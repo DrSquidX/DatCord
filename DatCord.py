@@ -84,7 +84,7 @@ class Server:
             self.server.bind((self.ip, self.port))
         except Exception as e:
             print(f"\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
-            self.log(f"\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
+            self.log(f"\n\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
             sys.exit()
         try:
             cursor.execute("select * from users")
@@ -113,7 +113,7 @@ class Server:
         print(f"[({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}")
         print(f"[({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}")
         print(f"[({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}")
-        self.log(f"\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
+        self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
         self.log(f"\n[({datetime.datetime.today()})][(INFO)]: Server is hosted on: {self.ip}:{self.port}")
         self.log(f"""\n[({datetime.datetime.today()})][(INFO)]: Owner Account Info: Username: {self.ownername} Password: {self.ownerpassword}
 [({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}
@@ -491,6 +491,9 @@ Advanced Server by Adrian Fang"""
                                         self.conn_list.append(conn)
                                         self.add_name_to_db(selfname, str(ip[0]) + " " + str(ip).strip('()').split()[1])
                                         self.show_server_com_with_client(conn, selfname, "Successfully logged in!")
+                                        display_msg = f"[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}"
+                                        self.log("\n"+display_msg)
+                                        print(display_msg)
                                         if selfname == self.ownername:
                                             serverowner = True
                                     else:
@@ -801,7 +804,11 @@ Advanced Server by Adrian Fang"""
                                         except:
                                             pass
                         if indm:
-                            dmconn.send("\n[(DM)]".encode()+main_msg.strip().encode())
+                            try:
+                                dmconn.send("\n[(DM)]".encode() + main_msg.strip().encode())
+                            except:
+                                self.show_server_com_with_client(conn, selfname, f"There was an error with sending your DM Message! The person may have gone offline. Closing your DM.")
+                                indm = False
                 if msg.strip() == "":
                     pass
                 else:
