@@ -1,24 +1,55 @@
 import socket, threading, sqlite3, hashlib, datetime, time, sys, random, os
 from optparse import OptionParser
 class Server:
+    """This is the main class for the server where all of the important functions and
+    variables needed for the server to work are inside of this class. Every server
+    error is also within here. Additionally, this is where all of the client handling,
+    server listening, and SQL Database connections happen. I have done my best to
+    explain every function, so that you can get a better picture of what they
+    actually do. This server is multi-threaded, which allows it to do many tasks at once,
+    compared to having a single thread script, which would be slower and can only do
+    one task at once."""
     class ServerError:
+        """Main Class for defining Server errors. Errors that include names that
+        are not registered on the main data base, as well as authentication errors
+        (when the user inputs a valid username but not a valid password). There is also
+        errors that include names already being in the database. If a user is registering
+        but the name provided is already registered, it will raise this error. Lastly,
+        there is also a Permission Error for room-admins. If a non-admin were to use
+        a room-admin command(for ex. !ban), that error will be raised."""
         class NameNotInDatabaseError(Exception):
+            """This error is if a name requested is not registered in the database"""
             def __init__(self, msg="Username is not in Database!"):
+                """This displays the error(in error format)."""
                 self.msg = msg
                 super().__init__(self.msg)
         class NameAlreadyRegisteredError(Exception):
+            """This error is if a user is trying to register, however the name
+            provided is already registered in the database."""
             def __init__(self, msg="Username is already registered in the Database!"):
+                """This displays the error(in error format)."""
                 self.msg = msg
                 super().__init__(self.msg)
         class AuthenticationError(Exception):
+            """This error is for if a user has put in an incorrect password, while
+            trying to either log in or trying to change a password."""
             def __init__(self, msg="Authentication Failed."):
+                """This displays the error(in error format)."""
                 self.msg = msg
                 super().__init__(self.msg)
         class PermissionError(Exception):
+            """This error is for if the user does not have permissions to do something.
+            For example if a non-room admin is trying to run an admin command."""
             def __init__(self, msg="You have insufficient permissions!"):
+                """This displays the error(in error format)."""
                 self.msg = msg
                 super().__init__(self.msg)
     def __init__(self, ip, port, dbfile, userdbfile, roomdata, logfile, ownername, ownerpassword, connpersec):
+        """This is the function where all of the important variables are defined. The databases
+        is configuyred here, as well as the owner account along with the logging files and room
+        data files. Once configured, the user can choose when to start listening for connections
+        (however in this script the .listen() function is used right after being configured so
+        the server starts listening on startup)."""
         self.ip = ip
         self.port = port
         self.dbfile = dbfile
@@ -48,10 +79,13 @@ class Server:
         userdbcursor = userdb.cursor()
         self.conn_list = []
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.log(self.logo())
         try:
             self.server.bind((self.ip, self.port))
         except Exception as e:
-            print(f"[+] There was an error with binding the server due to error: {e}.")
+            print(f"\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
+            self.log(f"\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
+            sys.exit()
         try:
             cursor.execute("select * from users")
         except:
@@ -79,7 +113,6 @@ class Server:
         print(f"[({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}")
         print(f"[({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}")
         print(f"[({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}")
-        self.log(self.logo())
         self.log(f"\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
         self.log(f"\n[({datetime.datetime.today()})][(INFO)]: Server is hosted on: {self.ip}:{self.port}")
         self.log(f"""\n[({datetime.datetime.today()})][(INFO)]: Owner Account Info: Username: {self.ownername} Password: {self.ownerpassword}
@@ -87,6 +120,7 @@ class Server:
 [({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}
 [({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}""")
     def logo(self):
+        """Logo of this script."""
         logo = """
  _____        _    _____              _        ___    ___  
 |  __ \      | |  / ____|            | |      |__ \  / _ \ 
@@ -94,11 +128,15 @@ class Server:
 | |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // / | | | |
 | |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /_ | |_| |
 |_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/|____(_)___/                                                         
-Advanced Server by DrSquid"""
+Advanced Server by Adrian Fang"""
         return logo
     def log(self, text):
+        """Logs server output to the server log file."""
         self.update_file(self.logfile, text)
     def configure_rooms(self):
+        """Configures the chat rooms for people to be able to connect
+        to them. It adds a connection list for every room created.
+        (.append() adds an item to a 'list' object)"""
         self.rooms = []
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
@@ -108,6 +146,13 @@ Advanced Server by DrSquid"""
             item.append(str(i[0]))
             self.rooms.append(item)
     def listen(self):
+        """This is the function that listens for connections.
+        When someone connects to the server, the script will start
+        a thread to handle that connection(the threading.Thread() part).
+        There the client can communicate with the server, log in
+        and do what they can do. The server will also be warned
+        about DDoS Attacks, and will close any incoming connections
+        if the connections per second gets too high."""
         print(f"[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         self.log(f"\n[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         while True:
@@ -125,6 +170,10 @@ Advanced Server by DrSquid"""
                 handler = threading.Thread(target=self.handler,args=(conn,ip))
                 handler.start()
     def exec_sqlcmd(self, file, cmd):
+        """This function connects to an SQL Database. It connects to the filename
+        that is provided, and executes a command that is provided within the
+        arguements. This function was made for optimization, and to help to
+        avoid making too-repetitive code."""
         db = sqlite3.connect(file)
         cursor = db.cursor()
         cursor.execute(cmd)
@@ -132,6 +181,10 @@ Advanced Server by DrSquid"""
         cursor.close()
         db.close()
     def attempt_login(self, username, password):
+        """Authentication Function with logging in. It connects to the SQL Users
+        database file, where it hashes the password provided and then sees if it
+        matches the one in the database. If the username does not exist, it will
+        raise the NameNotInDatabaseError."""
         password = hashlib.sha256(password.encode()).hexdigest()
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
@@ -150,10 +203,14 @@ Advanced Server by DrSquid"""
         cursor.close()
         db.close()
     def reset_connvar(self):
+        """Sets the connections per second variable to 0 every second."""
         while True:
             time.sleep(1)
             self.connpersec = 0
     def register_accounts(self, username, password):
+        """Adds an account to the Users database file and registers the user
+        onto it. If the username is already registered in the database, it
+        will raise the NameAlreadyRegisteredError."""
         password = hashlib.sha256(password.encode()).hexdigest()
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
@@ -170,19 +227,31 @@ Advanced Server by DrSquid"""
         cursor.close()
         db.close()
     def change_password(self, username, password):
+        """Changes the users password. It first hashes it and then puts it
+        back into the database."""
         password = hashlib.sha256(password.encode()).hexdigest()
         self.exec_sqlcmd(self.dbfile, f'update users set password = "{password}" where username = "{username}"')
     def add_name_to_db(self, name, conn):
+        """Adds a name and the connection to the active connections
+        database file."""
         self.exec_sqlcmd(self.userdbfile, f"insert into loggedinusers values('{name}', '{conn}')")
     def remove_user_from_db(self, name):
+        """This Deletes the name from the Active connections database."""
         self.exec_sqlcmd(self.userdbfile,f"delete from loggedinusers where username = '{name}'")
     def create_room(self, roomname, roompass):
+        """This adds a room into the rooms table in the Users database."""
         self.exec_sqlcmd(self.dbfile,f"insert into open_rooms values('{roomname.strip()}','{roompass.strip()}')")
     def ban_user_fr_server(self, user):
+        """This adds a user to the banlist in the Users database."""
         self.exec_sqlcmd(self.dbfile, f"insert into banlist values('{user}')")
     def unban_user_fr_server(self, user):
+        """This unbans a user from the banlist in the users database."""
         self.exec_sqlcmd(self.dbfile, f"delete from banlist where username = '{user}'")
     def attempt_join_room(self, name, password):
+        """Attempts to join a chat-room from the database. It connects to the name
+        provided and then uses the password provided and hashes it, where if the
+        password is correct, the user can go into the room. Otherwise the
+        AuthenticationError will be raised."""
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
         cursor.execute(f"select * from open_rooms where roomname = '{name}'")
@@ -202,6 +271,9 @@ Advanced Server by DrSquid"""
             else:
                 raise self.ServerError.AuthenticationError(f"Incorrect password for Room '{name}'")
     def check_for_sameusers(self, username):
+        """This checks for any users in the database to check if the user's username is already
+        in the server. If the name is already in the database, then the user's connection will be
+        terminated."""
         db = sqlite3.connect(self.userdbfile)
         cursor = db.cursor()
         tag = 0
@@ -218,6 +290,8 @@ Advanced Server by DrSquid"""
         cursor.close()
         db.close()
     def check_for_samerooms(self, roomname):
+        """When creating rooms, this will check if there already rooms of the same name in
+        the database."""
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
         tag = 0
@@ -234,6 +308,8 @@ Advanced Server by DrSquid"""
         cursor.close()
         db.close()
     def update_file(self, file, text):
+        """This function adds text to a file. It opens a file, reads its contents
+        and then re-writes those contents and adds the text that needs to be added."""
         files = open(file,"r")
         content = files.read()
         files.close()
@@ -242,6 +318,7 @@ Advanced Server by DrSquid"""
         files.write(text)
         files.close()
     def add_to_roomdata(self, selfname, roomname, stat):
+        """This function adds names to room-data."""
         file = open(self.roomdata, "r")
         contents = file.readlines()
         file.close()
@@ -283,6 +360,7 @@ Advanced Server by DrSquid"""
                     break
                 item += 1
     def del_from_roomdata(self, user, roomname, stat):
+        """This function removes names from room-data."""
         file = open(self.roomdata, "r")
         contents = file.readlines()
         file.close()
@@ -331,14 +409,18 @@ Advanced Server by DrSquid"""
             item += 1
         pass
     def show_errors(self, msg):
+        """This displays and logs errors that happen in the server."""
         self.log(msg)
         print(msg.strip())
     def show_server_com_with_client(self, conn, clientname, msg):
+        """This displays and logs server communication with the
+        clients."""
         conn.send("\n[(SERVER)]: ".encode()+msg.encode())
         new_msg = f"[({datetime.datetime.today()})][(SERVER)--->({clientname})]: {msg}"
         print(new_msg)
         self.log("\n"+new_msg)
     def opendm(self, username):
+        """This opens a direct message room with another user."""
         db = sqlite3.connect(self.userdbfile)
         tag = 0
         cursor = db.cursor()
@@ -356,12 +438,17 @@ Advanced Server by DrSquid"""
         else:
             raise self.ServerError.NameNotInDatabaseError
     def sendall(self,msg):
+        """This sends a message to everyone in the connection list."""
         for conn in self.conn_list:
             try:
                 self.show_server_com_with_client(conn, selfname, msg)
             except:
                 pass
     def handler(self, conn, ip):
+        """This is the main handler for connections. Every message from the client
+        will be used into this function(used as a thread), to do the programmed
+        commands from the server. There are variables to recognize whether the user
+        is the Owner or not, if the user is in a room, or dm, or not."""
         selfname = str(ip).strip('()')
         logged_in = False
         inroom = False
@@ -441,6 +528,18 @@ Advanced Server by DrSquid"""
                         elif msg.startswith("!unnick"):
                             selfname = self.ownername
                             self.show_server_com_with_client(conn, selfname, f"Changed your name back to: {selfname}")
+                        elif msg.startswith("!broadcast"):
+                            try:
+                                msg_to_all = msg.split()
+                                del msg_to_all[0]
+                                main_msg = ""
+                                for i in msg_to_all:
+                                    main_msg = main_msg + i + " "
+                                main_msg = main_msg.strip()
+                                main_msg = f"[(BROADCAST)]: {main_msg}"
+                                self.sendall(main_msg)
+                            except:
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !broadcast <msg>")
                         elif msg.startswith("!banuser"):
                             try:
                                 banned_user = msg.split()[1]
@@ -639,16 +738,13 @@ Advanced Server by DrSquid"""
                                     self.add_to_roomdata(name, selfroomname, "Banlist: ")
                                 except self.ServerError.PermissionError:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(
-                                        f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 except Exception as e:
-                                    self.show_errors(
-                                        f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
                             else:
                                 self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                self.show_errors(
-                                    f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                     elif msg.startswith("!unban"):
                         if roomadmin:
                             try:
@@ -663,8 +759,7 @@ Advanced Server by DrSquid"""
                                     f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
                         else:
-                            self.show_server_com_with_client(conn, selfname,
-                                                             "Your permissions are invalid for this command.")
+                            self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                             self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                     elif msg.startswith("!promoteuser"):
                         if inroom:
@@ -686,8 +781,7 @@ Advanced Server by DrSquid"""
                                     usertodemote = msg.split()[1]
                                     self.del_from_roomdata(usertodemote, selfroomname, "Admins: ")
                                 else:
-                                    self.show_errors(
-                                        f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                             except self.ServerError.PermissionError:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -722,9 +816,12 @@ Advanced Server by DrSquid"""
                 conn.close()
                 break
 class OptionParse:
+    """Option-Parsing Class for parsing arguements."""
     def __init__(self):
+        """Starts to parse the arguements."""
         self.parse_args()
     def usage(self):
+        """Displays the help message for option-parsing(in case you need it)."""
         print(Server.logo(None))
         print("""
 [+] Option-Parsing Help:
@@ -749,6 +846,7 @@ class OptionParse:
 [+] python3 Datcord.py --ip <ip> --p <port> --db <dbfile> --au <aufile> --rd <roomdata> --sl <servlog> --ou <owneruser> --op <ownerpass> --mc <maxconn>
 [+] python3 Datcord.py --i""")
     def parse_args(self):
+        """This function parses the arguements."""
         args = OptionParser()
         args.add_option("--ip", "--ipaddr", dest="ip")
         args.add_option("--p",  "--port", dest="port")
@@ -814,6 +912,7 @@ class OptionParse:
         server = Server(ip, port, db, au, rd, sl, ou, op, mc)
         server.listen()
 if __name__ == '__main__':
+    """Initiates the script."""
     if sys.platform == "win32":
         os.system("cls")
     else:
