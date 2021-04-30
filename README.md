@@ -4,7 +4,7 @@ This is a school project for one of my Design classes. This server is a sophisti
 # Every Feature Included(In a more straightforward way):
 Secure Password Storage - Every password is stored inside of an SQL Database
 
-Password Hashing        - Passwords are hashed, meaning that they will return what appears to be gibberish if an SQL Injection is to happen.
+* Password Hashing        - Passwords are hashed, meaning that they will return what appears to be gibberish if an SQL Injection is to happen.
 
 Chat Rooms              - Chat rooms made for you to be able to talk and communicate with friends. These can have a password, however it is optional.
 
