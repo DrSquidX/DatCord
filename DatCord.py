@@ -100,6 +100,10 @@ class Server:
             cursor.execute("select * from banlist")
         except:
             cursor.execute("create table banlist(username)")
+        try:
+            cursor.execute("select * from ipbanlist")
+        except:
+            cursor.execute("create table ipbanlist(ip)")
         userdbcursor.execute("create table loggedinusers(username, connection)")
         userdb.commit()
         userdbcursor.close()
@@ -160,15 +164,24 @@ Advanced Server by Adrian Fang"""
             conn, ip = self.server.accept()
             self.connpersec += 1
             if self.connpersec >= self.maxconnpersec:
-                print(f"[({datetime.datetime.today()})][(DDOS_WARNING)]: Server may be under attack!")
-                self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARNING)]: Server may be under attack!")
+                print(f"[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack!")
+                self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack!")
                 conn.close()
             else:
-                msg = f"[({datetime.datetime.today()})][(CONNECTION)]: {ip} has connected."
+                msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
                 print(msg)
-                self.log("\n"+msg)
-                handler = threading.Thread(target=self.handler,args=(conn,ip))
-                handler.start()
+                self.log("\n" + msg)
+                isbanned = False
+                if ip[0] in self.get_ipbanlist():
+                    isbanned = True
+                if not isbanned:
+                    handler = threading.Thread(target=self.handler,args=(conn,ip))
+                    handler.start()
+                else:
+                    msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
+                    print(msg2)
+                    self.log("\n"+msg2)
+                    conn.close()
     def exec_sqlcmd(self, file, cmd):
         """This function connects to an SQL Database. It connects to the filename
         that is provided, and executes a command that is provided within the
@@ -207,6 +220,15 @@ Advanced Server by Adrian Fang"""
         while True:
             time.sleep(1)
             self.connpersec = 0
+    def get_ipbanlist(self):
+        """Gets all of the IP Addresses in the banlist."""
+        db = sqlite3.connect(self.dbfile)
+        cursor = db.cursor()
+        cursor.execute("select * from ipbanlist")
+        ip_ban_list = []
+        for i in cursor.fetchall():
+            ip_ban_list.append(i[0])
+        return ip_ban_list
     def register_accounts(self, username, password):
         """Adds an account to the Users database file and registers the user
         onto it. If the username is already registered in the database, it
@@ -247,6 +269,12 @@ Advanced Server by Adrian Fang"""
     def unban_user_fr_server(self, user):
         """This unbans a user from the banlist in the users database."""
         self.exec_sqlcmd(self.dbfile, f"delete from banlist where username = '{user}'")
+    def ban_ip_fr_server(self, ip):
+        """This adds an ip to the banlist in the Users database."""
+        self.exec_sqlcmd(self.dbfile, f"insert into ipbanlist values('{ip}')")
+    def unban_ip_fr_server(self, ip):
+        """This unbans an ip from the banlist in the users database."""
+        self.exec_sqlcmd(self.dbfile, f"delete from ipbanlist where ip = '{ip}'")
     def attempt_join_room(self, name, password):
         """Attempts to join a chat-room from the database. It connects to the name
         provided and then uses the password provided and hashes it, where if the
@@ -531,6 +559,30 @@ Advanced Server by Adrian Fang"""
                         elif msg.startswith("!unnick"):
                             selfname = self.ownername
                             self.show_server_com_with_client(conn, selfname, f"Changed your name back to: {selfname}")
+                        elif msg.startswith("!banip"):
+                            try:
+                                ip_addr = msg.split()[1]
+                                actual_ip = socket.gethostbyname(ip_addr)
+                                if ip_addr in self.get_ipbanlist():
+                                    self.show_server_com_with_client(conn, selfname, f"The IP is already in the banlist!")
+                                else:
+                                    self.ban_ip_fr_server(ip_addr)
+                            except socket.error:
+                                self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
+                            except:
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !ipban <ip>")
+                        elif msg.startswith("!unbanip"):
+                            try:
+                                ip_addr = msg.split()[1]
+                                actual_ip = socket.gethostbyname(ip_addr)
+                                if ip_addr not in self.get_ipbanlist():
+                                    self.show_server_com_with_client(conn, selfname, f"The IP Is not in the banlist!")
+                                else:
+                                    self.unban_ip_fr_server(ip_addr)
+                            except socket.error:
+                                self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
+                            except:
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !ipban <ip>")
                         elif msg.startswith("!broadcast"):
                             try:
                                 msg_to_all = msg.split()
