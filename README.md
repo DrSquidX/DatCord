@@ -18,6 +18,8 @@ This is a school project for one of my Design classes. This server is a sophisti
 
 * Developer Friendly      - It is very easy to make a client script to connect to this server!
 
+* Option Parsing          - Parse arguements when running this script in terminal, where it could help with changing different settings and help with the usablity of the server.
+
 # Secure Password Storage
 Due to some recent learning of SQL, I have changed my old way of password storage of a plain text file, to a more advanced alternative - SQL Databases. This way I can store passwords in a more secure way, where the server would have to run a certain SQL Command to extract a username and password from the Database(this command is similar to "select * from users). This password storage system is more quick than the old text file system, as I can run a certain SQL Command to extract, remove or insert something in the Database, whereas I would have to read a whole text file to extract information from it(this would be worse if the server had a lot of clients, as the reading of the file would take very long). This system is more secure than any system I have made so far. 
 
@@ -32,3 +34,11 @@ If you want to chat one-to-one with another person, it is very simple. There is 
 
 # Multi-Threaded
 The server is multi-threaded, meaning that It can handle multiple clients at once. This is better than having single-threaded servers, where they do not have the abilities to listen for connections, send and recieve messages at the same time, where multi-threaded servers(like this one) are able to be used.
+
+# Owner Account
+In the server, there is one owner account, made for the server owner to be able to use and chat with other people. This account is unlike any normal account, as it has the abilities to broadcast messages to everyone on the server, ban and kick people, as well as being able to change their name to someone elses. This owner account has the highest authority on the server, and it has a lot of power.
+
+# Logging
+Everything in the server is logged. This is good for being able to report and debug errors on the server, so that these could be easily fixed. Every error, message, and connection is logged, so that the server can know who is connecting, what they might be saying, as well as any errors that pop up when the server is running.
+
+(More writing coming soon)
