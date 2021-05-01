@@ -128,12 +128,12 @@ class Server:
     def logo(self):
         """Logo of this script."""
         logo = """
- _____        _    _____              _        ___    ___  
-|  __ \      | |  / ____|            | |      |__ \  / _ \ 
-| |  | | __ _| |_| |     ___  _ __ __| | __   __ ) || | | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // / | | | |
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /_ | |_| |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/|____(_)___/                                                         
+ _____        _    _____              _        ____   ___  
+|  __ \      | |  / ____|            | |      |___ \ / _ \ 
+| |  | | __ _| |_| |     ___  _ __ __| | __   ____) | | | |
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / /__ <| | | |
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V /___) | |_| |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/|____(_)___/                                                                                                          
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -484,36 +484,42 @@ Advanced Server by DrSquid"""
                 pass
     def login_help_message(self):
         """Generates the help message with all of the login commands."""
-        msg = """[+] Log-In Commands For This server:
+        msg = """
+[(SERVER)]:
+[+] Log-In Commands For This server:
 [+] !login [username] [password]           - Logs into your account.
 [+] !register [username] [password]        - Registers your account to the server."""
         return msg
     def regular_client_help_message(self):
         """Generates the help message for regular clients(after logging in)."""
-        msg = """[+] Regular Commands For This Server:
+        msg = """
+[(SERVER)]:
+[+] Regular Commands For This Server:
 [+] !dm [user]                             - Opens a DM With the specified User.
 [+] !closedm                               - Closes the DM that you are currently in.
 [+] !reregister [old_pass] [new_pass]      - Changes your current password if you enter the correct one.
 [+] !createroom [room_name] [room_pass]    - Creates a chat room(the password is optional).
 [+] !joinroom [room_name] [room_pass]      - Joins a chat room(the password is optional)
 [+] !leaveroom                             - Leaves the current room you are in.
-[+] !ban [user]                            - Bans a user from the chat-room(you need to be room admin).
-[+] !unban [user]                          - Unbans a user from the chat-room(you need to be room admin).
+[+] !roomban [user]                        - Bans a user from the chat-room(you need to be room admin).
+[+] !roomunban [user]                      - Unbans a user from the chat-room(you need to be room admin).
 [+] !promoteuser [user]                    - Promotes a user to room-admin(you need to be room admin).
 [+] !demoteuser [user]                     - Demotes a user down to regular room client(you need to be room admin)."""
         return msg
     def admin_help_message(self):
         """Generates the admin help message for admins."""
-        msg = """[+] Admin Commands For This Server:
+        msg = """
+[(SERVER)]:
+[+] Admin Commands For This Server:
 [+] !nick [username]                       - Changes your name.
 [+] !unnick                                - Reverts yourname back to the owner account.
 [+] !togglelisten                          - Toggles whether to listen for connections or not.
-[+] !banip [ip_addr]                       - Bans the IP Address specified.
-[+] !unbanip [ip_addr]                     - Unbans the IP Address specified.
+[+] !ipban [ip_addr]                       - Bans the IP Address specified.
+[+] !ipunban [ip_addr]                     - Unbans the IP Address specified.
 [+] !broadcast [msg]                       - Broadcasts a message to everyone in the server.
-[+] !banuser [user]                        - Bans a user from the server.
-[+] !unbanuser [user]                      - Unbans a user from the server.
-[+] !kickuser [user]                       - Kicks a user from the server."""
+[+] !ban [user]                            - Bans a user from the server.
+[+] !unban [user]                          - Unbans a user from the server.
+[+] !kick [user]                           - Kicks a user from the server."""
         return msg
     def handler(self, conn, ip):
         """This is the main handler for connections. Every message from the client
@@ -634,7 +640,7 @@ Advanced Server by DrSquid"""
                             self.show_server_com_with_client(conn, selfname, f"Set Listening for connections to {self.listening}")
                             print(logmsg)
                             self.log("\n"+logmsg)
-                        elif msg.startswith("!banip"):
+                        elif msg.startswith("!ipban"):
                             try:
                                 ip_addr = msg.split()[1]
                                 actual_ip = socket.gethostbyname(ip_addr)
@@ -647,7 +653,7 @@ Advanced Server by DrSquid"""
                                 self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
                             except:
                                 self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !ipban <ip>")
-                        elif msg.startswith("!unbanip"):
+                        elif msg.startswith("!ipunban"):
                             try:
                                 ip_addr = msg.split()[1]
                                 actual_ip = socket.gethostbyname(ip_addr)
@@ -659,7 +665,7 @@ Advanced Server by DrSquid"""
                             except socket.error:
                                 self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
                             except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !ipban <ip>")
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !ipunban <ip>")
                         elif msg.startswith("!broadcast"):
                             try:
                                 msg_to_all = msg.split()
@@ -672,7 +678,7 @@ Advanced Server by DrSquid"""
                                 self.sendall(main_msg)
                             except:
                                 self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !broadcast <msg>")
-                        elif msg.startswith("!banuser"):
+                        elif msg.startswith("!ban"):
                             try:
                                 banned_user = msg.split()[1]
                                 if banned_user == self.ownername:
@@ -694,8 +700,8 @@ Advanced Server by DrSquid"""
                                     db.close()
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !banuser <username>")
-                        elif msg.startswith("!kickuser"):
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !ban <username>")
+                        elif msg.startswith("!kick"):
                             try:
                                 kick_user = msg.split()[1]
                                 if kick_user == self.ownername:
@@ -716,11 +722,12 @@ Advanced Server by DrSquid"""
                                     db.close()
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !kickuser <username>")
-                        elif msg.startswith("!unbanuser"):
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !kick <username>")
+                        elif msg.startswith("!unban"):
                             try:
                                 unbanned_user = msg.split()[1]
                                 self.unban_user_fr_server(unbanned_user)
+                                self.show_server_com_with_client(f"Successfully unbanned {unbanned_user} from the banlist.")
                             except:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                                 self.show_server_com_with_client(conn, selfname, f"There was an error.")
@@ -866,7 +873,7 @@ Advanced Server by DrSquid"""
                                 room_admin = False
                                 selfroomname = ""
                                 break
-                    elif msg.startswith("!ban"):
+                    elif msg.startswith("!roomban"):
                         if inroom:
                             if roomadmin:
                                 try:
@@ -877,25 +884,25 @@ Advanced Server by DrSquid"""
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 except Exception as e:
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                                    self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
+                                    self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !roomban <username>")
                             else:
                                 self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
-                    elif msg.startswith("!unban"):
-                        if roomadmin:
-                            try:
-                                name = msg.split()[1]
-                                self.del_from_roomdata(name, selfroomname, "Banlist: ")
-                            except self.ServerError.PermissionError:
+                    elif msg.startswith("!roomunban"):
+                        if inroom:
+                            if roomadmin:
+                                try:
+                                    name = msg.split()[1]
+                                    self.del_from_roomdata(name, selfroomname, "Banlist: ")
+                                except self.ServerError.PermissionError:
+                                    self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                except Exception as e:
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                    self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !roomunban <username>")
+                            else:
                                 self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                self.show_errors(
-                                    f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
-                            except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                                self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
-                        else:
-                            self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                     elif msg.startswith("!promoteuser"):
                         if inroom:
                             try:
