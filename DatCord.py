@@ -1,7 +1,8 @@
 import socket, threading, sqlite3, hashlib, datetime, time, sys, random, os
 from optparse import OptionParser
 class Server:
-    """This is the main class for the server where all of the important functions and
+    """Note: This server was made for a school project.
+    This is the main class for the server where all of the important functions and
     variables needed for the server to work are inside of this class. Every server
     error is also within here. Additionally, this is where all of the client handling,
     server listening, and SQL Database connections happen. I have done my best to
@@ -77,6 +78,7 @@ class Server:
         cursor = db.cursor()
         userdb = sqlite3.connect(self.userdbfile)
         userdbcursor = userdb.cursor()
+        self.listening = True
         self.conn_list = []
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.log(self.logo())
@@ -132,7 +134,7 @@ class Server:
 | |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // / | | | |
 | |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /_ | |_| |
 |_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/|____(_)___/                                                         
-Advanced Server by Adrian Fang"""
+Advanced Server by DrSquid"""
         return logo
     def log(self, text):
         """Logs server output to the server log file."""
@@ -160,28 +162,34 @@ Advanced Server by Adrian Fang"""
         print(f"[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         self.log(f"\n[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         while True:
-            self.server.listen()
-            conn, ip = self.server.accept()
-            self.connpersec += 1
-            if self.connpersec >= self.maxconnpersec:
-                print(f"[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack!")
-                self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack!")
-                conn.close()
-            else:
-                msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
-                print(msg)
-                self.log("\n" + msg)
-                isbanned = False
-                if ip[0] in self.get_ipbanlist():
-                    isbanned = True
-                if not isbanned:
-                    handler = threading.Thread(target=self.handler,args=(conn,ip))
-                    handler.start()
-                else:
-                    msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
-                    print(msg2)
-                    self.log("\n"+msg2)
+            if self.listening:
+                self.server.listen()
+                conn, ip = self.server.accept()
+                if not self.listening:
                     conn.close()
+                else:
+                    self.connpersec += 1
+                    if self.connpersec >= self.maxconnpersec:
+                        print(f"[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack!")
+                        self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack!")
+                        conn.close()
+                    else:
+                        msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
+                        print(msg)
+                        self.log("\n" + msg)
+                        isbanned = False
+                        if ip[0] in self.get_ipbanlist():
+                            isbanned = True
+                        if not isbanned:
+                            handler = threading.Thread(target=self.handler, args=(conn, ip))
+                            handler.start()
+                        else:
+                            msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
+                            print(msg2)
+                            self.log("\n" + msg2)
+                            conn.close()
+            else:
+                pass
     def exec_sqlcmd(self, file, cmd):
         """This function connects to an SQL Database. It connects to the filename
         that is provided, and executes a command that is provided within the
@@ -197,7 +205,9 @@ Advanced Server by Adrian Fang"""
         """Authentication Function with logging in. It connects to the SQL Users
         database file, where it hashes the password provided and then sees if it
         matches the one in the database. If the username does not exist, it will
-        raise the NameNotInDatabaseError."""
+        raise the NameNotInDatabaseError. The hashed password will be compared
+        to the one in the database, and if it's correct, they have successfully
+        authenitcated."""
         password = hashlib.sha256(password.encode()).hexdigest()
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
@@ -445,8 +455,8 @@ Advanced Server by Adrian Fang"""
         clients."""
         conn.send("\n[(SERVER)]: ".encode()+msg.encode())
         new_msg = f"[({datetime.datetime.today()})][(SERVER)--->({clientname})]: {msg}"
-        print(new_msg)
-        self.log("\n"+new_msg)
+        print(new_msg.strip("\n"))
+        self.log("\n"+new_msg.strip("\n"))
     def opendm(self, username):
         """This opens a direct message room with another user."""
         db = sqlite3.connect(self.userdbfile)
@@ -472,6 +482,39 @@ Advanced Server by Adrian Fang"""
                 self.show_server_com_with_client(conn, selfname, msg)
             except:
                 pass
+    def login_help_message(self):
+        """Generates the help message with all of the login commands."""
+        msg = """[+] Log-In Commands For This server:
+[+] !login [username] [password]           - Logs into your account.
+[+] !register [username] [password]        - Registers your account to the server."""
+        return msg
+    def regular_client_help_message(self):
+        """Generates the help message for regular clients(after logging in)."""
+        msg = """[+] Regular Commands For This Server:
+[+] !dm [user]                             - Opens a DM With the specified User.
+[+] !closedm                               - Closes the DM that you are currently in.
+[+] !reregister [old_pass] [new_pass]      - Changes your current password if you enter the correct one.
+[+] !createroom [room_name] [room_pass]    - Creates a chat room(the password is optional).
+[+] !joinroom [room_name] [room_pass]      - Joins a chat room(the password is optional)
+[+] !leaveroom                             - Leaves the current room you are in.
+[+] !ban [user]                            - Bans a user from the chat-room(you need to be room admin).
+[+] !unban [user]                          - Unbans a user from the chat-room(you need to be room admin).
+[+] !promoteuser [user]                    - Promotes a user to room-admin(you need to be room admin).
+[+] !demoteuser [user]                     - Demotes a user down to regular room client(you need to be room admin)."""
+        return msg
+    def admin_help_message(self):
+        """Generates the admin help message for admins."""
+        msg = """[+] Admin Commands For This Server:
+[+] !nick [username]                       - Changes your name.
+[+] !unnick                                - Reverts yourname back to the owner account.
+[+] !togglelisten                          - Toggles whether to listen for connections or not.
+[+] !banip [ip_addr]                       - Bans the IP Address specified.
+[+] !unbanip [ip_addr]                     - Unbans the IP Address specified.
+[+] !broadcast [msg]                       - Broadcasts a message to everyone in the server.
+[+] !banuser [user]                        - Bans a user from the server.
+[+] !unbanuser [user]                      - Unbans a user from the server.
+[+] !kickuser [user]                       - Kicks a user from the server."""
+        return msg
     def handler(self, conn, ip):
         """This is the main handler for connections. Every message from the client
         will be used into this function(used as a thread), to do the programmed
@@ -481,11 +524,16 @@ Advanced Server by Adrian Fang"""
         logged_in = False
         inroom = False
         room_admin = False
+        roomadmin = False
         indm = False
         dmconn = None
         dmusername = None
         serverowner = False
         selfroomname = ""
+        conn.send(self.login_help_message().encode())
+        othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Login Help Message."
+        print(othermsg)
+        self.log("\n" + othermsg)
         while True:
             try:
                 msg = conn.recv(1024)
@@ -519,11 +567,22 @@ Advanced Server by Adrian Fang"""
                                         self.conn_list.append(conn)
                                         self.add_name_to_db(selfname, str(ip[0]) + " " + str(ip).strip('()').split()[1])
                                         self.show_server_com_with_client(conn, selfname, "Successfully logged in!")
-                                        display_msg = f"[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}"
+                                        conn.send(self.regular_client_help_message().encode())
+                                        othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
+                                        print(othermsg)
+                                        self.log("\n" + othermsg)
+                                        display_msg = f"[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}."
                                         self.log("\n"+display_msg)
                                         print(display_msg)
                                         if selfname == self.ownername:
                                             serverowner = True
+                                            conn.send(self.admin_help_message().encode())
+                                            infomsg = f"[({datetime.datetime.today()})][(INFO)]: {selfname} is an Admin!"
+                                            print(infomsg)
+                                            self.log("\n"+infomsg)
+                                            othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Admin Help Message."
+                                            print(othermsg)
+                                            self.log("\n"+othermsg)
                                     else:
                                         self.show_server_com_with_client(conn, selfname, "Your account has been banned from the server.")
                         except self.ServerError.AuthenticationError:
@@ -543,6 +602,12 @@ Advanced Server by Adrian Fang"""
                             self.conn_list.append(conn)
                             self.add_name_to_db(selfname, str(ip[0])+" "+str(ip).strip('()').split()[1])
                             self.show_server_com_with_client(conn, selfname, "Successfully Registered. You have been logged in with this account!")
+                            conn.send(self.regular_client_help_message().encode())
+                            othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
+                            print(othermsg)
+                            self.log("\n" + othermsg)
+                            display_msg = f"[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}."
+                            self.log("\n" + display_msg)
                         except self.ServerError.NameAlreadyRegisteredError:
                             self.show_server_com_with_client(conn, selfname, "The account name is already registered in the database. Please use another name for your account.")
                         except Exception as e:
@@ -559,6 +624,16 @@ Advanced Server by Adrian Fang"""
                         elif msg.startswith("!unnick"):
                             selfname = self.ownername
                             self.show_server_com_with_client(conn, selfname, f"Changed your name back to: {selfname}")
+                        elif msg.startswith("!togglelisten"):
+                            if self.listening:
+                                logmsg = f"[({datetime.datetime.today()})][(INFO)]: Stopped Listening For Connections....."
+                                self.listening = False
+                            else:
+                                logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began Listening For Connections....."
+                                self.listening = True
+                            self.show_server_com_with_client(conn, selfname, f"Set Listening for connections to {self.listening}")
+                            print(logmsg)
+                            self.log("\n"+logmsg)
                         elif msg.startswith("!banip"):
                             try:
                                 ip_addr = msg.split()[1]
@@ -567,6 +642,7 @@ Advanced Server by Adrian Fang"""
                                     self.show_server_com_with_client(conn, selfname, f"The IP is already in the banlist!")
                                 else:
                                     self.ban_ip_fr_server(ip_addr)
+                                    self.show_server_com_with_client(conn, selfname, f"Successfully banned {ip_addr}. They won't be able to join the server the next time they try to.")
                             except socket.error:
                                 self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
                             except:
@@ -579,6 +655,7 @@ Advanced Server by Adrian Fang"""
                                     self.show_server_com_with_client(conn, selfname, f"The IP Is not in the banlist!")
                                 else:
                                     self.unban_ip_fr_server(ip_addr)
+                                    self.show_server_com_with_client(conn, selfname, f"Successfully unbanned {ip_addr}.")
                             except socket.error:
                                 self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
                             except:
@@ -640,7 +717,7 @@ Advanced Server by Adrian Fang"""
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                                 self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !kickuser <username>")
-                        elif msg.startswith("!unban"):
+                        elif msg.startswith("!unbanuser"):
                             try:
                                 unbanned_user = msg.split()[1]
                                 self.unban_user_fr_server(unbanned_user)
@@ -660,6 +737,10 @@ Advanced Server by Adrian Fang"""
                         except Exception as e:
                             self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                             self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
+                    elif msg.startswith("!help"):
+                        self.show_server_com_with_client(conn, selfname, self.regular_client_help_message().strip())
+                        if serverowner:
+                            self.show_server_com_with_client(conn, selfname, self.admin_help_message().strip())
                     elif msg.startswith("!dm"):
                         try:
                             username = msg.split()[1]
@@ -810,8 +891,7 @@ Advanced Server by Adrian Fang"""
                                 self.show_errors(
                                     f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                             except Exception as e:
-                                self.show_errors(
-                                    f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
                         else:
                             self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
