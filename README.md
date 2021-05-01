@@ -8,8 +8,6 @@ This is a school project for one of my Design classes. This server is a sophisti
 
 * Chat Rooms              - Chat rooms made for you to be able to talk and communicate with friends. These can have a password, however it is optional.
 
-* Chat Room Moderation    - Chat room admins have the abilities to ban users from the chat-rooms, as well as being able to promote others.
-
 * Direct Messaging        - Privately chat with friends on the server.
 
 * Multi-Threaded          - The server can handle multiple clients at oncel, since it is multi-threaded(meaning that it could to many tasks at once, AKA Multi-Tasking).
@@ -25,3 +23,12 @@ Due to some recent learning of SQL, I have changed my old way of password storag
 
 # Password Hashing
 Every password in this server is hashed. This helps with security, as the hashed password is a hash of an original password, however it looks nothing like it. This would mean if some sort of SQL Injection were to happen, the attacker would get a dictionary of what would look like gibberish. It is unusable, as if the hashed password were to be put into the server, this hash would again be hashed, which would not actually match the password hash in the database. The hashing algorithim is sha256, which is considered a more secure hashing algorithim compared to md5, which is what I used to use.
+
+# Chat Rooms
+Every user has the ability to create their own chat room. These chat rooms are private rooms for them and their friends to be able to chat on. These chatrooms are able to have passwords, however these are optional. If you want to have a chat room that is private, it is suggested that you make the chat room created have a password. Once you are have logged into a chatroom once, you won't need to be using a password when you want to join it. If you want a public chat room, you do not need to provide the password. Every chat room also has moderation. This means that you can ban users from the chat room(if you are room admin). The creator of the chat rooms are automatically an admin, and they also have the ability to promote other users to admin, where they can do similar things.
+
+# Direct Messaging
+If you want to chat one-to-one with another person, it is very simple. There is a direct messaging system in the server, where you are allowed to chat privately with another user. These are private, so nobody else(maybe the server), will be able to see what is being sent between each person. The only reason that the server is able to see these messages is in case there is any bullying going around, where evidence can be put around to whoever was doing the bad things. Let me know if I should remove that, and I will make it so that the message will not be displayed in the server(I figure that will be rather easy).
+
+# Multi-Threaded
+The server is multi-threaded, meaning that It can handle multiple clients at once. This is better than having single-threaded servers, where they do not have the abilities to listen for connections, send and recieve messages at the same time, where multi-threaded servers(like this one) are able to be used.
