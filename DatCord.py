@@ -106,6 +106,10 @@ class Server:
             cursor.execute("select * from ipbanlist")
         except:
             cursor.execute("create table ipbanlist(ip)")
+        try:
+            cursor.execute("select * from ipwhitelist")
+        except:
+            cursor.execute("create table ipwhitelist(ip)")
         userdbcursor.execute("create table loggedinusers(username, connection)")
         userdb.commit()
         userdbcursor.close()
@@ -114,17 +118,15 @@ class Server:
         cursor.close()
         db.close()
         self.configure_rooms()
-        print(f"\n[({datetime.datetime.today()})][(INFO)]: Server is hosted on: {self.ip}:{self.port}")
-        print(f"[({datetime.datetime.today()})][(INFO)]: Owner Account Info: Username: {self.ownername} Password: {self.ownerpassword}")
-        print(f"[({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}")
-        print(f"[({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}")
-        print(f"[({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}")
+        logmsg = f"""
+[({datetime.datetime.today()})][(INFO)]: Server is hosted on: {self.ip}:{self.port}                                       
+[({datetime.datetime.today()})][(INFO)]: Owner Account Info: Username: {self.ownername} Password: {self.ownerpassword}      
+[({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}                                    
+[({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}                                  
+[({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}"""
+        print(logmsg)
         self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
-        self.log(f"\n[({datetime.datetime.today()})][(INFO)]: Server is hosted on: {self.ip}:{self.port}")
-        self.log(f"""\n[({datetime.datetime.today()})][(INFO)]: Owner Account Info: Username: {self.ownername} Password: {self.ownerpassword}
-[({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}
-[({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}
-[({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}""")
+        self.log(logmsg)
     def logo(self):
         """Logo of this script."""
         logo = """
@@ -152,33 +154,50 @@ Advanced Server by DrSquid"""
             item.append(str(i[0]))
             self.rooms.append(item)
     def listen(self):
-        """This is the function that listens for connections.
-        When someone connects to the server, the script will start
-        a thread to handle that connection(the threading.Thread() part).
-        There the client can communicate with the server, log in
-        and do what they can do. The server will also be warned
-        about DDoS Attacks, and will close any incoming connections
-        if the connections per second gets too high."""
+        """This is the function that listens for connections. When someone connects to the server,
+        the script will start a thread to handle that connection(the threading.Thread() part).
+        There the client can communicate with the server, log in and do what they can do. The server
+        will also be warned about DDoS Attacks, and will close any incoming connections if the
+        connections per second gets too high. This is where the whitelist system takes place, where
+        connections from the IP's in the whitelist are accepted into the server."""
         print(f"[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         self.log(f"\n[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
+        self.being_attacked = False
         while True:
             if self.listening:
                 self.server.listen()
                 conn, ip = self.server.accept()
                 if not self.listening:
+                    msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
+                    self.log("\n"+msg2)
                     conn.close()
                 else:
-                    self.connpersec += 1
-                    if self.connpersec >= self.maxconnpersec:
-                        print(f"[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack!")
-                        self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack!")
-                        conn.close()
+                    closed = False
+                    if not self.being_attacked:
+                        self.connpersec += 1
                     else:
+                        if ip[0] in self.get_iplist("ipbanlist"):
+                            closed = True
+                            conn.close()
+                        else:
+                            self.connpersec += 1
+                    if self.connpersec <= self.maxconnpersec:
+                        self.being_attacked = False
+                    if self.connpersec >= self.maxconnpersec:
+                        self.being_attacked = True
+                        if ip[0] in self.get_iplist("ipwhitelist"):
+                            pass
+                        else:
+                            if not closed:
+                                print(f"[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                                self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                                conn.close()
+                    elif self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
                         msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
                         print(msg)
                         self.log("\n" + msg)
                         isbanned = False
-                        if ip[0] in self.get_ipbanlist():
+                        if ip[0] in self.get_iplist("ipbanlist"):
                             isbanned = True
                         if not isbanned:
                             handler = threading.Thread(target=self.handler, args=(conn, ip))
@@ -212,6 +231,7 @@ Advanced Server by DrSquid"""
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
         tag = 0
+        username = username.strip('"').strip("'")
         cursor.execute(f"select * from users where username = '{username}'")
         for i in cursor.fetchall():
             if username in i[0]:
@@ -230,15 +250,15 @@ Advanced Server by DrSquid"""
         while True:
             time.sleep(1)
             self.connpersec = 0
-    def get_ipbanlist(self):
-        """Gets all of the IP Addresses in the banlist."""
+    def get_iplist(self, ls):
+        """Gets all of the IP Addresses in a list."""
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
-        cursor.execute("select * from ipbanlist")
-        ip_ban_list = []
+        cursor.execute(f"select * from {ls}")
+        ip_list = []
         for i in cursor.fetchall():
-            ip_ban_list.append(i[0])
-        return ip_ban_list
+            ip_list.append(i[0])
+        return ip_list
     def register_accounts(self, username, password):
         """Adds an account to the Users database file and registers the user
         onto it. If the username is already registered in the database, it
@@ -285,6 +305,12 @@ Advanced Server by DrSquid"""
     def unban_ip_fr_server(self, ip):
         """This unbans an ip from the banlist in the users database."""
         self.exec_sqlcmd(self.dbfile, f"delete from ipbanlist where ip = '{ip}'")
+    def whitelist_ip_to_server(self, ip):
+        """This adds an ip to the whitelist in the Users database."""
+        self.exec_sqlcmd(self.dbfile, f"insert into ipwhitelist values('{ip}')")
+    def unwhitelist_ip_fr_server(self, ip):
+        """This unwhitelists an ip from the whitelist in the users database."""
+        self.exec_sqlcmd(self.dbfile, f"delete from ipwhitelist where ip = '{ip}'")
     def attempt_join_room(self, name, password):
         """Attempts to join a chat-room from the database. It connects to the name
         provided and then uses the password provided and hashes it, where if the
@@ -308,33 +334,15 @@ Advanced Server by DrSquid"""
                 return True
             else:
                 raise self.ServerError.AuthenticationError(f"Incorrect password for Room '{name}'")
-    def check_for_sameusers(self, username):
-        """This checks for any users in the database to check if the user's username is already
-        in the server. If the name is already in the database, then the user's connection will be
-        terminated."""
+    def check_for_sameitems(self, name, cmd):
+        """This checks for same items that already in the server. If the name is
+        already in the database, then the value the function is assigned to will
+        return as False(bool object)."""
         db = sqlite3.connect(self.userdbfile)
         cursor = db.cursor()
         tag = 0
         try:
-            cursor.execute(f"select * from loggedinusers where username = '{username}'")
-            for i in cursor.fetchall():
-                if username in i[0]:
-                    tag = 1
-                    return True
-            if tag == 0:
-                return False
-        except:
-            return False
-        cursor.close()
-        db.close()
-    def check_for_samerooms(self, roomname):
-        """When creating rooms, this will check if there already rooms of the same name in
-        the database."""
-        db = sqlite3.connect(self.dbfile)
-        cursor = db.cursor()
-        tag = 0
-        try:
-            cursor.execute(f"select * from open_rooms where roomname = '{roomname}'")
+            cursor.execute(cmd)
             for i in cursor.fetchall():
                 if username in i[0]:
                     tag = 1
@@ -516,6 +524,8 @@ Advanced Server by DrSquid"""
 [+] !togglelisten                          - Toggles whether to listen for connections or not.
 [+] !ipban [ip_addr]                       - Bans the IP Address specified.
 [+] !ipunban [ip_addr]                     - Unbans the IP Address specified.
+[+] !whitelistip [ip_addr]                 - Whitelists an IP Address(connections from it will be accepted even in DDoS Attack).
+[+] !unwhitelistip [ip_addr]               - Removes an IP from the IP whitelist.
 [+] !broadcast [msg]                       - Broadcasts a message to everyone in the server.
 [+] !ban [user]                            - Bans a user from the server.
 [+] !unban [user]                          - Unbans a user from the server.
@@ -551,11 +561,11 @@ Advanced Server by DrSquid"""
                 if not logged_in:
                     if msg.startswith("!login"):
                         try:
-                            username = msg.split()[1]
-                            password = msg.split()[2]
+                            username = msg.split()[1].strip("'").strip('"')
+                            password = msg.split()[2].strip("'").strip('"')
                             authentication = self.attempt_login(username, password)
                             if authentication == True:
-                                namealreadylogged = self.check_for_sameusers(username)
+                                namealreadylogged = self.check_for_sameitems(username, f"select * from loggedinusers where username = '{username}'")
                                 if namealreadylogged:
                                     self.show_server_com_with_client(conn, selfname, "Your account is already being used in another location!")
                                 else:
@@ -600,8 +610,8 @@ Advanced Server by DrSquid"""
                             self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!register"):
                         try:
-                            username = msg.split()[1]
-                            password = msg.split()[2]
+                            username = msg.split()[1].strip("'").strip('"')
+                            password = msg.split()[2].strip("'").strip('"')
                             self.register_accounts(username, password)
                             logged_in = True
                             selfname = username
@@ -637,14 +647,14 @@ Advanced Server by DrSquid"""
                             else:
                                 logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began Listening For Connections....."
                                 self.listening = True
-                            self.show_server_com_with_client(conn, selfname, f"Set Listening for connections to {self.listening}")
+                            self.show_server_com_with_client(conn, selfname, f"Set Listening for connections to {self.listening}.")
                             print(logmsg)
                             self.log("\n"+logmsg)
                         elif msg.startswith("!ipban"):
                             try:
                                 ip_addr = msg.split()[1]
                                 actual_ip = socket.gethostbyname(ip_addr)
-                                if ip_addr in self.get_ipbanlist():
+                                if ip_addr in self.get_iplist("ipbanlist"):
                                     self.show_server_com_with_client(conn, selfname, f"The IP is already in the banlist!")
                                 else:
                                     self.ban_ip_fr_server(ip_addr)
@@ -657,7 +667,7 @@ Advanced Server by DrSquid"""
                             try:
                                 ip_addr = msg.split()[1]
                                 actual_ip = socket.gethostbyname(ip_addr)
-                                if ip_addr not in self.get_ipbanlist():
+                                if ip_addr not in self.get_iplist("ipbanlist"):
                                     self.show_server_com_with_client(conn, selfname, f"The IP Is not in the banlist!")
                                 else:
                                     self.unban_ip_fr_server(ip_addr)
@@ -666,6 +676,32 @@ Advanced Server by DrSquid"""
                                 self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
                             except:
                                 self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !ipunban <ip>")
+                        elif msg.startswith("!whitelistip"):
+                            try:
+                                ip_addr = msg.split()[1]
+                                actual_ip = socket.gethostbyname(ip_addr)
+                                if ip_addr in self.get_iplist("ipbanlist"):
+                                    self.show_server_com_with_client(conn, selfname, f"The IP Is in the banlist! Unban them first.")
+                                else:
+                                    self.whitelist_ip_to_server(ip_addr)
+                                    self.show_server_com_with_client(conn, selfname, f"Successfully whitelisted {ip_addr}.")
+                            except socket.error:
+                                self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
+                            except:
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !whitelistip <ip>")
+                        elif msg.startswith("!unwhitelistip"):
+                            try:
+                                ip_addr = msg.split()[1]
+                                actual_ip = socket.gethostbyname(ip_addr)
+                                if ip_addr not in self.get_iplist("ipwhitelist"):
+                                    self.show_server_com_with_client(conn, selfname, f"The IP Is not in the whitelist!")
+                                else:
+                                    self.unwhitelist_ip_fr_server(ip_addr)
+                                    self.show_server_com_with_client(conn, selfname, f"Successfully unwhitelisted {ip_addr}.")
+                            except socket.error:
+                                self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
+                            except:
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !unwhitelistip <ip>")
                         elif msg.startswith("!broadcast"):
                             try:
                                 msg_to_all = msg.split()
@@ -733,8 +769,8 @@ Advanced Server by DrSquid"""
                                 self.show_server_com_with_client(conn, selfname, f"There was an error.")
                     if msg.startswith("!reregister"):
                         try:
-                            old_pass = msg.split()[1]
-                            newpass = msg.split()[2]
+                            old_pass = msg.split()[1].strip("'").strip('"')
+                            newpass = msg.split()[2].strip("'").strip('"')
                             authentication = self.attempt_login(selfname, old_pass)
                             if authentication == True:
                                 self.show_server_com_with_client(conn, selfname, f"Changing your password to: {newpass}")
@@ -745,9 +781,15 @@ Advanced Server by DrSquid"""
                             self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                             self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!help"):
-                        self.show_server_com_with_client(conn, selfname, self.regular_client_help_message().strip())
+                        conn.send(self.regular_client_help_message().strip().encode())
+                        othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
+                        print(othermsg)
+                        self.log("\n"+othermsg)
                         if serverowner:
-                            self.show_server_com_with_client(conn, selfname, self.admin_help_message().strip())
+                            conn.send(self.admin_help_message().strip().encode())
+                            othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Admin Help Message."
+                            print(othermsg)
+                            self.log("\n"+othermsg)
                     elif msg.startswith("!dm"):
                         try:
                             username = msg.split()[1]
@@ -776,13 +818,13 @@ Advanced Server by DrSquid"""
                             room_password = msg.split()[2]
                         except:
                             room_password = "None"
-                        conflicting_rooms = self.check_for_samerooms(roomname)
+                        conflicting_rooms = self.check_for_sameitems(roomname, f"select * from open_rooms where roomname = '{roomname}'")
                         if not conflicting_rooms:
                             self.show_server_com_with_client(conn, selfname, f"Creating a room.\n[+] Room Name: {roomname}\n[+] Room Password: {room_password.strip()}")
                             room_password = hashlib.sha256(room_password.encode()).hexdigest()
                             self.create_room(roomname, room_password)
                             self.rooms.append([roomname])
-                            self.update_file(self.roomdata, f"RoomName: {roomname}\nOwner: {selfname}\nAdmins: {selfname}\nMembers: {selfname}\nBanlist: \nEndData\n")
+                            self.update_file(self.roomdata, f"\nRoomName: {roomname}\nOwner: {selfname}\nAdmins: {selfname}\nMembers: {selfname}\nBanlist: \nEndData\n")
                             self.show_server_com_with_client(conn, selfname, "You are free to join your room.")
                         else:
                             self.show_server_com_with_client(conn, selfname, "There is already a room with the name you provided. Try to use another name.")
@@ -955,10 +997,11 @@ Advanced Server by DrSquid"""
                     print(f"[({datetime.datetime.today()})]"+main_msg.strip())
             except Exception as e:
                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Client Error with {ip}(known as {selfname}): {e}")
-                try:
-                    self.remove_user_from_db(selfname)
-                except Exception as e:
-                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error whilst removing name from database: {e}")
+                if logged_in:
+                    try:
+                        self.remove_user_from_db(selfname)
+                    except Exception as e:
+                        self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error whilst removing name from database: {e}")
                 conn.close()
                 break
 class OptionParse:
