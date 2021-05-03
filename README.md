@@ -20,6 +20,8 @@ This is a school project for one of my Design classes. This server is a sophisti
 
 * Option Parsing          - Parse arguements when running this script in terminal, where it could help with changing different settings and help with the usablity of the server.
 
+* DDoS Protection         - A work in progress(The server can identify when the attack is happening, and will close these connections).
+
 # Secure Password Storage
 Due to some recent learning of SQL, I have changed my old way of password storage of a plain text file, to a more advanced alternative - SQL Databases. This way I can store passwords in a more secure way, where the server would have to run a certain SQL Command to extract a username and password from the Database(this command is similar to "select * from users). This password storage system is more quick than the old text file system, as I can run a certain SQL Command to extract, remove or insert something in the Database, whereas I would have to read a whole text file to extract information from it(this would be worse if the server had a lot of clients, as the reading of the file would take very long). This system is more secure than any system I have made so far. 
 
