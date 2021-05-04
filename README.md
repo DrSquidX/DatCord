@@ -22,6 +22,8 @@ This is a school project for one of my Design classes. This server is a sophisti
 
 * DDoS Protection         - A work in progress(The server can identify when the attack is happening, and will close these connections).
 
+* Anti Spam               - Spammers will get kicked!
+
 # Secure Password Storage
 Due to some recent learning of SQL, I have changed my old way of password storage of a plain text file, to a more advanced alternative - SQL Databases. This way I can store passwords in a more secure way, where the server would have to run a certain SQL Command to extract a username and password from the Database(this command is similar to "select * from users). This password storage system is more quick than the old text file system, as I can run a certain SQL Command to extract, remove or insert something in the Database, whereas I would have to read a whole text file to extract information from it(this would be worse if the server had a lot of clients, as the reading of the file would take very long). This system is more secure than any system I have made so far. 
 
@@ -43,4 +45,8 @@ In the server, there is one owner account, made for the server owner to be able 
 # Logging
 Everything in the server is logged. This is good for being able to report and debug errors on the server, so that these could be easily fixed. Every error, message, and connection is logged, so that the server can know who is connecting, what they might be saying, as well as any errors that pop up when the server is running.
 
-(More writing coming soon)
+# Developer Friendly
+Making scripts to connect to this server is very easy. The possibilites are endless, since there is barely any code(15 lines at most) needed to connect to the main server. This means other people can add more code, such as for GUI's, or making it overall more user friendly. The possiblities are endless, and people can add anything to the client side to make it better.
+
+# Option Parsing
+(Writing coming soon)
