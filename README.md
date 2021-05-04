@@ -47,6 +47,7 @@ Every user has the ability to create their own chat room. These chat rooms are p
 If you want to chat one-to-one with another person, it is very simple. There is a direct messaging system in the server, where you are allowed to chat privately with another user. These are private, so nobody else(maybe the server), will be able to see what is being sent between each person. The only reason that the server is able to see these messages is in case there is any bullying going around, where evidence can be put around to whoever was doing the bad things. Let me know if I should remove that, and I will make it so that the message will not be displayed in the server(I figure that will be rather easy).
 
 2 Test Accounts in a DM Together:
+
 ![indm](/dm.png)
 
 # Multi-Threaded
