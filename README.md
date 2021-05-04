@@ -40,6 +40,7 @@ User info from executing an SQL Command(clients won't be able to do this):
 Every user has the ability to create their own chat room. These chat rooms are private rooms for them and their friends to be able to chat on. These chatrooms are able to have passwords, however these are optional. If you want to have a chat room that is private, it is suggested that you make the chat room created have a password. Once you are have logged into a chatroom once, you won't need to be using a password when you want to join it. If you want a public chat room, you do not need to provide the password. Every chat room also has moderation. This means that you can ban users from the chat room(if you are room admin). The creator of the chat rooms are automatically an admin, and they also have the ability to promote other users to admin, where they can do similar things.
 
 2 Test Accounts in a chat room together:
+
 ![inroom](/inchatroom.png)
 
 # Direct Messaging
