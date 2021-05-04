@@ -78,7 +78,7 @@ Making scripts to connect to this server is very easy. The possibilites are endl
 This server uses option-parsing. This would mean that it would first need to be ran in terminal, where the command that runs the script will check the arguements of the command. For this script, the arguements are parsed and identified into variables needed to run the server the best way possible. You need to specify the ip to host the server on, as well as the port. Many of the arguements are optional, and are merely for if you have other items for them. There is also a help message for the option-parsing, where if you don't provide an IP address to host the server on, that message will show up and give you more info on how to do it.
 
 Help message for Option Parsing:
-![optionparse](/optparse1.png)
+![optionparse](/optparse.png)
 
 Example of Option Parsing:
 ![optionparse2](/optparse2.png)
