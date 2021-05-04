@@ -79,6 +79,7 @@ class Server:
         userdb = sqlite3.connect(self.userdbfile)
         userdbcursor = userdb.cursor()
         self.listening = True
+        self.banningallincomingconn = False
         self.conn_list = []
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.log(self.logo())
@@ -176,8 +177,6 @@ Advanced Server by DrSquid"""
                     else:
                         if ip[0] in self.get_iplist("ipbanlist"):
                             closed = True
-                            msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
-                            self.log("\n" + msg2)
                             conn.close()
                         else:
                             self.connpersec += 1
@@ -192,6 +191,10 @@ Advanced Server by DrSquid"""
                                 print(f"[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
                                 self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
                                 conn.close()
+                    if self.banningallincomingconn:
+                        if ip[0] not in self.get_iplist("ipwhitelist"):
+                            if ip[0] not in self.get_iplist("ipbanlist"):
+                                self.ban_ip_fr_server(ip[0])
                     if self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
                         msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
                         print(msg)
@@ -207,6 +210,11 @@ Advanced Server by DrSquid"""
                             print(msg2)
                             self.log("\n" + msg2)
                             conn.close()
+                    else:
+                        try:
+                            conn.close()
+                        except:
+                            pass
             else:
                 pass
     def exec_sqlcmd(self, file, cmd):
@@ -553,14 +561,29 @@ Advanced Server by DrSquid"""
         othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Login Help Message."
         print(othermsg)
         self.log("\n" + othermsg)
+        timer = time.time()
+        msgspersec = 0
+        max_spam_warns = 3
+        spam_warnings = 0
         while True:
             try:
                 msg = conn.recv(1024)
+                msgspersec += 1
                 try:
                     msg = str(msg.decode())
                 except:
                     msg = str(msg)
                 main_msg = f"\n[({selfname})]: {msg}"
+                current_timer = time.time()
+                if round(current_timer-timer) >= 1:
+                    if msgspersec >= 5:
+                        spam_warnings += 1
+                        self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warnings left until you are kicked.")
+                    if spam_warnings >= max_spam_warns:
+                        self.show_server_com_with_client(conn, selfname, f"You have been kicked for spamming.")
+                        conn.close()
+                    timer = time.time()
+                    msgspersec = 0
                 if not logged_in:
                     if msg.startswith("!login"):
                         try:
@@ -632,6 +655,16 @@ Advanced Server by DrSquid"""
                         except Exception as e:
                             self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                             self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
+                    elif msg.startswith("!allipban"):
+                        if self.banningallincomingconn:
+                            self.banningallincomingconn = False
+                            logmsg = f"[({datetime.datetime.today()})][(INFO)]: Stopped banning all incoming IP's."
+                        else:
+                            self.banningallincomingconn = True
+                            logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began banning all incoming IP's."
+                        self.show_server_com_with_client(conn, selfname, f"Set Banning all incoming connections to: {self.banningallincomingconn}.")
+                        print(logmsg)
+                        self.log("\n" + logmsg)
                 if logged_in:
                     if serverowner:
                         if msg.startswith("!nick"):
@@ -961,8 +994,7 @@ Advanced Server by DrSquid"""
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                             except:
-                                self.show_errors(
-                                    f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!demoteuser"):
                         if inroom:
