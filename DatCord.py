@@ -165,58 +165,61 @@ Advanced Server by DrSquid"""
         self.log(f"\n[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         self.being_attacked = False
         while True:
-            if self.listening:
-                self.server.listen()
-                conn, ip = self.server.accept()
-                if not self.listening:
-                    conn.close()
-                else:
-                    closed = False
-                    if not self.being_attacked:
-                        self.connpersec += 1
+            try:
+                if self.listening:
+                    self.server.listen()
+                    conn, ip = self.server.accept()
+                    if not self.listening:
+                        conn.close()
                     else:
-                        if ip[0] in self.get_iplist("ipbanlist"):
-                            closed = True
-                            conn.close()
-                        else:
+                        closed = False
+                        if not self.being_attacked:
                             self.connpersec += 1
-                    if self.connpersec <= self.maxconnpersec:
-                        self.being_attacked = False
-                    elif self.connpersec >= self.maxconnpersec:
-                        self.being_attacked = True
-                        if ip[0] in self.get_iplist("ipwhitelist"):
-                            pass
                         else:
-                            if not closed:
-                                print(f"[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
-                                self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                            if ip[0] in self.get_iplist("ipbanlist"):
+                                closed = True
                                 conn.close()
-                    if self.banningallincomingconn:
-                        if ip[0] not in self.get_iplist("ipwhitelist"):
-                            if ip[0] not in self.get_iplist("ipbanlist"):
-                                self.ban_ip_fr_server(ip[0])
-                    if self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
-                        msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
-                        print(msg)
-                        self.log("\n" + msg)
-                        isbanned = False
-                        if ip[0] in self.get_iplist("ipbanlist"):
-                            isbanned = True
-                        if not isbanned:
-                            handler = threading.Thread(target=self.handler, args=(conn, ip))
-                            handler.start()
+                            else:
+                                self.connpersec += 1
+                        if self.connpersec <= self.maxconnpersec:
+                            self.being_attacked = False
+                        elif self.connpersec >= self.maxconnpersec:
+                            self.being_attacked = True
+                            if ip[0] in self.get_iplist("ipwhitelist"):
+                                pass
+                            else:
+                                if not closed:
+                                    print(f"[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                                    self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                                    conn.close()
+                        if self.banningallincomingconn:
+                            if ip[0] not in self.get_iplist("ipwhitelist"):
+                                if ip[0] not in self.get_iplist("ipbanlist"):
+                                    self.ban_ip_fr_server(ip[0])
+                        if self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
+                            msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
+                            print(msg)
+                            self.log("\n" + msg)
+                            isbanned = False
+                            if ip[0] in self.get_iplist("ipbanlist"):
+                                isbanned = True
+                            if not isbanned:
+                                handler = threading.Thread(target=self.handler, args=(conn, ip))
+                                handler.start()
+                            else:
+                                msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
+                                print(msg2)
+                                self.log("\n" + msg2)
+                                conn.close()
                         else:
-                            msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
-                            print(msg2)
-                            self.log("\n" + msg2)
-                            conn.close()
-                    else:
-                        try:
-                            conn.close()
-                        except:
-                            pass
-            else:
-                pass
+                            try:
+                                conn.close()
+                            except:
+                                pass
+                else:
+                    pass
+            except Exception as e:
+                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error when listening for connections: {e}")
     def exec_sqlcmd(self, file, cmd):
         """This function connects to an SQL Database. It connects to the filename
         that is provided, and executes a command that is provided within the
