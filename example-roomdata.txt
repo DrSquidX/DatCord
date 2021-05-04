@@ -1,0 +1,14 @@
+
+RoomName: h
+Owner: hello
+Banlist: 
+Members: hello
+Admins: hello
+EndData
+
+RoomName: world
+Owner: hello
+Admins: hello
+Banlist: 
+Members: hello DatCord
+EndData
