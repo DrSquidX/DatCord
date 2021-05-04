@@ -1,5 +1,5 @@
 # DatCord
-This is a school project for one of my Design classes. This server is a sophisticated secure server using an SQL database to store passwords, along with sha256 password hashing which made passwords more secure. There is logging system that allows errors and communication between client and server to be displayed, and allows for easier debugging and more. There is also a room system, where people can communicate with each other, as well as a direct messaging system that allows for private messaging.
+This is a school project for one of my Design classes. This server is a sophisticated secure server using an SQL database to store passwords, along with sha256 password hashing which made passwords more secure. There is a logging system that allows errors and communication between client and server to be displayed, and allows for easier debugging and more. There is also a room system, where people can communicate with each other, as well as a direct messaging system that allows for private messaging.
 
 # Every Feature Included(In a more straightforward way):
 * Secure Password Storage - Every password is stored inside of an SQL Database
@@ -10,7 +10,7 @@ This is a school project for one of my Design classes. This server is a sophisti
 
 * Direct Messaging        - Privately chat with friends on the server.
 
-* Multi-Threaded          - The server can handle multiple clients at oncel, since it is multi-threaded(meaning that it could to many tasks at once, AKA Multi-Tasking).
+* Multi-Threaded          - The server can handle multiple clients at once, since it is multi-threaded(meaning that it could do many tasks at once, AKA Multi-Tasking).
 
 * Owner Account           - An account made for the server owner. It has the highest authority out of any of the clients.
 
@@ -18,7 +18,7 @@ This is a school project for one of my Design classes. This server is a sophisti
 
 * Developer Friendly      - It is very easy to make a client script to connect to this server!
 
-* Option Parsing          - Parse arguements when running this script in terminal, where it could help with changing different settings and help with the usablity of the server.
+* Option Parsing          - Parse arguments when running this script in terminal, where it could help with changing different settings and help with the usability of the server.
 
 * DDoS Protection         - A work in progress(The server can identify when the attack is happening, and will close these connections).
 
@@ -31,13 +31,13 @@ User info SQL Database file:
 ![sqlfile](/sqlfile.png)
 
 # Password Hashing
-Every password in this server is hashed. This helps with security, as the hashed password is a hash of an original password, however it looks nothing like it. This would mean if some sort of SQL Injection were to happen, the attacker would get a dictionary of what would look like gibberish. It is unusable, as if the hashed password were to be put into the server, this hash would again be hashed, which would not actually match the password hash in the database. The hashing algorithim is sha256, which is considered a more secure hashing algorithim compared to md5, which is what I used to use.
+Every password in this server is hashed. This helps with security, as the hashed password is a hash of an original password, however it looks nothing like it. This would mean if some sort of SQL Injection were to happen, the attacker would get a dictionary of what would look like gibberish. It is unusable, as if the hashed password were to be put into the server, this hash would again be hashed, which would not actually match the password hash in the database. The hashing algorithm is sha256, which is considered a more secure hashing algorithm compared to md5, which is what I used to use.
 
 User info from executing an SQL Command(clients won't be able to do this):
 ![hashes](/sql.png)
 
 # Chat Rooms
-Every user has the ability to create their own chat room. These chat rooms are private rooms for them and their friends to be able to chat on. These chatrooms are able to have passwords, however these are optional. If you want to have a chat room that is private, it is suggested that you make the chat room created have a password. Once you are have logged into a chatroom once, you won't need to be using a password when you want to join it. If you want a public chat room, you do not need to provide the password. Every chat room also has moderation. This means that you can ban users from the chat room(if you are room admin). The creator of the chat rooms are automatically an admin, and they also have the ability to promote other users to admin, where they can do similar things.
+Every user has the ability to create their own chat room. These chat rooms are private rooms for them and their friends to be able to chat on. These chatrooms are able to have passwords, however these are optional. If you want to have a chat room that is private, it is suggested that you make the chat room created have a password. Once you have logged into a chatroom once, you won't need to be using a password when you want to join it. If you want a public chat room, you do not need to provide the password. Every chat room also has moderation. This means that you can ban users from the chat room(if you are room admin). The creator of the chat rooms are automatically an admin, and they also have the ability to promote other users to admin, where they can do similar things.
 
 2 Test Accounts in a chat room together:
 
@@ -51,12 +51,12 @@ If you want to chat one-to-one with another person, it is very simple. There is 
 ![indm](/dm.png)
 
 # Multi-Threaded
-The server is multi-threaded, meaning that It can handle multiple clients at once. This is better than having single-threaded servers, where they do not have the abilities to listen for connections, send and recieve messages at the same time, where multi-threaded servers(like this one) are able to be used.
+The server is multi-threaded, meaning that It can handle multiple clients at once. This is better than having single-threaded servers, where they do not have the abilities to listen for connections, send and receive messages at the same time, where multi-threaded servers(like this one) are able to be used.
 
 (photo coming soon)
 
 # Owner Account
-In the server, there is one owner account, made for the server owner to be able to use and chat with other people. This account is unlike any normal account, as it has the abilities to broadcast messages to everyone on the server, ban and kick people, as well as being able to change their name to someone elses. This owner account has the highest authority on the server, and it has a lot of power.
+In the server, there is one owner account, made for the server owner to be able to use and chat with other people. This account is unlike any normal account, as it has the abilities to broadcast messages to everyone on the server, ban and kick people, as well as being able to change their name to someone else's. This owner account has the highest authority on the server, and it has a lot of power.
 
 Admin Account specified in the server after starting:
 ![adminacc](/admin1.png)
@@ -74,12 +74,12 @@ Logging in the Server:
 ![log](/log.png)
 
 # Developer Friendly
-Making scripts to connect to this server is very easy. The possibilites are endless, since there is barely any code(15 lines at most) needed to connect to the main server. This means other people can add more code, such as for GUI's, or making it overall more user friendly. The possiblities are endless, and people can add anything to the client side to make it better.
+Making scripts to connect to this server is very easy. The possibilities are endless, since there is barely any code(15 lines at most) needed to connect to the main server. This means other people can add more code, such as for GUI's, or making it overall more user friendly. The possibilities are endless, and people can add anything to the client side to make it better.
 
 (photo coming soon)
 
 # Option Parsing
-This server uses option-parsing. This would mean that it would first need to be ran in terminal, where the command that runs the script will check the arguements of the command. For this script, the arguements are parsed and identified into variables needed to run the server the best way possible. You need to specify the ip to host the server on, as well as the port. Many of the arguements are optional, and are merely for if you have other items for them. There is also a help message for the option-parsing, where if you don't provide an IP address to host the server on, that message will show up and give you more info on how to do it.
+This server uses option-parsing. This would mean that it would first need to be ran in terminal, where the command that runs the script will check the arguments of the command. For this script, the arguments are parsed and identified into variables needed to run the server the best way possible. You need to specify the ip to host the server on, as well as the port. Many of the arguments are optional, and are merely for if you have other items for them. There is also a help message for the option-parsing, where if you don't provide an IP address to host the server on, that message will show up and give you more info on how to do it.
 
 Help message for Option Parsing:
 ![optionparse](/optparse.png)
@@ -104,6 +104,6 @@ Spammer getting kicked by server:
 ![spamkick](/anti-spam.png)
 
 # Overall
-DatCord is a secure chat server that is safe to use, DoS-Free, as well as a lot of capabilites for clients. They can create their own chat rooms for their friends, chat privately one-to-one with them, and more. The Owner account on the server can also manage and moderate the server, to stop attackers and hackers(if they have the knowledge), if the server is to be compromised. This server shows the improvement of my skills in networking, and also a bit in cybersecurity.
+DatCord is a secure chat server that is safe to use, DoS-Free, as well as a lot of capibilites for clients. They can create their own chat rooms for their friends, chat privately one-to-one with them, and more. The Owner account on the server can also manage and moderate the server, to stop attackers and hackers(if they have the knowledge), if the server is to be compromised. This server shows the improvement of my skills in networking, and also a bit in cybersecurity.
 
 # Happy Chatting, DrSquidX
