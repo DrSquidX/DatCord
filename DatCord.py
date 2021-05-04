@@ -223,7 +223,7 @@ Advanced Server by DrSquid"""
     def exec_sqlcmd(self, file, cmd):
         """This function connects to an SQL Database. It connects to the filename
         that is provided, and executes a command that is provided within the
-        arguements. This function was made for optimization, and to help to
+        arguments. This function was made for optimization, and to help to
         avoid making too-repetitive code."""
         db = sqlite3.connect(file)
         cursor = db.cursor()
@@ -576,7 +576,6 @@ Advanced Server by DrSquid"""
                     msg = str(msg.decode())
                 except:
                     msg = str(msg)
-                main_msg = f"\n[({selfname})]: {msg}"
                 current_timer = time.time()
                 if round(current_timer-timer) >= 1:
                     if msgspersec >= 5:
@@ -636,7 +635,7 @@ Advanced Server by DrSquid"""
                             self.show_server_com_with_client(conn, selfname, "Your account is not registered in the database. Please register your account.")
                         except Exception as e:
                             self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                            self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
+                            self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!register"):
                         try:
                             username = msg.split()[1].strip("'").strip('"')
@@ -657,7 +656,7 @@ Advanced Server by DrSquid"""
                             self.show_server_com_with_client(conn, selfname, "The account name is already registered in the database. Please use another name for your account.")
                         except Exception as e:
                             self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                            self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
+                            self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!allipban"):
                         if self.banningallincomingconn:
                             self.banningallincomingconn = False
@@ -675,7 +674,7 @@ Advanced Server by DrSquid"""
                                 selfname = msg.split()[1]
                                 self.show_server_com_with_client(conn, selfname, f"Changed your name to: {selfname}")
                             except:
-                                self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !nick <username>")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !nick <username>")
                         elif msg.startswith("!unnick"):
                             selfname = self.ownername
                             self.show_server_com_with_client(conn, selfname, f"Changed your name back to: {selfname}")
@@ -701,7 +700,7 @@ Advanced Server by DrSquid"""
                             except socket.error:
                                 self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
                             except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !ipban <ip>")
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ipban <ip>")
                         elif msg.startswith("!ipunban"):
                             try:
                                 ip_addr = msg.split()[1]
@@ -714,7 +713,7 @@ Advanced Server by DrSquid"""
                             except socket.error:
                                 self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
                             except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !ipunban <ip>")
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ipunban <ip>")
                         elif msg.startswith("!whitelistip"):
                             try:
                                 ip_addr = msg.split()[1]
@@ -727,7 +726,7 @@ Advanced Server by DrSquid"""
                             except socket.error:
                                 self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
                             except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !whitelistip <ip>")
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !whitelistip <ip>")
                         elif msg.startswith("!unwhitelistip"):
                             try:
                                 ip_addr = msg.split()[1]
@@ -740,7 +739,7 @@ Advanced Server by DrSquid"""
                             except socket.error:
                                 self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
                             except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !unwhitelistip <ip>")
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !unwhitelistip <ip>")
                         elif msg.startswith("!broadcast"):
                             try:
                                 msg_to_all = msg.split()
@@ -755,7 +754,7 @@ Advanced Server by DrSquid"""
                                 print(logmsg)
                                 self.log("\n"+logmsg)
                             except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !broadcast <msg>")
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !broadcast <msg>")
                         elif msg.startswith("!ban"):
                             try:
                                 banned_user = msg.split()[1]
@@ -778,7 +777,7 @@ Advanced Server by DrSquid"""
                                     db.close()
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !ban <username>")
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ban <username>")
                         elif msg.startswith("!kick"):
                             try:
                                 kick_user = msg.split()[1]
@@ -800,7 +799,7 @@ Advanced Server by DrSquid"""
                                     db.close()
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !kick <username>")
+                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !kick <username>")
                         elif msg.startswith("!unban"):
                             try:
                                 unbanned_user = msg.split()[1]
@@ -821,7 +820,7 @@ Advanced Server by DrSquid"""
                             self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
                         except Exception as e:
                             self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                            self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
+                            self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!help"):
                         conn.send(self.regular_client_help_message().strip().encode())
                         othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
@@ -842,7 +841,7 @@ Advanced Server by DrSquid"""
                         except self.ServerError.NameNotInDatabaseError:
                             self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
                         except:
-                            self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
+                            self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!closedm"):
                         if not indm:
                             self.show_server_com_with_client(conn, selfname, "You are not currently in a DM.")
@@ -943,7 +942,7 @@ Advanced Server by DrSquid"""
                             self.show_server_com_with_client(conn, selfname, "Password provided for the room is incorrect.")
                         except Exception as e:
                             self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                            self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
+                            self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!leaveroom"):
                         self.show_server_com_with_client(conn, selfname, "Leaving your current room.")
                         for room in self.rooms:
@@ -968,7 +967,7 @@ Advanced Server by DrSquid"""
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 except Exception as e:
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                                    self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !roomban <username>")
+                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomban <username>")
                             else:
                                 self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -983,7 +982,7 @@ Advanced Server by DrSquid"""
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 except Exception as e:
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                                    self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !roomunban <username>")
+                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomunban <username>")
                             else:
                                 self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -998,7 +997,7 @@ Advanced Server by DrSquid"""
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                             except:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                                self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!demoteuser"):
                         if inroom:
                             try:
@@ -1013,7 +1012,7 @@ Advanced Server by DrSquid"""
                                 self.show_server_com_with_client(conn, selfname, "Invalid Permissions to ban the user.")
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
-                                self.show_server_com_with_client(conn, selfname, "Invalid arguements! Proper Usage: !login <username> <password>")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.strip() == "":
                         pass
                     else:
@@ -1034,6 +1033,7 @@ Advanced Server by DrSquid"""
                 if msg.strip() == "":
                     pass
                 else:
+                    main_msg = f"\n[({selfname})]: {msg}"
                     self.log(f"\n[({datetime.datetime.today()})]"+main_msg.strip())
                     print(f"[({datetime.datetime.today()})]"+main_msg.strip())
             except Exception as e:
@@ -1046,9 +1046,9 @@ Advanced Server by DrSquid"""
                 conn.close()
                 break
 class OptionParse:
-    """Option-Parsing Class for parsing arguements."""
+    """Option-Parsing Class for parsing arguments."""
     def __init__(self):
-        """Starts to parse the arguements."""
+        """Starts to parse the arguments."""
         self.parse_args()
     def usage(self):
         """Displays the help message for option-parsing(in case you need it)."""
@@ -1056,12 +1056,12 @@ class OptionParse:
         print("""
 [+] Option-Parsing Help:
 
-[+] Required Arguements:
+[+] Required Arguments:
 [+] --ip, --ipaddr     - Specify the IP to host the server on.
 [+] --p,  --port       - Specify the Port to host the server on.
 [+] These are needed to host the server.
 
-[+] Optional Arguements:
+[+] Optional Arguments:
 [+] --i,  --info       - Shows this message.
 [+] --db, --database   - Specify the Database file to store passwords on(must be a .db).
 [+] --au, --activeuser - Specify the database file with all the current active users.
@@ -1070,13 +1070,13 @@ class OptionParse:
 [+] --ou, --owneruser  - Specify the owner username.
 [+] --op, --ownerpass  - Specify the owner password.
 [+] --mc, --maxconn    - Specify the max amount of connections per second.
-[+] Note: These optional arguements have defaults, so you are able to leave them.
+[+] Note: These optional arguments have defaults, so you are able to leave them.
 
 [+] Usage:
 [+] python3 Datcord.py --ip <ip> --p <port> --db <dbfile> --au <aufile> --rd <roomdata> --sl <servlog> --ou <owneruser> --op <ownerpass> --mc <maxconn>
 [+] python3 Datcord.py --i""")
     def parse_args(self):
-        """This function parses the arguements."""
+        """This function parses the arguments."""
         args = OptionParser()
         args.add_option("--ip", "--ipaddr", dest="ip")
         args.add_option("--p",  "--port", dest="port")
