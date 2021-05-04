@@ -130,12 +130,12 @@ class Server:
     def logo(self):
         """Logo of this script."""
         logo = """
- _____        _    _____              _        ____   ___  
-|  __ \      | |  / ____|            | |      |___ \ / _ \ 
-| |  | | __ _| |_| |     ___  _ __ __| | __   ____) | | | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / /__ <| | | |
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V /___) | |_| |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/|____(_)___/                                                                                                          
+ _____        _    _____              _         _  _    ___  
+|  __ \      | |  / ____|            | |       | || |  / _ \ 
+| |  | | __ _| |_| |     ___  _ __ __| | __   _| || |_| | | |
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / /__   _| | | |
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V /   | |_| |_| |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/    |_(_)\___/                                                                                             
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -168,8 +168,6 @@ Advanced Server by DrSquid"""
                 self.server.listen()
                 conn, ip = self.server.accept()
                 if not self.listening:
-                    msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
-                    self.log("\n"+msg2)
                     conn.close()
                 else:
                     closed = False
@@ -178,12 +176,14 @@ Advanced Server by DrSquid"""
                     else:
                         if ip[0] in self.get_iplist("ipbanlist"):
                             closed = True
+                            msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
+                            self.log("\n" + msg2)
                             conn.close()
                         else:
                             self.connpersec += 1
                     if self.connpersec <= self.maxconnpersec:
                         self.being_attacked = False
-                    if self.connpersec >= self.maxconnpersec:
+                    elif self.connpersec >= self.maxconnpersec:
                         self.being_attacked = True
                         if ip[0] in self.get_iplist("ipwhitelist"):
                             pass
@@ -192,7 +192,7 @@ Advanced Server by DrSquid"""
                                 print(f"[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
                                 self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
                                 conn.close()
-                    elif self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
+                    if self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
                         msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
                         print(msg)
                         self.log("\n" + msg)
@@ -356,13 +356,16 @@ Advanced Server by DrSquid"""
     def update_file(self, file, text):
         """This function adds text to a file. It opens a file, reads its contents
         and then re-writes those contents and adds the text that needs to be added."""
-        files = open(file,"r")
-        content = files.read()
-        files.close()
-        files = open(file,"w")
-        files.write(content)
-        files.write(text)
-        files.close()
+        try:
+            files = open(file, "r")
+            content = files.read()
+            files.close()
+            files = open(file, "w")
+            files.write(content)
+            files.write(text)
+            files.close()
+        except Exception as e:
+            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with updating file({file}): {e}")
     def add_to_roomdata(self, selfname, roomname, stat):
         """This function adds names to room-data."""
         file = open(self.roomdata, "r")
@@ -487,7 +490,7 @@ Advanced Server by DrSquid"""
         """This sends a message to everyone in the connection list."""
         for conn in self.conn_list:
             try:
-                self.show_server_com_with_client(conn, selfname, msg)
+                conn.send(msg.encode())
             except:
                 pass
     def login_help_message(self):
@@ -706,12 +709,15 @@ Advanced Server by DrSquid"""
                             try:
                                 msg_to_all = msg.split()
                                 del msg_to_all[0]
-                                main_msg = ""
+                                _main_msg = ""
                                 for i in msg_to_all:
-                                    main_msg = main_msg + i + " "
-                                main_msg = main_msg.strip()
-                                main_msg = f"[(BROADCAST)]: {main_msg}"
-                                self.sendall(main_msg)
+                                    _main_msg = _main_msg + i + " "
+                                main_msg = _main_msg.strip()
+                                main_msg2 = f"[(BROADCAST)]: {_main_msg}"
+                                self.sendall(main_msg2)
+                                logmsg = f"[({datetime.datetime.today()})][(BROADCAST)]: {_main_msg}"
+                                print(logmsg)
+                                self.log("\n"+logmsg)
                             except:
                                 self.show_server_com_with_client(conn, selfname, f"Invalid arguements! Proper Usage: !broadcast <msg>")
                         elif msg.startswith("!ban"):
