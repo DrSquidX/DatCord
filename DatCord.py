@@ -565,6 +565,8 @@ Advanced Server by DrSquid"""
         print(othermsg)
         self.log("\n" + othermsg)
         timer = time.time()
+        login_attempts = 0
+        max_login_attempts = 5
         msgspersec = 0
         max_spam_warns = 3
         spam_warnings = 0
@@ -576,9 +578,10 @@ Advanced Server by DrSquid"""
                     msg = str(msg.decode())
                 except:
                     msg = str(msg)
+                this_main_msg = f"\n[({selfname})]: {msg}"
                 current_timer = time.time()
                 if round(current_timer-timer) >= 1:
-                    if msgspersec >= 5:
+                    if msgspersec >= 4:
                         spam_warnings += 1
                         self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warnings left until you are kicked.")
                     if spam_warnings >= max_spam_warns:
@@ -631,6 +634,11 @@ Advanced Server by DrSquid"""
                                         self.show_server_com_with_client(conn, selfname, "Your account has been banned from the server.")
                         except self.ServerError.AuthenticationError:
                             self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
+                            login_attempts += 1
+                            self.show_server_com_with_client(conn, selfname, f"Login attempt number: {login_attempts}. You have {max_login_attempts - login_attempts} login attempts left until you are kicked.")
+                            if login_attempts >= max_login_attempts:
+                                self.show_server_com_with_client(conn, selfname, "You have exceeded the amount of login attempts.")
+                                conn.close()
                         except self.ServerError.NameNotInDatabaseError:
                             self.show_server_com_with_client(conn, selfname, "Your account is not registered in the database. Please register your account.")
                         except Exception as e:
@@ -793,7 +801,7 @@ Advanced Server by DrSquid"""
                                             connectionnum = i[1]
                                             for i in self.conn_list:
                                                 if connectionnum.split()[0] in str(i) and connectionnum.split()[1] in str(i):
-                                                    self.show_server_com_with_client(i, kick_user, "You have been banned from the server!")
+                                                    self.show_server_com_with_client(i, kick_user, "You have been kicked from the server!")
                                                     i.close()
                                     cursor.close()
                                     db.close()
@@ -1021,21 +1029,20 @@ Advanced Server by DrSquid"""
                                 if selfroomname in room[0]:
                                     for person in room:
                                         try:
-                                            person.send(main_msg.encode())
+                                            person.send(this_main_msg.encode())
                                         except:
                                             pass
                         if indm:
                             try:
-                                dmconn.send("\n[(DM)]".encode() + main_msg.strip().encode())
+                                dmconn.send("\n[(DM)]".encode() + this_main_msg.strip().encode())
                             except:
                                 self.show_server_com_with_client(conn, selfname, f"There was an error with sending your DM Message! The person may have gone offline. Closing your DM.")
                                 indm = False
                 if msg.strip() == "":
                     pass
                 else:
-                    main_msg = f"\n[({selfname})]: {msg}"
-                    self.log(f"\n[({datetime.datetime.today()})]"+main_msg.strip())
-                    print(f"[({datetime.datetime.today()})]"+main_msg.strip())
+                    self.log(f"\n[({datetime.datetime.today()})]"+this_main_msg.strip())
+                    print(f"[({datetime.datetime.today()})]"+this_main_msg.strip())
             except Exception as e:
                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Client Error with {ip}(known as {selfname}): {e}")
                 if logged_in:
