@@ -637,7 +637,7 @@ Advanced Server by DrSquid"""
                             login_attempts += 1
                             self.show_server_com_with_client(conn, selfname, f"Login attempt number: {login_attempts}. You have {max_login_attempts - login_attempts} login attempts left until you are kicked.")
                             if login_attempts >= max_login_attempts:
-                                self.show_server_com_with_client(conn, selfname, "You have exceeded the amount of login attempts.")
+                                self.show_server_com_with_client(conn, selfname, "You have exceeded the amount of login attempts. You have been kicked from the server.")
                                 conn.close()
                         except self.ServerError.NameNotInDatabaseError:
                             self.show_server_com_with_client(conn, selfname, "Your account is not registered in the database. Please register your account.")
@@ -663,7 +663,7 @@ Advanced Server by DrSquid"""
                         except self.ServerError.NameAlreadyRegisteredError:
                             self.show_server_com_with_client(conn, selfname, "The account name is already registered in the database. Please use another name for your account.")
                         except Exception as e:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                             self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!allipban"):
                         if self.banningallincomingconn:
@@ -952,24 +952,28 @@ Advanced Server by DrSquid"""
                             self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                             self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!leaveroom"):
-                        self.show_server_com_with_client(conn, selfname, "Leaving your current room.")
-                        for room in self.rooms:
-                            if selfroomname in room:
-                                item = 0
-                                for i in room:
-                                    if str(conn) == str(i):
-                                        del room[item]
-                                    item += 1
-                                inroom = False
-                                room_admin = False
-                                selfroomname = ""
-                                break
+                        if inroom:
+                            self.show_server_com_with_client(conn, selfname, "Leaving your current room.")
+                            for room in self.rooms:
+                                if selfroomname in room:
+                                    item = 0
+                                    for i in room:
+                                        if str(conn) == str(i):
+                                            del room[item]
+                                        item += 1
+                                    inroom = False
+                                    room_admin = False
+                                    selfroomname = ""
+                                    break
+                        else:
+                            self.show_server_com_with_client(conn, selfname, "You are not currently in a room.")
                     elif msg.startswith("!roomban"):
                         if inroom:
                             if roomadmin:
                                 try:
                                     name = msg.split()[1]
-                                    self.add_to_roomdata(name, selfroomname, "Banlist: ")
+                                    self.add_to_roomdata(name, selfroomname, "Banlist:")
+                                    self.show_server_com_with_client(conn, selfname, f"{name} has been banned from the room.")
                                 except self.ServerError.PermissionError:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -984,7 +988,8 @@ Advanced Server by DrSquid"""
                             if roomadmin:
                                 try:
                                     name = msg.split()[1]
-                                    self.del_from_roomdata(name, selfroomname, "Banlist: ")
+                                    self.del_from_roomdata(name, selfroomname, "Banlist:")
+                                    self.show_server_com_with_client(conn, selfname, f"{name} has been unbanned from the room.")
                                 except self.ServerError.PermissionError:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
