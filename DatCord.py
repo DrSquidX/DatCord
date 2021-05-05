@@ -278,7 +278,7 @@ Advanced Server by DrSquid"""
         """Sets the connections per second variable to 0 every second.
         This function is used for the Anti-DDoS Function."""
         while True:
-            time.sleep(30)
+            time.sleep(15)
             if self.connpersec <= self.maxconnpersec:
                 self.being_attacked = False
                 self.waitingforautoban = False
@@ -595,10 +595,13 @@ Advanced Server by DrSquid"""
         msgspersec = 0
         max_spam_warns = 3
         spam_warnings = 0
-        conn.send(self.login_help_message().encode())
-        othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Login Help Message."
-        print(othermsg)
-        self.log("\n" + othermsg)
+        try:
+            conn.send(self.login_help_message().encode())
+            othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Login Help Message."
+            print(othermsg)
+            self.log("\n" + othermsg)
+        except:
+            conn.close()
         while True:
             try:
                 msg = conn.recv(1024)
