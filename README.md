@@ -53,7 +53,8 @@ If you want to chat one-to-one with another person, it is very simple. There is 
 # Multi-Threaded
 The server is multi-threaded, meaning that It can handle multiple clients at once. This is better than having single-threaded servers, where they do not have the abilities to listen for connections, send and receive messages at the same time, where multi-threaded servers(like this one) are able to be used.
 
-(photo coming soon)
+Server handling multiple clients at once:
+![multithreaded](/multi-threaded.png)
 
 # Owner Account
 In the server, there is one owner account, made for the server owner to be able to use and chat with other people. This account is unlike any normal account, as it has the abilities to broadcast messages to everyone on the server, ban and kick people, as well as being able to change their name to someone else's. This owner account has the highest authority on the server, and it has a lot of power.
