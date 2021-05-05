@@ -812,8 +812,8 @@ Advanced Server by DrSquid"""
                             try:
                                 unbanned_user = msg.split()[1]
                                 self.unban_user_fr_server(unbanned_user)
-                                self.show_server_com_with_client(f"Successfully unbanned {unbanned_user} from the banlist.")
-                            except:
+                                self.show_server_com_with_client(conn, selfname, f"Successfully unbanned {unbanned_user} from the banlist.")
+                            except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
                                 self.show_server_com_with_client(conn, selfname, f"There was an error.")
                     if msg.startswith("!reregister"):
