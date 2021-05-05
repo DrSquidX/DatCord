@@ -98,7 +98,7 @@ Admin IP banning the attacker of a DoS Attack:
 ![ipban](/ipban.png)
 
 # Anti Spam
-There is an Anti-Spam system on the server. It works somewhat similarly to the Anti-DDoS System, as it measures whether to do something if the amount of messages sent per second(in the Anti-DDoS System it's connections per second). If the messages per second reach the limit(set to 5), the client will be warned. They have 3 warnings, and if they reach the 3rd warning, they will be kicked. This system prevents spammers from flooding peoples direct messages or chat rooms with junk or gibberish.
+There is an Anti-Spam system on the server. It works somewhat similarly to the Anti-DDoS System, as it measures whether to do something if the amount of messages sent per second(in the Anti-DDoS System it's connections per second). If the messages per second reach the limit(set to 4), the client will be warned. They have 3 warnings, and if they reach the 3rd warning, they will be kicked. This system prevents spammers from flooding peoples direct messages or chat rooms with junk or gibberish.
 
 Spammer getting kicked by server:
 ![spamkick](/anti-spam.png)
