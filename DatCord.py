@@ -63,7 +63,9 @@ class Server:
             self.maxconnpersec = int(connpersec)
         except:
             self.maxconnpersec = 20
+        self.conncount = 0
         self.connpersec = 0
+        self.uptime = 0
         self.manualbanall = False
         print(self.logo())
         file = open(self.userdbfile,"w")
@@ -162,8 +164,8 @@ Advanced Server by DrSquid"""
         will also be warned about DDoS Attacks, and will close any incoming connections if the
         connections per second gets too high. This is where the whitelist system takes place, where
         connections from the IP's in the whitelist are accepted into the server."""
-        self.convarresetter = threading.Thread(target=self.reset_connvar)
-        self.convarresetter.start()
+        self.uptimeadder = threading.Thread(target=self.add_to_connvar)
+        self.uptimeadder.start()
         print(f"[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         self.log(f"\n[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         self.being_attacked = False
@@ -183,7 +185,8 @@ Advanced Server by DrSquid"""
                             closed = True
                             conn.close()
                         else:
-                            self.connpersec += 1
+                            self.conncount += 1
+                            self.connpersec = self.conncount / self.uptime
                         if not closed:
                             if self.connpersec <= self.maxconnpersec:
                                 self.being_attacked = False
@@ -274,11 +277,11 @@ Advanced Server by DrSquid"""
             raise self.ServerError.NameNotInDatabaseError
         cursor.close()
         db.close()
-    def reset_connvar(self):
-        """Sets the connections per second variable to 0 every second.
+    def add_to_connvar(self):
+        """Adds 1 to the up time variable after every second.
         This function is used for the Anti-DDoS Function."""
         while True:
-            time.sleep(15)
+            time.sleep(1)
             if self.connpersec <= self.maxconnpersec:
                 self.being_attacked = False
                 self.waitingforautoban = False
@@ -287,7 +290,11 @@ Advanced Server by DrSquid"""
                     logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
                     print(logmsg)
                     self.log(f"\n" + logmsg)
-            self.connpersec = 0
+            self.uptime += 1
+            try:
+                self.connpersec = self.conncount / self.uptime
+            except:
+                pass
     def get_iplist(self, ls):
         """Gets all of the IP Addresses in a list in the database(ex. whitelist, banlist)."""
         db = sqlite3.connect(self.dbfile)
