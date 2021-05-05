@@ -162,6 +162,8 @@ Advanced Server by DrSquid"""
         will also be warned about DDoS Attacks, and will close any incoming connections if the
         connections per second gets too high. This is where the whitelist system takes place, where
         connections from the IP's in the whitelist are accepted into the server."""
+        self.convarresetter = threading.Thread(target=self.reset_connvar)
+        self.convarresetter.start()
         print(f"[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         self.log(f"\n[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         self.being_attacked = False
@@ -177,63 +179,61 @@ Advanced Server by DrSquid"""
                         conn.close()
                     else:
                         closed = False
-                        if not self.being_attacked:
+                        if ip[0] in self.get_iplist("ipbanlist"):
+                            closed = True
+                            conn.close()
+                        else:
                             self.connpersec += 1
-                        else:
-                            if ip[0] in self.get_iplist("ipbanlist"):
-                                closed = True
-                                conn.close()
-                            else:
-                                self.connpersec += 1
-                        if self.connpersec <= self.maxconnpersec:
-                            self.being_attacked = False
-                            self.waitingforautoban = False
-                            if not self.manualbanall and self.banningallincomingconn:
-                                self.banningallincomingconn = False
-                                logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
-                                print(logmsg)
-                                self.log(f"\n"+logmsg)
-                        elif self.connpersec >= self.maxconnpersec:
-                            if not self.waitingforautoban:
-                                timetoauto_ban = time.time()
-                                self.waitingforautoban = True
-                            if round(time.time()-timetoauto_ban) >= 30 and not self.banningallincomingconn:
-                                self.banningallincomingconn = True
-                                logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
-                                print(logmsg)
-                                self.log(f"\n" + logmsg)
-                            self.being_attacked = True
-                            if ip[0] in self.get_iplist("ipwhitelist"):
-                                pass
-                            else:
-                                if not closed:
-                                    print(f"[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
-                                    self.log(f"\n[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                        if not closed:
+                            if self.connpersec <= self.maxconnpersec:
+                                self.being_attacked = False
+                                self.waitingforautoban = False
+                                if not self.manualbanall and self.banningallincomingconn:
+                                    self.banningallincomingconn = False
+                                    logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
+                                    print(logmsg)
+                                    self.log(f"\n" + logmsg)
+                            elif self.connpersec >= self.maxconnpersec:
+                                if not self.waitingforautoban:
+                                    timetoauto_ban = time.time()
+                                    self.waitingforautoban = True
+                                if round(time.time() - timetoauto_ban) >= 15 and not self.banningallincomingconn:
+                                    self.banningallincomingconn = True
+                                    logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
+                                    print(logmsg)
+                                    self.log(f"\n" + logmsg)
+                                self.being_attacked = True
+                                if ip[0] in self.get_iplist("ipwhitelist"):
+                                    pass
+                                else:
+                                    if not closed:
+                                        print(f"[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                                        self.log(f"\n[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                                        conn.close()
+                            if self.banningallincomingconn:
+                                if ip[0] not in self.get_iplist("ipwhitelist"):
+                                    if ip[0] not in self.get_iplist("ipbanlist"):
+                                        self.ban_ip_fr_server(ip[0])
+                            if self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
+                                msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
+                                print(msg)
+                                self.log("\n" + msg)
+                                isbanned = False
+                                if ip[0] in self.get_iplist("ipbanlist"):
+                                    isbanned = True
+                                if not isbanned:
+                                    handler = threading.Thread(target=self.handler, args=(conn, ip))
+                                    handler.start()
+                                else:
+                                    msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
+                                    print(msg2)
+                                    self.log("\n" + msg2)
                                     conn.close()
-                        if self.banningallincomingconn:
-                            if ip[0] not in self.get_iplist("ipwhitelist"):
-                                if ip[0] not in self.get_iplist("ipbanlist"):
-                                    self.ban_ip_fr_server(ip[0])
-                        if self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
-                            msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
-                            print(msg)
-                            self.log("\n" + msg)
-                            isbanned = False
-                            if ip[0] in self.get_iplist("ipbanlist"):
-                                isbanned = True
-                            if not isbanned:
-                                handler = threading.Thread(target=self.handler, args=(conn, ip))
-                                handler.start()
                             else:
-                                msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
-                                print(msg2)
-                                self.log("\n" + msg2)
-                                conn.close()
-                        else:
-                            try:
-                                conn.close()
-                            except:
-                                pass
+                                try:
+                                    conn.close()
+                                except:
+                                    pass
                 else:
                     pass
             except Exception as e:
@@ -278,7 +278,15 @@ Advanced Server by DrSquid"""
         """Sets the connections per second variable to 0 every second.
         This function is used for the Anti-DDoS Function."""
         while True:
-            time.sleep(1)
+            time.sleep(30)
+            if self.connpersec <= self.maxconnpersec:
+                self.being_attacked = False
+                self.waitingforautoban = False
+                if not self.manualbanall and self.banningallincomingconn:
+                    self.banningallincomingconn = False
+                    logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
+                    print(logmsg)
+                    self.log(f"\n" + logmsg)
             self.connpersec = 0
     def get_iplist(self, ls):
         """Gets all of the IP Addresses in a list in the database(ex. whitelist, banlist)."""
@@ -1175,9 +1183,9 @@ class OptionParse:
             try:
                 mc = int(arg.mc)
             except:
-                mc = 20
+                mc = 50
         else:
-            mc = 20
+            mc = 50
         server = Server(ip, port, db, au, rd, sl, ou, op, mc)
         server.listen()
 if __name__ == '__main__':
