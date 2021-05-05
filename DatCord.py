@@ -131,12 +131,12 @@ class Server:
     def logo(self):
         """Logo of this script."""
         logo = """
- _____        _    _____              _         _  _    ___  
-|  __ \      | |  / ____|            | |       | || |  / _ \ 
-| |  | | __ _| |_| |     ___  _ __ __| | __   _| || |_| | | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / /__   _| | | |
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V /   | |_| |_| |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/    |_(_)\___/                                                                                             
+ _____        _    _____              _         _____  ___  
+|  __ \      | |  / ____|            | |       | ____|/ _ \ 
+| |  | | __ _| |_| |     ___  _ __ __| | __   _| |__ | | | |
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / /___ \| | | |
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V / ___) | |_| |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/ |____(_)___/                                                                 
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -257,12 +257,13 @@ Advanced Server by DrSquid"""
         cursor.close()
         db.close()
     def reset_connvar(self):
-        """Sets the connections per second variable to 0 every second."""
+        """Sets the connections per second variable to 0 every second.
+        This function is used for the Anti-DDoS Function."""
         while True:
             time.sleep(1)
             self.connpersec = 0
     def get_iplist(self, ls):
-        """Gets all of the IP Addresses in a list."""
+        """Gets all of the IP Addresses in a list in the database(ex. whitelist, banlist)."""
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
         cursor.execute(f"select * from {ls}")
@@ -378,7 +379,8 @@ Advanced Server by DrSquid"""
         except Exception as e:
             self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with updating file({file}): {e}")
     def add_to_roomdata(self, selfname, roomname, stat):
-        """This function adds names to room-data."""
+        """This function adds names to room-data. It adds the name to the
+        provided room stat(admin, member, etc)."""
         file = open(self.roomdata, "r")
         contents = file.readlines()
         file.close()
@@ -420,7 +422,7 @@ Advanced Server by DrSquid"""
                     break
                 item += 1
     def del_from_roomdata(self, user, roomname, stat):
-        """This function removes names from room-data."""
+        """This function removes names from room-data. Removes from a provided stat."""
         file = open(self.roomdata, "r")
         contents = file.readlines()
         file.close()
@@ -533,9 +535,10 @@ Advanced Server by DrSquid"""
         msg = """
 [(SERVER)]:
 [+] Admin Commands For This Server:
-[+] !nick [username]                       - Changes your name.
 [+] !unnick                                - Reverts yourname back to the owner account.
+[+] !allipban                              - Toggles whether to ban all incoming IP addresses or not. 
 [+] !togglelisten                          - Toggles whether to listen for connections or not.
+[+] !nick [username]                       - Changes your name.
 [+] !ipban [ip_addr]                       - Bans the IP Address specified.
 [+] !ipunban [ip_addr]                     - Unbans the IP Address specified.
 [+] !whitelistip [ip_addr]                 - Whitelists an IP Address(connections from it will be accepted even in DDoS Attack).
@@ -560,16 +563,16 @@ Advanced Server by DrSquid"""
         dmusername = None
         serverowner = False
         selfroomname = ""
-        conn.send(self.login_help_message().encode())
-        othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Login Help Message."
-        print(othermsg)
-        self.log("\n" + othermsg)
         timer = time.time()
         login_attempts = 0
         max_login_attempts = 5
         msgspersec = 0
         max_spam_warns = 3
         spam_warnings = 0
+        conn.send(self.login_help_message().encode())
+        othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Login Help Message."
+        print(othermsg)
+        self.log("\n" + othermsg)
         while True:
             try:
                 msg = conn.recv(1024)
@@ -642,7 +645,7 @@ Advanced Server by DrSquid"""
                         except self.ServerError.NameNotInDatabaseError:
                             self.show_server_com_with_client(conn, selfname, "Your account is not registered in the database. Please register your account.")
                         except Exception as e:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                             self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!register"):
                         try:
@@ -755,7 +758,7 @@ Advanced Server by DrSquid"""
                                 _main_msg = ""
                                 for i in msg_to_all:
                                     _main_msg = _main_msg + i + " "
-                                main_msg = _main_msg.strip()
+                                _main_msg = _main_msg.strip()
                                 main_msg2 = f"[(BROADCAST)]: {_main_msg}"
                                 self.sendall(main_msg2)
                                 logmsg = f"[({datetime.datetime.today()})][(BROADCAST)]: {_main_msg}"
@@ -784,7 +787,7 @@ Advanced Server by DrSquid"""
                                     cursor.close()
                                     db.close()
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ban <username>")
                         elif msg.startswith("!kick"):
                             try:
@@ -806,7 +809,7 @@ Advanced Server by DrSquid"""
                                     cursor.close()
                                     db.close()
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !kick <username>")
                         elif msg.startswith("!unban"):
                             try:
@@ -814,7 +817,7 @@ Advanced Server by DrSquid"""
                                 self.unban_user_fr_server(unbanned_user)
                                 self.show_server_com_with_client(conn, selfname, f"Successfully unbanned {unbanned_user} from the banlist.")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, f"There was an error.")
                     if msg.startswith("!reregister"):
                         try:
@@ -827,7 +830,7 @@ Advanced Server by DrSquid"""
                         except self.ServerError.AuthenticationError:
                             self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
                         except Exception as e:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                             self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!help"):
                         conn.send(self.regular_client_help_message().strip().encode())
@@ -869,7 +872,9 @@ Advanced Server by DrSquid"""
                             room_password = "None"
                         conflicting_rooms = self.check_for_sameitems(roomname, f"select * from open_rooms where roomname = '{roomname}'")
                         if not conflicting_rooms:
-                            self.show_server_com_with_client(conn, selfname, f"Creating a room.\n[+] Room Name: {roomname}\n[+] Room Password: {room_password.strip()}")
+                            conn.send(f"\n[(SERVER)]: Creating a room.\n[+] Room Name: {roomname}\n[+] Room Password: {room_password.strip()}".encode())
+                            logmsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent room creation message(Name: {roomname}, Pass: {room_password})."
+                            self.log("\n"+logmsg)
                             room_password = hashlib.sha256(room_password.encode()).hexdigest()
                             self.create_room(roomname, room_password)
                             self.rooms.append([roomname])
@@ -949,7 +954,7 @@ Advanced Server by DrSquid"""
                             self.show_errors(f"\n[({datetime.datetime.today()})][(AUTENTICATION_ERROR)]: {selfname} has provided incorrect credentials!")
                             self.show_server_com_with_client(conn, selfname, "Password provided for the room is incorrect.")
                         except Exception as e:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing argumentss: {e}")
                             self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!leaveroom"):
                         if inroom:
@@ -958,7 +963,7 @@ Advanced Server by DrSquid"""
                                 if selfroomname in room:
                                     item = 0
                                     for i in room:
-                                        if str(conn) == str(i):
+                                        if str(conn).strip() == str(i).strip():
                                             del room[item]
                                         item += 1
                                     inroom = False
@@ -978,7 +983,7 @@ Advanced Server by DrSquid"""
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 except Exception as e:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomban <username>")
                             else:
                                 self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
@@ -994,7 +999,7 @@ Advanced Server by DrSquid"""
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 except Exception as e:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomunban <username>")
                             else:
                                 self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
@@ -1009,7 +1014,7 @@ Advanced Server by DrSquid"""
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                             except:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.startswith("!demoteuser"):
                         if inroom:
@@ -1024,7 +1029,7 @@ Advanced Server by DrSquid"""
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 self.show_server_com_with_client(conn, selfname, "Invalid Permissions to ban the user.")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing agruments: {e}")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                     elif msg.strip() == "":
                         pass
@@ -1040,6 +1045,8 @@ Advanced Server by DrSquid"""
                         if indm:
                             try:
                                 dmconn.send("\n[(DM)]".encode() + this_main_msg.strip().encode())
+                                logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
+                                self.log("\n"+logmsg)
                             except:
                                 self.show_server_com_with_client(conn, selfname, f"There was an error with sending your DM Message! The person may have gone offline. Closing your DM.")
                                 indm = False
