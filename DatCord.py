@@ -64,6 +64,7 @@ class Server:
         except:
             self.maxconnpersec = 20
         self.connpersec = 0
+        self.manualbanall = False
         print(self.logo())
         file = open(self.userdbfile,"w")
         file.close()
@@ -164,6 +165,9 @@ Advanced Server by DrSquid"""
         print(f"[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         self.log(f"\n[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
         self.being_attacked = False
+        self.auto_ban = False
+        self.waitingforautoban = False
+        timetoauto_ban = 0
         while True:
             try:
                 if self.listening:
@@ -183,14 +187,28 @@ Advanced Server by DrSquid"""
                                 self.connpersec += 1
                         if self.connpersec <= self.maxconnpersec:
                             self.being_attacked = False
+                            self.waitingforautoban = False
+                            if not self.manualbanall and self.banningallincomingconn:
+                                self.banningallincomingconn = False
+                                logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
+                                print(logmsg)
+                                self.log(f"\n"+logmsg)
                         elif self.connpersec >= self.maxconnpersec:
+                            if not self.waitingforautoban:
+                                timetoauto_ban = time.time()
+                                self.waitingforautoban = True
+                            if round(time.time()-timetoauto_ban) >= 30 and not self.banningallincomingconn:
+                                self.banningallincomingconn = True
+                                logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
+                                print(logmsg)
+                                self.log(f"\n" + logmsg)
                             self.being_attacked = True
                             if ip[0] in self.get_iplist("ipwhitelist"):
                                 pass
                             else:
                                 if not closed:
-                                    print(f"[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
-                                    self.log(f"\n[({datetime.datetime.today()})][(DDOS_WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                                    print(f"[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                                    self.log(f"\n[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
                                     conn.close()
                         if self.banningallincomingconn:
                             if ip[0] not in self.get_iplist("ipwhitelist"):
@@ -671,9 +689,11 @@ Advanced Server by DrSquid"""
                     elif msg.startswith("!allipban"):
                         if self.banningallincomingconn:
                             self.banningallincomingconn = False
+                            self.manualbanall = False
                             logmsg = f"[({datetime.datetime.today()})][(INFO)]: Stopped banning all incoming IP's."
                         else:
                             self.banningallincomingconn = True
+                            self.manualbanall = True
                             logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began banning all incoming IP's."
                         self.show_server_com_with_client(conn, selfname, f"Set Banning all incoming connections to: {self.banningallincomingconn}.")
                         print(logmsg)
@@ -951,7 +971,7 @@ Advanced Server by DrSquid"""
                         except self.ServerError.NameNotInDatabaseError:
                             self.show_server_com_with_client(conn, selfname, "The room provided is not in the database.")
                         except self.ServerError.AuthenticationError:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(AUTENTICATION_ERROR)]: {selfname} has provided incorrect credentials!")
+                            self.show_errors(f"\n[({datetime.datetime.today()})][(AUTENTICATION-ERROR)]: {selfname} has provided incorrect credentials!")
                             self.show_server_com_with_client(conn, selfname, "Password provided for the room is incorrect.")
                         except Exception as e:
                             self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing argumentss: {e}")
@@ -981,13 +1001,13 @@ Advanced Server by DrSquid"""
                                     self.show_server_com_with_client(conn, selfname, f"{name} has been banned from the room.")
                                 except self.ServerError.PermissionError:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 except Exception as e:
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomban <username>")
                             else:
                                 self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                     elif msg.startswith("!roomunban"):
                         if inroom:
                             if roomadmin:
@@ -997,13 +1017,13 @@ Advanced Server by DrSquid"""
                                     self.show_server_com_with_client(conn, selfname, f"{name} has been unbanned from the room.")
                                 except self.ServerError.PermissionError:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 except Exception as e:
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomunban <username>")
                             else:
                                 self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                     elif msg.startswith("!promoteuser"):
                         if inroom:
                             try:
@@ -1012,7 +1032,7 @@ Advanced Server by DrSquid"""
                                     self.add_to_roomdata(usertopromote, selfroomname, "Admins: ")
                                 else:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                             except:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
@@ -1023,10 +1043,10 @@ Advanced Server by DrSquid"""
                                     usertodemote = msg.split()[1]
                                     self.del_from_roomdata(usertodemote, selfroomname, "Admins: ")
                                 else:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                             except self.ServerError.PermissionError:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION_ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 self.show_server_com_with_client(conn, selfname, "Invalid Permissions to ban the user.")
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
