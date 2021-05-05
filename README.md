@@ -54,6 +54,7 @@ If you want to chat one-to-one with another person, it is very simple. There is 
 The server is multi-threaded, meaning that It can handle multiple clients at once. This is better than having single-threaded servers, where they do not have the abilities to listen for connections, send and receive messages at the same time, where multi-threaded servers(like this one) are able to be used.
 
 Server handling multiple clients at once:
+
 ![multithreaded](/multi-threaded.png)
 
 # Owner Account
