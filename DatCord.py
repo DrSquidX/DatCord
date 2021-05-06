@@ -187,8 +187,16 @@ Advanced Server by DrSquid"""
                         else:
                             self.conncount += 1
                             self.connpersec = self.conncount / self.uptime
+                            if self.connpersec >= self.maxconnpersec:
+                                self.connpersec = self.maxconnpersec + 5
                         if not closed:
                             if self.connpersec <= self.maxconnpersec:
+                                if self.uptime == 60:
+                                    self.uptime = 0
+                                    self.conncount = 0
+                                    logmsg = f"[({datetime.datetime.today()})][(INFO)]: Setting Uptime Variable to: {self.uptime} and Conn Count Variable to: {self.conncount}"
+                                    print(logmsg)
+                                    self.log("\n"+logmsg)
                                 self.being_attacked = False
                                 self.waitingforautoban = False
                                 if not self.manualbanall and self.banningallincomingconn:
@@ -200,7 +208,7 @@ Advanced Server by DrSquid"""
                                 if not self.waitingforautoban:
                                     timetoauto_ban = time.time()
                                     self.waitingforautoban = True
-                                if round(time.time() - timetoauto_ban) >= 15 and not self.banningallincomingconn:
+                                if round(time.time() - timetoauto_ban) >= 10 and not self.banningallincomingconn:
                                     self.banningallincomingconn = True
                                     logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
                                     print(logmsg)
@@ -283,6 +291,12 @@ Advanced Server by DrSquid"""
         while True:
             time.sleep(1)
             if self.connpersec <= self.maxconnpersec:
+                if self.uptime == 60:
+                    self.uptime = 0
+                    self.conncount = 0
+                    logmsg = f"[({datetime.datetime.today()})][(INFO)]: Setting Uptime Variable to: {self.uptime} and Conn Count Variable to: {self.conncount}"
+                    print(logmsg)
+                    self.log("\n" + logmsg)
                 self.being_attacked = False
                 self.waitingforautoban = False
                 if not self.manualbanall and self.banningallincomingconn:
@@ -602,506 +616,509 @@ Advanced Server by DrSquid"""
         msgspersec = 0
         max_spam_warns = 3
         spam_warnings = 0
+        valid_conn = False
         try:
             conn.send(self.login_help_message().encode())
             othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Login Help Message."
             print(othermsg)
             self.log("\n" + othermsg)
+            valid_conn = True
         except:
             conn.close()
-        while True:
-            try:
-                msg = conn.recv(1024)
-                msgspersec += 1
+        if valid_conn:
+            while True:
                 try:
-                    msg = str(msg.decode())
-                except:
-                    msg = str(msg)
-                this_main_msg = f"\n[({selfname})]: {msg}"
-                current_timer = time.time()
-                if round(current_timer-timer) >= 1:
-                    if msgspersec >= 4:
-                        spam_warnings += 1
-                        self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warnings left until you are kicked.")
-                    if spam_warnings >= max_spam_warns:
-                        self.show_server_com_with_client(conn, selfname, f"You have been kicked for spamming.")
-                        conn.close()
-                    timer = time.time()
-                    msgspersec = 0
-                if not logged_in:
-                    if msg.startswith("!login"):
-                        try:
-                            username = msg.split()[1].strip("'").strip('"')
-                            password = msg.split()[2].strip("'").strip('"')
-                            authentication = self.attempt_login(username, password)
-                            if authentication == True:
-                                namealreadylogged = self.check_for_sameitems(username, f"select * from loggedinusers where username = '{username}'")
-                                if namealreadylogged:
-                                    self.show_server_com_with_client(conn, selfname, "Your account is already being used in another location!")
-                                else:
-                                    selfname = username
-                                    isbanned = False
-                                    db = sqlite3.connect(self.dbfile)
-                                    cursor = db.cursor()
-                                    cursor.execute("select * from banlist")
-                                    for i in cursor.fetchall():
-                                        if selfname in i[0]:
-                                            isbanned = True
-                                            break
-                                    if not isbanned:
-                                        logged_in = True
-                                        self.conn_list.append(conn)
-                                        self.add_name_to_db(selfname, str(ip[0]) + " " + str(ip).strip('()').split()[1])
-                                        self.show_server_com_with_client(conn, selfname, "Successfully logged in!")
-                                        conn.send(self.regular_client_help_message().encode())
-                                        othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
-                                        print(othermsg)
-                                        self.log("\n" + othermsg)
-                                        display_msg = f"[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}."
-                                        self.log("\n"+display_msg)
-                                        print(display_msg)
-                                        if selfname == self.ownername:
-                                            serverowner = True
-                                            conn.send(self.admin_help_message().encode())
-                                            infomsg = f"[({datetime.datetime.today()})][(INFO)]: {selfname} is an Admin!"
-                                            print(infomsg)
-                                            self.log("\n"+infomsg)
-                                            othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Admin Help Message."
-                                            print(othermsg)
-                                            self.log("\n"+othermsg)
+                    msg = conn.recv(1024)
+                    msgspersec += 1
+                    try:
+                        msg = str(msg.decode())
+                    except:
+                        msg = str(msg)
+                    this_main_msg = f"\n[({selfname})]: {msg}"
+                    current_timer = time.time()
+                    if round(current_timer-timer) >= 1:
+                        if msgspersec >= 4:
+                            spam_warnings += 1
+                            self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warnings left until you are kicked.")
+                        if spam_warnings >= max_spam_warns:
+                            self.show_server_com_with_client(conn, selfname, f"You have been kicked for spamming.")
+                            conn.close()
+                        timer = time.time()
+                        msgspersec = 0
+                    if not logged_in:
+                        if msg.startswith("!login"):
+                            try:
+                                username = msg.split()[1].strip("'").strip('"')
+                                password = msg.split()[2].strip("'").strip('"')
+                                authentication = self.attempt_login(username, password)
+                                if authentication == True:
+                                    namealreadylogged = self.check_for_sameitems(username, f"select * from loggedinusers where username = '{username}'")
+                                    if namealreadylogged:
+                                        self.show_server_com_with_client(conn, selfname, "Your account is already being used in another location!")
                                     else:
-                                        self.show_server_com_with_client(conn, selfname, "Your account has been banned from the server.")
-                        except self.ServerError.AuthenticationError:
-                            self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
-                            login_attempts += 1
-                            self.show_server_com_with_client(conn, selfname, f"Login attempt number: {login_attempts}. You have {max_login_attempts - login_attempts} login attempts left until you are kicked.")
-                            if login_attempts >= max_login_attempts:
-                                self.show_server_com_with_client(conn, selfname, "You have exceeded the amount of login attempts. You have been kicked from the server.")
-                                conn.close()
-                        except self.ServerError.NameNotInDatabaseError:
-                            self.show_server_com_with_client(conn, selfname, "Your account is not registered in the database. Please register your account.")
-                        except Exception as e:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                            self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
-                    elif msg.startswith("!register"):
-                        try:
-                            username = msg.split()[1].strip("'").strip('"')
-                            password = msg.split()[2].strip("'").strip('"')
-                            self.register_accounts(username, password)
-                            logged_in = True
-                            selfname = username
-                            self.conn_list.append(conn)
-                            self.add_name_to_db(selfname, str(ip[0])+" "+str(ip).strip('()').split()[1])
-                            self.show_server_com_with_client(conn, selfname, "Successfully Registered. You have been logged in with this account!")
-                            conn.send(self.regular_client_help_message().encode())
-                            othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
-                            print(othermsg)
-                            self.log("\n" + othermsg)
-                            display_msg = f"[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}."
-                            self.log("\n" + display_msg)
-                        except self.ServerError.NameAlreadyRegisteredError:
-                            self.show_server_com_with_client(conn, selfname, "The account name is already registered in the database. Please use another name for your account.")
-                        except Exception as e:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                            self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
-                    elif msg.startswith("!allipban"):
-                        if self.banningallincomingconn:
-                            self.banningallincomingconn = False
-                            self.manualbanall = False
-                            logmsg = f"[({datetime.datetime.today()})][(INFO)]: Stopped banning all incoming IP's."
-                        else:
-                            self.banningallincomingconn = True
-                            self.manualbanall = True
-                            logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began banning all incoming IP's."
-                        self.show_server_com_with_client(conn, selfname, f"Set Banning all incoming connections to: {self.banningallincomingconn}.")
-                        print(logmsg)
-                        self.log("\n" + logmsg)
-                if logged_in:
-                    if serverowner:
-                        if msg.startswith("!nick"):
+                                        selfname = username
+                                        isbanned = False
+                                        db = sqlite3.connect(self.dbfile)
+                                        cursor = db.cursor()
+                                        cursor.execute("select * from banlist")
+                                        for i in cursor.fetchall():
+                                            if selfname in i[0]:
+                                                isbanned = True
+                                                break
+                                        if not isbanned:
+                                            logged_in = True
+                                            self.conn_list.append(conn)
+                                            self.add_name_to_db(selfname, str(ip[0]) + " " + str(ip).strip('()').split()[1])
+                                            self.show_server_com_with_client(conn, selfname, "Successfully logged in!")
+                                            conn.send(self.regular_client_help_message().encode())
+                                            othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
+                                            print(othermsg)
+                                            self.log("\n" + othermsg)
+                                            display_msg = f"[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}."
+                                            self.log("\n"+display_msg)
+                                            print(display_msg)
+                                            if selfname == self.ownername:
+                                                serverowner = True
+                                                conn.send(self.admin_help_message().encode())
+                                                infomsg = f"[({datetime.datetime.today()})][(INFO)]: {selfname} is an Admin!"
+                                                print(infomsg)
+                                                self.log("\n"+infomsg)
+                                                othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Admin Help Message."
+                                                print(othermsg)
+                                                self.log("\n"+othermsg)
+                                        else:
+                                            self.show_server_com_with_client(conn, selfname, "Your account has been banned from the server.")
+                            except self.ServerError.AuthenticationError:
+                                self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
+                                login_attempts += 1
+                                self.show_server_com_with_client(conn, selfname, f"Login attempt number: {login_attempts}. You have {max_login_attempts - login_attempts} login attempts left until you are kicked.")
+                                if login_attempts >= max_login_attempts:
+                                    self.show_server_com_with_client(conn, selfname, "You have exceeded the amount of login attempts. You have been kicked from the server.")
+                                    conn.close()
+                            except self.ServerError.NameNotInDatabaseError:
+                                self.show_server_com_with_client(conn, selfname, "Your account is not registered in the database. Please register your account.")
+                            except Exception as e:
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                        elif msg.startswith("!register"):
                             try:
-                                selfname = msg.split()[1]
-                                self.show_server_com_with_client(conn, selfname, f"Changed your name to: {selfname}")
-                            except:
-                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !nick <username>")
-                        elif msg.startswith("!unnick"):
-                            selfname = self.ownername
-                            self.show_server_com_with_client(conn, selfname, f"Changed your name back to: {selfname}")
-                        elif msg.startswith("!togglelisten"):
-                            if self.listening:
-                                logmsg = f"[({datetime.datetime.today()})][(INFO)]: Stopped Listening For Connections....."
-                                self.listening = False
+                                username = msg.split()[1].strip("'").strip('"')
+                                password = msg.split()[2].strip("'").strip('"')
+                                self.register_accounts(username, password)
+                                logged_in = True
+                                selfname = username
+                                self.conn_list.append(conn)
+                                self.add_name_to_db(selfname, str(ip[0])+" "+str(ip).strip('()').split()[1])
+                                self.show_server_com_with_client(conn, selfname, "Successfully Registered. You have been logged in with this account!")
+                                conn.send(self.regular_client_help_message().encode())
+                                othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
+                                print(othermsg)
+                                self.log("\n" + othermsg)
+                                display_msg = f"[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}."
+                                self.log("\n" + display_msg)
+                            except self.ServerError.NameAlreadyRegisteredError:
+                                self.show_server_com_with_client(conn, selfname, "The account name is already registered in the database. Please use another name for your account.")
+                            except Exception as e:
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                        elif msg.startswith("!allipban"):
+                            if self.banningallincomingconn:
+                                self.banningallincomingconn = False
+                                self.manualbanall = False
+                                logmsg = f"[({datetime.datetime.today()})][(INFO)]: Stopped banning all incoming IP's."
                             else:
-                                logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began Listening For Connections....."
-                                self.listening = True
-                            self.show_server_com_with_client(conn, selfname, f"Set Listening for connections to {self.listening}.")
+                                self.banningallincomingconn = True
+                                self.manualbanall = True
+                                logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began banning all incoming IP's."
+                            self.show_server_com_with_client(conn, selfname, f"Set Banning all incoming connections to: {self.banningallincomingconn}.")
                             print(logmsg)
-                            self.log("\n"+logmsg)
-                        elif msg.startswith("!ipban"):
-                            try:
-                                ip_addr = msg.split()[1]
-                                actual_ip = socket.gethostbyname(ip_addr)
-                                if ip_addr in self.get_iplist("ipbanlist"):
-                                    self.show_server_com_with_client(conn, selfname, f"The IP is already in the banlist!")
+                            self.log("\n" + logmsg)
+                    if logged_in:
+                        if serverowner:
+                            if msg.startswith("!nick"):
+                                try:
+                                    selfname = msg.split()[1]
+                                    self.show_server_com_with_client(conn, selfname, f"Changed your name to: {selfname}")
+                                except:
+                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !nick <username>")
+                            elif msg.startswith("!unnick"):
+                                selfname = self.ownername
+                                self.show_server_com_with_client(conn, selfname, f"Changed your name back to: {selfname}")
+                            elif msg.startswith("!togglelisten"):
+                                if self.listening:
+                                    logmsg = f"[({datetime.datetime.today()})][(INFO)]: Stopped Listening For Connections....."
+                                    self.listening = False
                                 else:
-                                    self.ban_ip_fr_server(ip_addr)
-                                    self.show_server_com_with_client(conn, selfname, f"Successfully banned {ip_addr}. They won't be able to join the server the next time they try to.")
-                            except socket.error:
-                                self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
-                            except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ipban <ip>")
-                        elif msg.startswith("!ipunban"):
-                            try:
-                                ip_addr = msg.split()[1]
-                                actual_ip = socket.gethostbyname(ip_addr)
-                                if ip_addr not in self.get_iplist("ipbanlist"):
-                                    self.show_server_com_with_client(conn, selfname, f"The IP Is not in the banlist!")
-                                else:
-                                    self.unban_ip_fr_server(ip_addr)
-                                    self.show_server_com_with_client(conn, selfname, f"Successfully unbanned {ip_addr}.")
-                            except socket.error:
-                                self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
-                            except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ipunban <ip>")
-                        elif msg.startswith("!whitelistip"):
-                            try:
-                                ip_addr = msg.split()[1]
-                                actual_ip = socket.gethostbyname(ip_addr)
-                                if ip_addr in self.get_iplist("ipbanlist"):
-                                    self.show_server_com_with_client(conn, selfname, f"The IP Is in the banlist! Unban them first.")
-                                else:
-                                    self.whitelist_ip_to_server(ip_addr)
-                                    self.show_server_com_with_client(conn, selfname, f"Successfully whitelisted {ip_addr}.")
-                            except socket.error:
-                                self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
-                            except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !whitelistip <ip>")
-                        elif msg.startswith("!unwhitelistip"):
-                            try:
-                                ip_addr = msg.split()[1]
-                                actual_ip = socket.gethostbyname(ip_addr)
-                                if ip_addr not in self.get_iplist("ipwhitelist"):
-                                    self.show_server_com_with_client(conn, selfname, f"The IP Is not in the whitelist!")
-                                else:
-                                    self.unwhitelist_ip_fr_server(ip_addr)
-                                    self.show_server_com_with_client(conn, selfname, f"Successfully unwhitelisted {ip_addr}.")
-                            except socket.error:
-                                self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
-                            except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !unwhitelistip <ip>")
-                        elif msg.startswith("!broadcast"):
-                            try:
-                                msg_to_all = msg.split()
-                                del msg_to_all[0]
-                                _main_msg = ""
-                                for i in msg_to_all:
-                                    _main_msg = _main_msg + i + " "
-                                _main_msg = _main_msg.strip()
-                                main_msg2 = f"[(BROADCAST)]: {_main_msg}"
-                                self.sendall(main_msg2)
-                                logmsg = f"[({datetime.datetime.today()})][(BROADCAST)]: {_main_msg}"
+                                    logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began Listening For Connections....."
+                                    self.listening = True
+                                self.show_server_com_with_client(conn, selfname, f"Set Listening for connections to {self.listening}.")
                                 print(logmsg)
                                 self.log("\n"+logmsg)
-                            except:
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !broadcast <msg>")
-                        elif msg.startswith("!ban"):
+                            elif msg.startswith("!ipban"):
+                                try:
+                                    ip_addr = msg.split()[1]
+                                    actual_ip = socket.gethostbyname(ip_addr)
+                                    if ip_addr in self.get_iplist("ipbanlist"):
+                                        self.show_server_com_with_client(conn, selfname, f"The IP is already in the banlist!")
+                                    else:
+                                        self.ban_ip_fr_server(ip_addr)
+                                        self.show_server_com_with_client(conn, selfname, f"Successfully banned {ip_addr}. They won't be able to join the server the next time they try to.")
+                                except socket.error:
+                                    self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
+                                except:
+                                    self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ipban <ip>")
+                            elif msg.startswith("!ipunban"):
+                                try:
+                                    ip_addr = msg.split()[1]
+                                    actual_ip = socket.gethostbyname(ip_addr)
+                                    if ip_addr not in self.get_iplist("ipbanlist"):
+                                        self.show_server_com_with_client(conn, selfname, f"The IP Is not in the banlist!")
+                                    else:
+                                        self.unban_ip_fr_server(ip_addr)
+                                        self.show_server_com_with_client(conn, selfname, f"Successfully unbanned {ip_addr}.")
+                                except socket.error:
+                                    self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
+                                except:
+                                    self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ipunban <ip>")
+                            elif msg.startswith("!whitelistip"):
+                                try:
+                                    ip_addr = msg.split()[1]
+                                    actual_ip = socket.gethostbyname(ip_addr)
+                                    if ip_addr in self.get_iplist("ipbanlist"):
+                                        self.show_server_com_with_client(conn, selfname, f"The IP Is in the banlist! Unban them first.")
+                                    else:
+                                        self.whitelist_ip_to_server(ip_addr)
+                                        self.show_server_com_with_client(conn, selfname, f"Successfully whitelisted {ip_addr}.")
+                                except socket.error:
+                                    self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
+                                except:
+                                    self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !whitelistip <ip>")
+                            elif msg.startswith("!unwhitelistip"):
+                                try:
+                                    ip_addr = msg.split()[1]
+                                    actual_ip = socket.gethostbyname(ip_addr)
+                                    if ip_addr not in self.get_iplist("ipwhitelist"):
+                                        self.show_server_com_with_client(conn, selfname, f"The IP Is not in the whitelist!")
+                                    else:
+                                        self.unwhitelist_ip_fr_server(ip_addr)
+                                        self.show_server_com_with_client(conn, selfname, f"Successfully unwhitelisted {ip_addr}.")
+                                except socket.error:
+                                    self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
+                                except:
+                                    self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !unwhitelistip <ip>")
+                            elif msg.startswith("!broadcast"):
+                                try:
+                                    msg_to_all = msg.split()
+                                    del msg_to_all[0]
+                                    _main_msg = ""
+                                    for i in msg_to_all:
+                                        _main_msg = _main_msg + i + " "
+                                    _main_msg = _main_msg.strip()
+                                    main_msg2 = f"[(BROADCAST)]: {_main_msg}"
+                                    self.sendall(main_msg2)
+                                    logmsg = f"[({datetime.datetime.today()})][(BROADCAST)]: {_main_msg}"
+                                    print(logmsg)
+                                    self.log("\n"+logmsg)
+                                except:
+                                    self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !broadcast <msg>")
+                            elif msg.startswith("!ban"):
+                                try:
+                                    banned_user = msg.split()[1]
+                                    if banned_user == self.ownername:
+                                        self.show_server_com_with_client(conn, selfname, f"You can't ban yourself!")
+                                    else:
+                                        self.ban_user_fr_server(banned_user)
+                                        self.show_server_com_with_client(conn, selfname, f"The Ban Hammer has spoken! {banned_user} has been banned from the server!")
+                                        db = sqlite3.connect(self.userdbfile)
+                                        cursor = db.cursor()
+                                        cursor.execute(f"select * from loggedinusers where username = '{banned_user}'")
+                                        for i in cursor.fetchall():
+                                            if banned_user.strip() == i[0].strip():
+                                                connectionnum = i[1]
+                                                for i in self.conn_list:
+                                                    if connectionnum.split()[0] in str(i) and connectionnum.split()[1] in str(i):
+                                                        self.show_server_com_with_client(i, banned_user, "You have been banned from the server!")
+                                                        i.close()
+                                        cursor.close()
+                                        db.close()
+                                except Exception as e:
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                    self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ban <username>")
+                            elif msg.startswith("!kick"):
+                                try:
+                                    kick_user = msg.split()[1]
+                                    if kick_user == self.ownername:
+                                        self.show_server_com_with_client(conn, selfname, f"You can't kick yourself!")
+                                    else:
+                                        self.show_server_com_with_client(conn, selfname, f"{kick_user} has been kicked from the server!")
+                                        db = sqlite3.connect(self.userdbfile)
+                                        cursor = db.cursor()
+                                        cursor.execute(f"select * from loggedinusers where username = '{kick_user}'")
+                                        for i in cursor.fetchall():
+                                            if kick_user.strip() == i[0].strip():
+                                                connectionnum = i[1]
+                                                for i in self.conn_list:
+                                                    if connectionnum.split()[0] in str(i) and connectionnum.split()[1] in str(i):
+                                                        self.show_server_com_with_client(i, kick_user, "You have been kicked from the server!")
+                                                        i.close()
+                                        cursor.close()
+                                        db.close()
+                                except Exception as e:
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                    self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !kick <username>")
+                            elif msg.startswith("!unban"):
+                                try:
+                                    unbanned_user = msg.split()[1]
+                                    self.unban_user_fr_server(unbanned_user)
+                                    self.show_server_com_with_client(conn, selfname, f"Successfully unbanned {unbanned_user} from the banlist.")
+                                except Exception as e:
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                    self.show_server_com_with_client(conn, selfname, f"There was an error.")
+                        if msg.startswith("!reregister"):
                             try:
-                                banned_user = msg.split()[1]
-                                if banned_user == self.ownername:
-                                    self.show_server_com_with_client(conn, selfname, f"You can't ban yourself!")
-                                else:
-                                    self.ban_user_fr_server(banned_user)
-                                    self.show_server_com_with_client(conn, selfname, f"The Ban Hammer has spoken! {banned_user} has been banned from the server!")
-                                    db = sqlite3.connect(self.userdbfile)
-                                    cursor = db.cursor()
-                                    cursor.execute(f"select * from loggedinusers where username = '{banned_user}'")
-                                    for i in cursor.fetchall():
-                                        if banned_user.strip() == i[0].strip():
-                                            connectionnum = i[1]
-                                            for i in self.conn_list:
-                                                if connectionnum.split()[0] in str(i) and connectionnum.split()[1] in str(i):
-                                                    self.show_server_com_with_client(i, banned_user, "You have been banned from the server!")
-                                                    i.close()
-                                    cursor.close()
-                                    db.close()
+                                old_pass = msg.split()[1].strip("'").strip('"')
+                                newpass = msg.split()[2].strip("'").strip('"')
+                                authentication = self.attempt_login(selfname, old_pass)
+                                if authentication == True:
+                                    self.show_server_com_with_client(conn, selfname, f"Changing your password to: {newpass}")
+                                    self.change_password(selfname, newpass)
+                            except self.ServerError.AuthenticationError:
+                                self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ban <username>")
-                        elif msg.startswith("!kick"):
-                            try:
-                                kick_user = msg.split()[1]
-                                if kick_user == self.ownername:
-                                    self.show_server_com_with_client(conn, selfname, f"You can't kick yourself!")
-                                else:
-                                    self.show_server_com_with_client(conn, selfname, f"{kick_user} has been kicked from the server!")
-                                    db = sqlite3.connect(self.userdbfile)
-                                    cursor = db.cursor()
-                                    cursor.execute(f"select * from loggedinusers where username = '{kick_user}'")
-                                    for i in cursor.fetchall():
-                                        if kick_user.strip() == i[0].strip():
-                                            connectionnum = i[1]
-                                            for i in self.conn_list:
-                                                if connectionnum.split()[0] in str(i) and connectionnum.split()[1] in str(i):
-                                                    self.show_server_com_with_client(i, kick_user, "You have been kicked from the server!")
-                                                    i.close()
-                                    cursor.close()
-                                    db.close()
-                            except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                                self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !kick <username>")
-                        elif msg.startswith("!unban"):
-                            try:
-                                unbanned_user = msg.split()[1]
-                                self.unban_user_fr_server(unbanned_user)
-                                self.show_server_com_with_client(conn, selfname, f"Successfully unbanned {unbanned_user} from the banlist.")
-                            except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                                self.show_server_com_with_client(conn, selfname, f"There was an error.")
-                    if msg.startswith("!reregister"):
-                        try:
-                            old_pass = msg.split()[1].strip("'").strip('"')
-                            newpass = msg.split()[2].strip("'").strip('"')
-                            authentication = self.attempt_login(selfname, old_pass)
-                            if authentication == True:
-                                self.show_server_com_with_client(conn, selfname, f"Changing your password to: {newpass}")
-                                self.change_password(selfname, newpass)
-                        except self.ServerError.AuthenticationError:
-                            self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
-                        except Exception as e:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                            self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
-                    elif msg.startswith("!help"):
-                        conn.send(self.regular_client_help_message().strip().encode())
-                        othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
-                        print(othermsg)
-                        self.log("\n"+othermsg)
-                        if serverowner:
-                            conn.send(self.admin_help_message().strip().encode())
-                            othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Admin Help Message."
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                        elif msg.startswith("!help"):
+                            conn.send(self.regular_client_help_message().strip().encode())
+                            othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
                             print(othermsg)
                             self.log("\n"+othermsg)
-                    elif msg.startswith("!dm"):
-                        try:
-                            username = msg.split()[1]
-                            dmconn = self.opendm(username)
-                            indm = True
-                            dmusername = username
-                            self.show_server_com_with_client(conn, selfname, f"Opened a DM with {username}. You can directly speak to them privately!")
-                        except self.ServerError.NameNotInDatabaseError:
-                            self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
-                        except:
-                            self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
-                    elif msg.startswith("!closedm"):
-                        if not indm:
-                            self.show_server_com_with_client(conn, selfname, "You are not currently in a DM.")
-                        else:
-                            self.show_server_com_with_client(conn, selfname, "Closing your dm.")
-                            dmusername = None
-                            indm = False
-                            dmconn = None
-                    elif msg.startswith("!createroom"):
-                        try:
-                            roomname = msg.split()[1]
-                        except:
-                            roomname = len(self.rooms)
-                        try:
-                            room_password = msg.split()[2]
-                        except:
-                            room_password = "None"
-                        conflicting_rooms = self.check_for_sameitems(roomname, f"select * from open_rooms where roomname = '{roomname}'")
-                        if not conflicting_rooms:
-                            conn.send(f"\n[(SERVER)]: Creating a room.\n[+] Room Name: {roomname}\n[+] Room Password: {room_password.strip()}".encode())
-                            logmsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent room creation message(Name: {roomname}, Pass: {room_password})."
-                            self.log("\n"+logmsg)
-                            room_password = hashlib.sha256(room_password.encode()).hexdigest()
-                            self.create_room(roomname, room_password)
-                            self.rooms.append([roomname])
-                            self.update_file(self.roomdata, f"\nRoomName: {roomname}\nOwner: {selfname}\nAdmins: {selfname}\nMembers: {selfname}\nBanlist: \nEndData\n")
-                            self.show_server_com_with_client(conn, selfname, "You are free to join your room.")
-                        else:
-                            self.show_server_com_with_client(conn, selfname, "There is already a room with the name you provided. Try to use another name.")
-                    elif msg.startswith("!joinroom"):
-                        try:
-                            if inroom:
-                                self.show_server_com_with_client(conn, selfname, "You are currently in a room! Do !leaveroom to leave your room!")
-                            else:
-                                roomname = msg.split()[1]
-                                try:
-                                    roompass = msg.split()[2]
-                                except:
-                                    roompass = "None"
-                                roommember = False
-                                file = open(self.roomdata, "r")
-                                contents = file.readlines()
-                                file.close()
-                                in_room = False
-                                roomadmin = False
-                                banned = False
-                                for i in contents:
-                                    if roomname.strip() in i.strip():
-                                        in_room = True
-                                    if in_room:
-                                        if i.startswith("Admins: "):
-                                            if selfname in i:
-                                                roommember = True
-                                                roomadmin = True
-                                        elif i.startswith("Members: "):
-                                            if selfname in i:
-                                                roommember = True
-                                        elif i.startswith("Banlist"):
-                                            if selfname in i:
-                                                banned = True
-                                        elif i.startswith("EndData"):
-                                            in_room = False
-                                            break
-                                if not banned:
-                                    if roomadmin:
-                                        room_admin = True
-                                        inroom = True
-                                        selfroomname = roomname
-                                    if roommember:
-                                        inroom = True
-                                        selfroomname = roomname
-                                    else:
-                                        authentication = self.attempt_join_room(roomname, roompass)
-                                        if authentication == True:
-                                            self.add_to_roomdata(selfname, roomname, "Members: ")
-                                            in_room = True
-                                            inroom = True
-                                    if inroom:
-                                        correct_ls = False
-                                        ls = []
-                                        self.show_server_com_with_client(conn, selfname, "You have joined the room. Say hi!")
-                                        for room in self.rooms:
-                                            if roomname in room[0]:
-                                                room.append(conn)
-                                                correct_ls = True
-                                                ls = room
-                                                break
-                                        if correct_ls:
-                                            for person in room:
-                                                try:
-                                                    person.send(f"\n[(SERVER)]: {selfname} has joined the chat.".encode())
-                                                except:
-                                                    pass
-                                else:
-                                    self.show_server_com_with_client(conn, selfname, "It seems your account has been banned from this chatroom.")
-                        except self.ServerError.NameNotInDatabaseError:
-                            self.show_server_com_with_client(conn, selfname, "The room provided is not in the database.")
-                        except self.ServerError.AuthenticationError:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(AUTENTICATION-ERROR)]: {selfname} has provided incorrect credentials!")
-                            self.show_server_com_with_client(conn, selfname, "Password provided for the room is incorrect.")
-                        except Exception as e:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing argumentss: {e}")
-                            self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
-                    elif msg.startswith("!leaveroom"):
-                        if inroom:
-                            self.show_server_com_with_client(conn, selfname, "Leaving your current room.")
-                            for room in self.rooms:
-                                if selfroomname in room:
-                                    item = 0
-                                    for i in room:
-                                        if str(conn).strip() == str(i).strip():
-                                            del room[item]
-                                        item += 1
-                                    inroom = False
-                                    room_admin = False
-                                    selfroomname = ""
-                                    break
-                        else:
-                            self.show_server_com_with_client(conn, selfname, "You are not currently in a room.")
-                    elif msg.startswith("!roomban"):
-                        if inroom:
-                            if roomadmin:
-                                try:
-                                    name = msg.split()[1]
-                                    self.add_to_roomdata(name, selfroomname, "Banlist:")
-                                    self.show_server_com_with_client(conn, selfname, f"{name} has been banned from the room.")
-                                except self.ServerError.PermissionError:
-                                    self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
-                                except Exception as e:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomban <username>")
-                            else:
-                                self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
-                    elif msg.startswith("!roomunban"):
-                        if inroom:
-                            if roomadmin:
-                                try:
-                                    name = msg.split()[1]
-                                    self.del_from_roomdata(name, selfroomname, "Banlist:")
-                                    self.show_server_com_with_client(conn, selfname, f"{name} has been unbanned from the room.")
-                                except self.ServerError.PermissionError:
-                                    self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
-                                except Exception as e:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomunban <username>")
-                            else:
-                                self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
-                    elif msg.startswith("!promoteuser"):
-                        if inroom:
+                            if serverowner:
+                                conn.send(self.admin_help_message().strip().encode())
+                                othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Admin Help Message."
+                                print(othermsg)
+                                self.log("\n"+othermsg)
+                        elif msg.startswith("!dm"):
                             try:
-                                if roomadmin:
-                                    usertopromote = msg.split()[1]
-                                    self.add_to_roomdata(usertopromote, selfroomname, "Admins: ")
-                                else:
-                                    self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                username = msg.split()[1]
+                                dmconn = self.opendm(username)
+                                indm = True
+                                dmusername = username
+                                self.show_server_com_with_client(conn, selfname, f"Opened a DM with {username}. You can directly speak to them privately!")
+                            except self.ServerError.NameNotInDatabaseError:
+                                self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
                             except:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
-                    elif msg.startswith("!demoteuser"):
-                        if inroom:
+                        elif msg.startswith("!closedm"):
+                            if not indm:
+                                self.show_server_com_with_client(conn, selfname, "You are not currently in a DM.")
+                            else:
+                                self.show_server_com_with_client(conn, selfname, "Closing your dm.")
+                                dmusername = None
+                                indm = False
+                                dmconn = None
+                        elif msg.startswith("!createroom"):
                             try:
-                                if roomadmin:
-                                    usertodemote = msg.split()[1]
-                                    self.del_from_roomdata(usertodemote, selfroomname, "Admins: ")
+                                roomname = msg.split()[1]
+                            except:
+                                roomname = len(self.rooms)
+                            try:
+                                room_password = msg.split()[2]
+                            except:
+                                room_password = "None"
+                            conflicting_rooms = self.check_for_sameitems(roomname, f"select * from open_rooms where roomname = '{roomname}'")
+                            if not conflicting_rooms:
+                                conn.send(f"\n[(SERVER)]: Creating a room.\n[+] Room Name: {roomname}\n[+] Room Password: {room_password.strip()}".encode())
+                                logmsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent room creation message(Name: {roomname}, Pass: {room_password})."
+                                self.log("\n"+logmsg)
+                                room_password = hashlib.sha256(room_password.encode()).hexdigest()
+                                self.create_room(roomname, room_password)
+                                self.rooms.append([roomname])
+                                self.update_file(self.roomdata, f"\nRoomName: {roomname}\nOwner: {selfname}\nAdmins: {selfname}\nMembers: {selfname}\nBanlist: \nEndData\n")
+                                self.show_server_com_with_client(conn, selfname, "You are free to join your room.")
+                            else:
+                                self.show_server_com_with_client(conn, selfname, "There is already a room with the name you provided. Try to use another name.")
+                        elif msg.startswith("!joinroom"):
+                            try:
+                                if inroom:
+                                    self.show_server_com_with_client(conn, selfname, "You are currently in a room! Do !leaveroom to leave your room!")
                                 else:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
-                                    self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                            except self.ServerError.PermissionError:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
-                                self.show_server_com_with_client(conn, selfname, "Invalid Permissions to ban the user.")
+                                    roomname = msg.split()[1]
+                                    try:
+                                        roompass = msg.split()[2]
+                                    except:
+                                        roompass = "None"
+                                    roommember = False
+                                    file = open(self.roomdata, "r")
+                                    contents = file.readlines()
+                                    file.close()
+                                    in_room = False
+                                    roomadmin = False
+                                    banned = False
+                                    for i in contents:
+                                        if roomname.strip() in i.strip():
+                                            in_room = True
+                                        if in_room:
+                                            if i.startswith("Admins: "):
+                                                if selfname in i:
+                                                    roommember = True
+                                                    roomadmin = True
+                                            elif i.startswith("Members: "):
+                                                if selfname in i:
+                                                    roommember = True
+                                            elif i.startswith("Banlist"):
+                                                if selfname in i:
+                                                    banned = True
+                                            elif i.startswith("EndData"):
+                                                in_room = False
+                                                break
+                                    if not banned:
+                                        if roomadmin:
+                                            room_admin = True
+                                            inroom = True
+                                            selfroomname = roomname
+                                        if roommember:
+                                            inroom = True
+                                            selfroomname = roomname
+                                        else:
+                                            authentication = self.attempt_join_room(roomname, roompass)
+                                            if authentication == True:
+                                                self.add_to_roomdata(selfname, roomname, "Members: ")
+                                                in_room = True
+                                                inroom = True
+                                        if inroom:
+                                            correct_ls = False
+                                            ls = []
+                                            self.show_server_com_with_client(conn, selfname, "You have joined the room. Say hi!")
+                                            for room in self.rooms:
+                                                if roomname in room[0]:
+                                                    room.append(conn)
+                                                    correct_ls = True
+                                                    ls = room
+                                                    break
+                                            if correct_ls:
+                                                for person in room:
+                                                    try:
+                                                        person.send(f"\n[(SERVER)]: {selfname} has joined the chat.".encode())
+                                                    except:
+                                                        pass
+                                    else:
+                                        self.show_server_com_with_client(conn, selfname, "It seems your account has been banned from this chatroom.")
+                            except self.ServerError.NameNotInDatabaseError:
+                                self.show_server_com_with_client(conn, selfname, "The room provided is not in the database.")
+                            except self.ServerError.AuthenticationError:
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(AUTENTICATION-ERROR)]: {selfname} has provided incorrect credentials!")
+                                self.show_server_com_with_client(conn, selfname, "Password provided for the room is incorrect.")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing argumentss: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
-                    elif msg.strip() == "":
+                        elif msg.startswith("!leaveroom"):
+                            if inroom:
+                                self.show_server_com_with_client(conn, selfname, "Leaving your current room.")
+                                for room in self.rooms:
+                                    if selfroomname in room:
+                                        item = 0
+                                        for i in room:
+                                            if str(conn).strip() == str(i).strip():
+                                                del room[item]
+                                            item += 1
+                                        inroom = False
+                                        room_admin = False
+                                        selfroomname = ""
+                                        break
+                            else:
+                                self.show_server_com_with_client(conn, selfname, "You are not currently in a room.")
+                        elif msg.startswith("!roomban"):
+                            if inroom:
+                                if roomadmin:
+                                    try:
+                                        name = msg.split()[1]
+                                        self.add_to_roomdata(name, selfroomname, "Banlist:")
+                                        self.show_server_com_with_client(conn, selfname, f"{name} has been banned from the room.")
+                                    except self.ServerError.PermissionError:
+                                        self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    except Exception as e:
+                                        self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                        self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomban <username>")
+                                else:
+                                    self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                        elif msg.startswith("!roomunban"):
+                            if inroom:
+                                if roomadmin:
+                                    try:
+                                        name = msg.split()[1]
+                                        self.del_from_roomdata(name, selfroomname, "Banlist:")
+                                        self.show_server_com_with_client(conn, selfname, f"{name} has been unbanned from the room.")
+                                    except self.ServerError.PermissionError:
+                                        self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    except Exception as e:
+                                        self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                        self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomunban <username>")
+                                else:
+                                    self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                        elif msg.startswith("!promoteuser"):
+                            if inroom:
+                                try:
+                                    if roomadmin:
+                                        usertopromote = msg.split()[1]
+                                        self.add_to_roomdata(usertopromote, selfroomname, "Admins: ")
+                                    else:
+                                        self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                except:
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                        elif msg.startswith("!demoteuser"):
+                            if inroom:
+                                try:
+                                    if roomadmin:
+                                        usertodemote = msg.split()[1]
+                                        self.del_from_roomdata(usertodemote, selfroomname, "Admins: ")
+                                    else:
+                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                        self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                except self.ServerError.PermissionError:
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_server_com_with_client(conn, selfname, "Invalid Permissions to ban the user.")
+                                except Exception as e:
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                        elif msg.strip() == "":
+                            pass
+                        else:
+                            if inroom:
+                                for room in self.rooms:
+                                    if selfroomname in room[0]:
+                                        for person in room:
+                                            try:
+                                                person.send(this_main_msg.encode())
+                                            except:
+                                                pass
+                            if indm:
+                                try:
+                                    dmconn.send("\n[(DM)]".encode() + this_main_msg.strip().encode())
+                                    logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
+                                    self.log("\n"+logmsg)
+                                except:
+                                    self.show_server_com_with_client(conn, selfname, f"There was an error with sending your DM Message! The person may have gone offline. Closing your DM.")
+                                    indm = False
+                    if msg.strip() == "":
                         pass
                     else:
-                        if inroom:
-                            for room in self.rooms:
-                                if selfroomname in room[0]:
-                                    for person in room:
-                                        try:
-                                            person.send(this_main_msg.encode())
-                                        except:
-                                            pass
-                        if indm:
-                            try:
-                                dmconn.send("\n[(DM)]".encode() + this_main_msg.strip().encode())
-                                logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
-                                self.log("\n"+logmsg)
-                            except:
-                                self.show_server_com_with_client(conn, selfname, f"There was an error with sending your DM Message! The person may have gone offline. Closing your DM.")
-                                indm = False
-                if msg.strip() == "":
-                    pass
-                else:
-                    self.log(f"\n[({datetime.datetime.today()})]"+this_main_msg.strip())
-                    print(f"[({datetime.datetime.today()})]"+this_main_msg.strip())
-            except Exception as e:
-                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Client Error with {ip}(known as {selfname}): {e}")
-                if logged_in:
-                    try:
-                        self.remove_user_from_db(selfname)
-                    except Exception as e:
-                        self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error whilst removing name from database: {e}")
-                conn.close()
-                break
+                        self.log(f"\n[({datetime.datetime.today()})]"+this_main_msg.strip())
+                        print(f"[({datetime.datetime.today()})]"+this_main_msg.strip())
+                except Exception as e:
+                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Client Error with {ip}(known as {selfname}): {e}")
+                    if logged_in:
+                        try:
+                            self.remove_user_from_db(selfname)
+                        except Exception as e:
+                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error whilst removing name from database: {e}")
+                    conn.close()
+                    break
 class OptionParse:
     """Option-Parsing Class for parsing arguments."""
     def __init__(self):
@@ -1193,9 +1210,9 @@ class OptionParse:
             try:
                 mc = int(arg.mc)
             except:
-                mc = 50
+                mc = 30
         else:
-            mc = 50
+            mc = 30
         server = Server(ip, port, db, au, rd, sl, ou, op, mc)
         server.listen()
 if __name__ == '__main__':
