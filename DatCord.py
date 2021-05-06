@@ -163,7 +163,10 @@ Advanced Server by DrSquid"""
         There the client can communicate with the server, log in and do what they can do. The server
         will also be warned about DDoS Attacks, and will close any incoming connections if the
         connections per second gets too high. This is where the whitelist system takes place, where
-        connections from the IP's in the whitelist are accepted into the server."""
+        connections from the IP's in the whitelist are accepted into the server. The automatic IP
+        banning function starts to take place if the DDoS Attacks last longer than 5 seconds. It
+        will start to ban all of the IP Addresses that connect to the server. While not perfect, as
+        it may ban innocent IP Addresses, it will help stop the DDoS Attack on the server."""
         self.uptimeadder = threading.Thread(target=self.add_to_connvar)
         self.uptimeadder.start()
         print(f"[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
@@ -392,7 +395,9 @@ Advanced Server by DrSquid"""
     def check_for_sameitems(self, name, cmd):
         """This checks for same items that already in the server. If the name is
         already in the database, then the value the function is assigned to will
-        return as False(bool object)."""
+        return as False(bool object). It was recently made into one function. There
+        was one for checking for the same names in the database as well as one
+        for checking if there is a session with the account opened."""
         db = sqlite3.connect(self.userdbfile)
         cursor = db.cursor()
         tag = 0
@@ -465,7 +470,8 @@ Advanced Server by DrSquid"""
                     break
                 item += 1
     def del_from_roomdata(self, user, roomname, stat):
-        """This function removes names from room-data. Removes from a provided stat."""
+        """This function removes names from room-data. Removes from a provided stat.
+        It is very similar to the 'add_to_roomdata' function."""
         file = open(self.roomdata, "r")
         contents = file.readlines()
         file.close()
