@@ -194,9 +194,6 @@ Advanced Server by DrSquid"""
                                 if self.uptime == 60:
                                     self.uptime = 0
                                     self.conncount = 0
-                                    logmsg = f"[({datetime.datetime.today()})][(INFO)]: Setting Uptime Variable to: {self.uptime} and Conn Count Variable to: {self.conncount}"
-                                    print(logmsg)
-                                    self.log("\n"+logmsg)
                                 self.being_attacked = False
                                 self.waitingforautoban = False
                                 if not self.manualbanall and self.banningallincomingconn:
@@ -294,9 +291,6 @@ Advanced Server by DrSquid"""
                 if self.uptime == 60:
                     self.uptime = 0
                     self.conncount = 0
-                    logmsg = f"[({datetime.datetime.today()})][(INFO)]: Setting Uptime Variable to: {self.uptime} and Conn Count Variable to: {self.conncount}"
-                    print(logmsg)
-                    self.log("\n" + logmsg)
                 self.being_attacked = False
                 self.waitingforautoban = False
                 if not self.manualbanall and self.banningallincomingconn:
@@ -1017,10 +1011,7 @@ Advanced Server by DrSquid"""
                                 for room in self.rooms:
                                     if selfroomname in room:
                                         item = 0
-                                        for i in room:
-                                            if str(conn).strip() == str(i).strip():
-                                                del room[item]
-                                            item += 1
+                                        room.remove(conn)
                                         inroom = False
                                         room_admin = False
                                         selfroomname = ""
