@@ -190,10 +190,11 @@ Advanced Server by DrSquid"""
                             if self.connpersec >= self.maxconnpersec:
                                 self.connpersec = self.maxconnpersec + 5
                         if not closed:
-                            if self.connpersec <= self.maxconnpersec:
+                            if not self.being_attacked:
                                 if self.uptime == 60:
                                     self.uptime = 0
                                     self.conncount = 0
+                            if self.connpersec <= self.maxconnpersec:
                                 self.being_attacked = False
                                 self.waitingforautoban = False
                                 if not self.manualbanall and self.banningallincomingconn:
@@ -205,7 +206,7 @@ Advanced Server by DrSquid"""
                                 if not self.waitingforautoban:
                                     timetoauto_ban = time.time()
                                     self.waitingforautoban = True
-                                if round(time.time() - timetoauto_ban) >= 10 and not self.banningallincomingconn:
+                                if round(time.time() - timetoauto_ban) >= 5 and not self.banningallincomingconn:
                                     self.banningallincomingconn = True
                                     logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
                                     print(logmsg)
@@ -288,9 +289,6 @@ Advanced Server by DrSquid"""
         while True:
             time.sleep(1)
             if self.connpersec <= self.maxconnpersec:
-                if self.uptime == 60:
-                    self.uptime = 0
-                    self.conncount = 0
                 self.being_attacked = False
                 self.waitingforautoban = False
                 if not self.manualbanall and self.banningallincomingconn:
@@ -298,6 +296,10 @@ Advanced Server by DrSquid"""
                     logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
                     print(logmsg)
                     self.log(f"\n" + logmsg)
+            if not self.being_attacked:
+                if self.uptime >= 30:
+                    self.uptime = 0
+                    self.conncount = 0
             self.uptime += 1
             try:
                 self.connpersec = self.conncount / self.uptime
@@ -622,7 +624,7 @@ Advanced Server by DrSquid"""
         if valid_conn:
             while True:
                 try:
-                    msg = conn.recv(1024)
+                    msg = conn.recv(10240)
                     msgspersec += 1
                     try:
                         msg = str(msg.decode())
@@ -1092,6 +1094,7 @@ Advanced Server by DrSquid"""
                                 try:
                                     dmconn.send("\n[(DM)]".encode() + this_main_msg.strip().encode())
                                     logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
+                                    print(logmsg)
                                     self.log("\n"+logmsg)
                                 except:
                                     self.show_server_com_with_client(conn, selfname, f"There was an error with sending your DM Message! The person may have gone offline. Closing your DM.")
@@ -1099,8 +1102,9 @@ Advanced Server by DrSquid"""
                     if msg.strip() == "":
                         pass
                     else:
-                        self.log(f"\n[({datetime.datetime.today()})]"+this_main_msg.strip())
-                        print(f"[({datetime.datetime.today()})]"+this_main_msg.strip())
+                        if not indm:
+                            self.log(f"\n[({datetime.datetime.today()})]" + this_main_msg.strip())
+                            print(f"[({datetime.datetime.today()})]" + this_main_msg.strip())
                 except Exception as e:
                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Client Error with {ip}(known as {selfname}): {e}")
                     if logged_in:
