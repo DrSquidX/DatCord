@@ -578,6 +578,7 @@ Advanced Server by DrSquid"""
         msg = """
 [(SERVER)]:
 [+] Regular Commands For This Server:
+[+] !help                                  - Displays this message.
 [+] !dm [user]                             - Opens a DM With the specified User.
 [+] !closedm                               - Closes the DM that you are currently in.
 [+] !reregister [old_pass] [new_pass]      - Changes your current password if you enter the correct one.
@@ -628,6 +629,10 @@ Advanced Server by DrSquid"""
         msgspersec = 0
         max_spam_warns = 3
         spam_warnings = 0
+        if self.ip == "localhost":
+            max_msg_persec = 3
+        else:
+            max_msg_persec = 4
         valid_conn = False
         try:
             conn.send(self.login_help_message().encode())
@@ -649,7 +654,7 @@ Advanced Server by DrSquid"""
                     this_main_msg = f"\n[({selfname})]: {msg}"
                     current_timer = time.time()
                     if round(current_timer-timer) >= 1:
-                        if msgspersec >= 4:
+                        if msgspersec >= max_msg_persec:
                             spam_warnings += 1
                             self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warnings left until you are kicked.")
                         if spam_warnings >= max_spam_warns:
@@ -682,6 +687,8 @@ Advanced Server by DrSquid"""
                                             self.conn_list.append(conn)
                                             self.add_name_to_db(selfname, str(ip[0]) + " " + str(ip).strip('()').split()[1])
                                             self.show_server_com_with_client(conn, selfname, "Successfully logged in!")
+                                            if self.ip == "localhost":
+                                                time.sleep(1)
                                             conn.send(self.regular_client_help_message().encode())
                                             othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
                                             print(othermsg)
@@ -691,6 +698,8 @@ Advanced Server by DrSquid"""
                                             print(display_msg)
                                             if selfname == self.ownername:
                                                 serverowner = True
+                                                if self.ip == "localhost":
+                                                    time.sleep(1)
                                                 conn.send(self.admin_help_message().encode())
                                                 infomsg = f"[({datetime.datetime.today()})][(INFO)]: {selfname} is an Admin!"
                                                 print(infomsg)
