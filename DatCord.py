@@ -205,6 +205,8 @@ Advanced Server by DrSquid"""
                                     logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
                                     print(logmsg)
                                     self.log(f"\n" + logmsg)
+                                    if not self.listening:
+                                        self.listening = True
                             elif self.connpersec >= self.maxconnpersec:
                                 if not self.waitingforautoban:
                                     timetoauto_ban = time.time()
@@ -223,9 +225,15 @@ Advanced Server by DrSquid"""
                                         self.log(f"\n[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
                                         conn.close()
                             if self.banningallincomingconn:
-                                if ip[0] not in self.get_iplist("ipwhitelist"):
-                                    if ip[0] not in self.get_iplist("ipbanlist"):
-                                        self.ban_ip_fr_server(ip[0])
+                                if ip[0] == "127.0.0.1":
+                                    self.listening = False
+                                    logmsg = f"[({datetime.datetime.today()})][(INFO)]: Server is being hosted on LOCALHOST! Setting Listening for connections to: {self.listening}"
+                                    print(logmsg)
+                                    self.log("\n"+logmsg)
+                                else:
+                                    if ip[0] not in self.get_iplist("ipwhitelist"):
+                                        if ip[0] not in self.get_iplist("ipbanlist"):
+                                            self.ban_ip_fr_server(ip[0])
                             if self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
                                 msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
                                 print(msg)
@@ -299,6 +307,8 @@ Advanced Server by DrSquid"""
                     logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
                     print(logmsg)
                     self.log(f"\n" + logmsg)
+                    if not self.listening:
+                        self.listening = True
             if not self.being_attacked:
                 if self.uptime >= 30:
                     self.uptime = 0
@@ -762,6 +772,8 @@ Advanced Server by DrSquid"""
                                     actual_ip = socket.gethostbyname(ip_addr)
                                     if ip_addr in self.get_iplist("ipbanlist"):
                                         self.show_server_com_with_client(conn, selfname, f"The IP is already in the banlist!")
+                                    elif ip_addr == "127.0.0.1":
+                                        self.show_server_com_with_client(conn, selfname, f"You can't ban localhost!")
                                     else:
                                         self.ban_ip_fr_server(ip_addr)
                                         self.show_server_com_with_client(conn, selfname, f"Successfully banned {ip_addr}. They won't be able to join the server the next time they try to.")
