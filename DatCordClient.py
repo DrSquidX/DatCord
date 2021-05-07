@@ -105,11 +105,11 @@ Advanced Server by DrSquid"""
     def send(self):
         print("[+] Sign-in")
         print("[+] Before you are able to communicate.\n[+] You are needed to either sign in or create an account for Datcord.")
-        print("\n[+] Don't have an account?\n[+] Not to worry. Enter the credentials you wish to use, and you will be prompted to register for a new account.\n")
+        print("\n[+] Don't have an account?\n[+] Not to worry. Enter the credentials you wish to use, and you will be prompted to register for a new account.")
         while True:
             try:
                 if not self.logged_in:
-                    username = input("[+] Enter your username: ")
+                    username = input("\n[+] Enter your username: ")
                     password = input("[+] Enter your password: ")
                     self.client.send(f"!login {username} {password}".encode())
                     msg = self.client.recv(10240).decode()
@@ -128,8 +128,7 @@ Advanced Server by DrSquid"""
                         else:
                             print("[+] Please re-enter your crentials.")
                     elif "Your account has been banned from the server." in msg:
-                        print(
-                            "[+] Your account has been banned from the server! Try to create a new account or wait until you are unbanned.")
+                        print("[+] Your account has been banned from the server! Try to create a new account or wait until you are unbanned.")
                     else:
                         print("[+] Unable to login.")
                         print(msg)
