@@ -1,5 +1,9 @@
 import socket, threading, sqlite3
 class Client:
+    """Configures the database files if they don't exist, as well as
+    also configuring the database tables if they also don't exist.
+    This function also starts the connecting function, which helps
+    the user with connecting to the server."""
     def __init__(self):
         print(self.logo())
         self.dbfile = "servers.db"
@@ -20,6 +24,16 @@ class Client:
         db.close()
         self.join_serv()
     def join_serv(self):
+        """This is the function that is used to connect to the server. If first prompts the user 
+        if they want to connect to an existing server in their directory, or if they want to 
+        connect to a new server that they haven't connected to one yet. If the user says 'yes', 
+        the database file with all of the servers and IP's will be displayed. If there isn't 
+        anything in the database, it will tell the user that there isn't any server to connect
+        to. If there is stuff in the database file, then the user can select which server that 
+        they want to connect to. They can then be able to connect to that server. If the user wants
+        to join a new server, they will be prompted to enter the IP and Port of the new server. 
+        If the user can connect to that IP and Port, it will be added to the server database
+        files, and you can connect to it with ease when you want to again."""
         self.inserver = False
         print("\n[+] You are required to go connect to a DatCord Server, before you are able to communicate with others.")
         while True:
@@ -93,6 +107,7 @@ class Client:
             self.sender = threading.Thread(target=self.send)
             self.sender.start()
     def logo(self):
+        """Logo of the script."""
         logo = """
  _____        _    _____              _    _____ _ _            _          ___    ___  
 |  __ \      | |  / ____|            | |  / ____| (_)          | |        |__ \  / _ \ 
@@ -103,6 +118,8 @@ class Client:
 Client Script For DatCord by DrSquid"""
         return logo
     def send(self):
+        """This function is what the client uses to send messages to the server.
+        All of the logging in code is here as well."""
         print("[+] Sign-in")
         print("[+] Before you are able to communicate.\n[+] You are needed to either sign in or create an account for Datcord.")
         print("\n[+] Don't have an account?\n[+] Not to worry. Enter the credentials you wish to use, and you will be prompted to register for a new account.")
@@ -144,6 +161,7 @@ Client Script For DatCord by DrSquid"""
                 servjoiner = threading.Thread(target=self.join_serv).start()
                 break
     def recv(self):
+        """This function is what the client uses to recieve messages from the server."""
         print("[+] You are free to send commands to the server.\n[+] You can run the commands that are used by the server(if you know them) or use the commands on this script to communicate with it.")
         while True:
             try:
