@@ -24,6 +24,8 @@ This is a school project for one of my Design classes. This server is a sophisti
 
 * Anti Spam               - Spammers will get kicked!
 
+* Special Client Script   - Official Client script used for connecting to the server.
+
 # Secure Password Storage
 Due to some recent learning of SQL, I have changed my old way of password storage of a plain text file, to a more advanced alternative - SQL Databases. This way I can store passwords in a more secure way, where the server would have to run a certain SQL Command to extract a username and password from the Database(this command is similar to "select * from users). This password storage system is more quick than the old text file system, as I can run a certain SQL Command to extract, remove or insert something in the Database, whereas I would have to read a whole text file to extract information from it(this would be worse if the server had a lot of clients, as the reading of the file would take very long). This system is more secure than any system I have made so far. 
 
@@ -108,6 +110,11 @@ There is an Anti-Spam system on the server. It works somewhat similarly to the A
 
 Spammer getting kicked by server:
 ![spamkick](/anti-spam.png)
+
+# Special Client Script
+There is a client script that is suggested to be used to connect to the server. The client script has an easy way of connecting to different DatCord servers, so you will have no problems with connecting. Logging in is easier, as you dont have to enter commands like "!login blablabla blablabla" and is more straightforward. Direct Messages that you get are also formatted to look better.
+
+(picture coming soon)
 
 # Overall
 DatCord is a secure chat server that is safe to use, DoS-Free, as well as a lot of capibilites for clients. They can create their own chat rooms for their friends, chat privately one-to-one with them, and more. The Owner account on the server can also manage and moderate the server, to stop attackers and hackers(if they have the knowledge), if the server is to be compromised. This server shows the improvement of my skills in networking, and also a bit in cybersecurity.
