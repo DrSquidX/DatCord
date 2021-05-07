@@ -83,7 +83,7 @@ class Client:
                             if ls.lower().strip() == "cancel":
                                 break
                             else:
-                                print("[+] Please enter a valid number.")
+                                print("[+] Please enter a valid number. Input 'cancel' if you would like to go back.")
                 if success:
                     break
             elif connect.lower().strip() == "no":
@@ -119,12 +119,12 @@ class Client:
     def logo(self):
         """Logo of the script."""
         logo = """
- _____        _    _____              _    _____ _ _            _          ___    ___  
-|  __ \      | |  / ____|            | |  / ____| (_)          | |        |__ \  / _ \ 
-| |  | | __ _| |_| |     ___  _ __ __| | | |    | |_  ___ _ __ | |_  __   __ ) || | | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | | |    | | |/ _ \ '_ \| __| \ \ / // / | | | |
-| |__| | (_| | |_| |___| (_) | | | (_| | | |____| | |  __/ | | | |_   \ V // /_ | |_| |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|  \_____|_|_|\___|_| |_|\__|   \_/|____(_)___/                                                                                               
+ _____        _    _____              _    _____ _ _            _          ____   ___  
+|  __ \      | |  / ____|            | |  / ____| (_)          | |        |___ \ / _ \ 
+| |  | | __ _| |_| |     ___  _ __ __| | | |    | |_  ___ _ __ | |_  __   ____) | | | |
+| |  | |/ _` | __| |    / _ \| '__/ _` | | |    | | |/ _ \ '_ \| __| \ \ / /__ <| | | |
+| |__| | (_| | |_| |___| (_) | | | (_| | | |____| | |  __/ | | | |_   \ V /___) | |_| |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|  \_____|_|_|\___|_| |_|\__|   \_/|____(_)___/                                                                                      
 Client Script For DatCord by DrSquid"""
         return logo
     def send(self):
@@ -137,7 +137,7 @@ Client Script For DatCord by DrSquid"""
             try:
                 if not self.logged_in:
                     if self.userinfo is not None:
-                        useinfo = input(f"\n[+] Would you like to use the same userinfo from last time you logged in?: ")
+                        useinfo = input(f"\n[+] Would you like to use the same userinfo from last time you logged in?(yes/no): ")
                         if useinfo.lower().strip() == "yes":
                             self.client.send(f"!login {self.userinfo[0]} {self.userinfo[1]}".encode())
                             msg = self.client.recv(10240).decode()
@@ -194,7 +194,7 @@ Client Script For DatCord by DrSquid"""
                             self.reciever.start()
                         print("")
                     if self.logged_in:
-                        print(f"\n[+] Logged in as: {self.userinfo1[0]}")
+                        print(f"\n[+] Logged in as: {self.userinfo1[0]}.\n")
                 else:
                     msg = input("[+] Enter your msg: ")
                     self.client.send(msg.encode())
