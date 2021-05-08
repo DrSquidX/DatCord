@@ -10,7 +10,7 @@ class Client:
         try:
             file = open(self.dbfile,"rb")
             file.close()
-        except FileNotFoundError:
+        except:
             file = open(self.dbfile, "wb")
             file.close()
         db = sqlite3.connect(self.dbfile)
@@ -47,7 +47,7 @@ class Client:
         self.inserver = False
         print("\n[+] Connect To A Server\n[+] You are required to go connect to a DatCord Server, before you are able to communicate with others.")
         while True:
-            connect = input("\n[+] Would you like to connect to an existing server or create a new profile for one?(yes/no): ")
+            connect = input("\n[+] Would you like to connect to an existing server that you have connected to?(yes/no): ")
             if connect.lower().strip() == "yes":
                 db = sqlite3.connect(self.dbfile)
                 cursor = db.cursor()
@@ -133,6 +133,7 @@ Client Script For DatCord by DrSquid"""
         print("[+] Sign-in")
         print("[+] Before you are able to communicate.\n[+] You are needed to either sign in or create an account for Datcord.")
         print("\n[+] Don't have an account?\n[+] Not to worry. Enter the credentials you wish to use, and you will be prompted to register for a new account.")
+        msg = None
         while True:
             try:
                 if not self.logged_in:
@@ -197,14 +198,21 @@ Client Script For DatCord by DrSquid"""
                         print(f"\n[+] Logged in as: {self.userinfo1[0]}.\n")
                 else:
                     msg = input("[+] Enter your msg: ")
-                    self.client.send(msg.encode())
+                    if msg == "!disconnect":
+                        print("[+] Disconnecting you from the server.")
+                        self.client.close()
+                        raise Exception("Closed conn")
+                    else:
+                        self.client.send(msg.encode())
             except Exception as e:
-                print("[+] There appears to be some issues with your connection with the server.")
+                if msg != "!disconnect":
+                    print("[+] There appears to be some issues with your connection with the server.")
+                    self.client.close()
                 servjoiner = threading.Thread(target=self.join_serv).start()
                 break
     def recv(self):
         """This function is what the client uses to recieve messages from the server."""
-        print("\n[+] You are free to send commands to the server.\n[+] You can run the commands that are used by the server(if you know them) or use the commands on this script to communicate with it.")
+        print("\n[+] You are free to send commands to the server.\n[+] Run '!help' to get the full list of commands(In case it didn't show up).\n[+] You can also run the command '!disconnect' if you would like to disconnect.")
         while True:
             try:
                 msg = self.client.recv(10240).decode()
@@ -223,7 +231,7 @@ Client Script For DatCord by DrSquid"""
                         pass
                     else:
                         print(msg)
-            except:
+            except Exception as e:
                 break
 if __name__ == '__main__':
     if sys.platform == "win32":
