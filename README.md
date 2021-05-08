@@ -114,7 +114,8 @@ Spammer getting kicked by server:
 # Special Client Script
 There is a client script that is suggested to be used to connect to the server. The client script has an easy way of connecting to different DatCord servers, so you will have no problems with connecting. Logging in is easier, as you dont have to enter commands like "!login blablabla blablabla" and is more straightforward. Direct Messages that you get are also formatted to look better.
 
-(picture coming soon)
+Client Script in Use:
+![clientscript](/clientscript.png)
 
 # Overall
 DatCord is a secure chat server that is safe to use, DoS-Free, as well as a lot of capibilites for clients. They can create their own chat rooms for their friends, chat privately one-to-one with them, and more. The Owner account on the server can also manage and moderate the server, to stop attackers and hackers(if they have the knowledge), if the server is to be compromised. This server shows the improvement of my skills in networking, and also a bit in cybersecurity.
