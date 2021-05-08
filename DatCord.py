@@ -656,7 +656,10 @@ Advanced Server by DrSquid"""
                     if round(current_timer-timer) >= 1:
                         if msgspersec >= max_msg_persec:
                             spam_warnings += 1
-                            self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warnings left until you are kicked.")
+                            if max_spam_warns - spam_warnings == 1:
+                                self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warning left until you are kicked.")
+                            else:
+                                self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warnings left until you are kicked.")
                         if spam_warnings >= max_spam_warns:
                             self.show_server_com_with_client(conn, selfname, f"You have been kicked for spamming.")
                             conn.close()
@@ -688,7 +691,7 @@ Advanced Server by DrSquid"""
                                             self.add_name_to_db(selfname, str(ip[0]) + " " + str(ip).strip('()').split()[1])
                                             self.show_server_com_with_client(conn, selfname, "Successfully logged in!")
                                             if self.ip == "localhost":
-                                                time.sleep(1)
+                                                time.sleep(0.5)
                                             conn.send(self.regular_client_help_message().encode())
                                             othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
                                             print(othermsg)
@@ -698,8 +701,6 @@ Advanced Server by DrSquid"""
                                             print(display_msg)
                                             if selfname == self.ownername:
                                                 serverowner = True
-                                                if self.ip == "localhost":
-                                                    time.sleep(1)
                                                 conn.send(self.admin_help_message().encode())
                                                 infomsg = f"[({datetime.datetime.today()})][(INFO)]: {selfname} is an Admin!"
                                                 print(infomsg)
@@ -712,7 +713,6 @@ Advanced Server by DrSquid"""
                             except self.ServerError.AuthenticationError:
                                 self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
                                 login_attempts += 1
-                                self.show_server_com_with_client(conn, selfname, f"Login attempt number: {login_attempts}. You have {max_login_attempts - login_attempts} login attempts left until you are kicked.")
                                 if login_attempts >= max_login_attempts:
                                     self.show_server_com_with_client(conn, selfname, "You have exceeded the amount of login attempts. You have been kicked from the server.")
                                     conn.close()
@@ -923,10 +923,13 @@ Advanced Server by DrSquid"""
                         elif msg.startswith("!dm"):
                             try:
                                 username = msg.split()[1]
-                                dmconn = self.opendm(username)
-                                indm = True
-                                dmusername = username
-                                self.show_server_com_with_client(conn, selfname, f"Opened a DM with {username}. You can directly speak to them privately!")
+                                if username == selfname:
+                                    self.show_server_com_with_client(conn, selfname, f"You can't dm yourself!")
+                                else:
+                                    dmconn = self.opendm(username)
+                                    indm = True
+                                    dmusername = username
+                                    self.show_server_com_with_client(conn, selfname, f"Opened a DM with {username}. You can directly speak to them privately!")
                             except self.ServerError.NameNotInDatabaseError:
                                 self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
                             except:
