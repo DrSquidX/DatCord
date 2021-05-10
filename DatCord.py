@@ -190,8 +190,8 @@ Advanced Server by DrSquid"""
                         else:
                             self.conncount += 1
                             self.connpersec = self.conncount / self.uptime
-                            if self.connpersec >= self.maxconnpersec:
-                                self.connpersec = self.maxconnpersec + 5
+                        if self.connpersec >= self.maxconnpersec:
+                            self.connpersec = self.maxconnpersec + 5
                         if not closed:
                             if not self.being_attacked:
                                 if self.uptime == 60:
@@ -203,7 +203,6 @@ Advanced Server by DrSquid"""
                                 if not self.manualbanall and self.banningallincomingconn:
                                     self.banningallincomingconn = False
                                     logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
-                                    print(logmsg)
                                     self.log(f"\n" + logmsg)
                                     if not self.listening:
                                         self.listening = True
@@ -551,16 +550,17 @@ Advanced Server by DrSquid"""
                 ipandsrcport = str(i[1]).split()
                 tag = 1
         if tag == 1:
-            conn = None
             for i in self.conn_list:
                 if ipandsrcport[0] in str(i) and ipandsrcport[1] in str(i):
                     return i
                     break
         else:
             raise self.ServerError.NameNotInDatabaseError
-    def sendall(self,msg):
+    def sendall(self,msg,ls=None):
         """This sends a message to everyone in the connection list."""
-        for conn in self.conn_list:
+        if ls is None:
+            ls = self.conn_list
+        for conn in ls:
             try:
                 conn.send(msg.encode())
             except:
@@ -671,7 +671,7 @@ Advanced Server by DrSquid"""
                                 username = msg.split()[1].strip("'").strip('"')
                                 password = msg.split()[2].strip("'").strip('"')
                                 authentication = self.attempt_login(username, password)
-                                if authentication == True:
+                                if authentication:
                                     namealreadylogged = self.check_for_sameitems(username, f"select * from loggedinusers where username = '{username}'")
                                     if namealreadylogged:
                                         self.show_server_com_with_client(conn, selfname, "Your account is already being used in another location!")
@@ -837,7 +837,7 @@ Advanced Server by DrSquid"""
                                     for i in msg_to_all:
                                         _main_msg = _main_msg + i + " "
                                     _main_msg = _main_msg.strip()
-                                    main_msg2 = f"[(BROADCAST)]: {_main_msg}"
+                                    main_msg2 = f"\n[(BROADCAST)]: {_main_msg}"
                                     self.sendall(main_msg2)
                                     logmsg = f"[({datetime.datetime.today()})][(BROADCAST)]: {_main_msg}"
                                     print(logmsg)
@@ -902,7 +902,7 @@ Advanced Server by DrSquid"""
                                 old_pass = msg.split()[1].strip("'").strip('"')
                                 newpass = msg.split()[2].strip("'").strip('"')
                                 authentication = self.attempt_login(selfname, old_pass)
-                                if authentication == True:
+                                if authentication:
                                     self.show_server_com_with_client(conn, selfname, f"Changing your password to: {newpass}")
                                     self.change_password(selfname, newpass)
                             except self.ServerError.AuthenticationError:
@@ -1007,7 +1007,7 @@ Advanced Server by DrSquid"""
                                             selfroomname = roomname
                                         else:
                                             authentication = self.attempt_join_room(roomname, roompass)
-                                            if authentication == True:
+                                            if authentication:
                                                 self.add_to_roomdata(selfname, roomname, "Members: ")
                                                 in_room = True
                                                 inroom = True
@@ -1045,6 +1045,10 @@ Advanced Server by DrSquid"""
                                         item = 0
                                         room.remove(conn)
                                         inroom = False
+                                        logmsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfroomname})]: {selfname} has left the chat!"
+                                        print(logmsg)
+                                        self.log("\n"+logmsg)
+                                        self.sendall(f"\n[(SERVER)]: {selfname} has left the chat!", room)
                                         room_admin = False
                                         selfroomname = ""
                                         break
