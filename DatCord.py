@@ -84,6 +84,7 @@ class Server:
         self.listening = True
         self.banningallincomingconn = False
         self.conn_list = []
+        self.roomkicked = []
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.log(self.logo())
         try:
@@ -134,12 +135,12 @@ class Server:
     def logo(self):
         """Logo of this script."""
         logo = """
- _____        _    _____              _         _____  ___  
-|  __ \      | |  / ____|            | |       | ____|/ _ \ 
-| |  | | __ _| |_| |     ___  _ __ __| | __   _| |__ | | | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / /___ \| | | |
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V / ___) | |_| |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/ |____(_)___/                                                                 
+ _____        _    _____              _           __   ___  
+|  __ \      | |  / ____|            | |         / /  / _ \ 
+| |  | | __ _| |_| |     ___  _ __ __| | __   __/ /_ | | | |
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / / '_ \| | | |
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V /| (_) | |_| |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/  \___(_)___/                                                          
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -156,6 +157,7 @@ Advanced Server by DrSquid"""
         for i in cursor.fetchall():
             item = []
             item.append(str(i[0]))
+            self.roomkicked.append(item)
             self.rooms.append(item)
     def listen(self):
         """This is the function that listens for connections. When someone connects to the server,
@@ -350,6 +352,11 @@ Advanced Server by DrSquid"""
         back into the database."""
         password = hashlib.sha256(password.encode()).hexdigest()
         self.exec_sqlcmd(self.dbfile, f'update users set password = "{password}" where username = "{username}"')
+    def change_room_password(self, roomname, password):
+        """Changes the room password. It first hashes it and then puts it
+        back into the database."""
+        password = hashlib.sha256(password.encode()).hexdigest()
+        self.exec_sqlcmd(self.dbfile, f'update open_rooms set roompass = "{password}" where roomname = "{roomname}"')
     def add_name_to_db(self, name, conn):
         """Adds a name and the connection to the active connections
         database file."""
@@ -565,6 +572,38 @@ Advanced Server by DrSquid"""
                 conn.send(msg.encode())
             except:
                 pass
+    def kick_user_fr_room(self, user, chatroomname, banned=False):
+        """This function deletes the user from the connections list
+        in the room."""
+        db = sqlite3.connect(self.userdbfile)
+        cursor = db.cursor()
+        cursor.execute("select * from loggedinusers")
+        for i in cursor.fetchall():
+            if user in i[0]:
+                conninfo = str(i[1]).split()
+                for ii in self.rooms:
+                    if chatroomname in ii[0]:
+                        for iii in ii:
+                            if conninfo[0] in str(iii) and conninfo[1] in str(iii):
+                                if banned:
+                                    item = "banned"
+                                else:
+                                    item = "kicked"
+                                logmsg = f"[({datetime.datetime.today()})][(SERVER)--->({chatroomname})]: {user} has left the chat!"
+                                print(logmsg)
+                                self.log("\n" + logmsg)
+                                self.sendall(f"\n[(SERVER)]: {user} has left the chat!", ii)
+                                try:
+                                    self.show_server_com_with_client(iii, user, f"You have been {item} from the chatroom.")
+                                except:
+                                    pass
+                                for items in self.roomkicked:
+                                    if chatroomname in items[0]:
+                                        if user not in items:
+                                            items.append(user)
+                                            break
+                                ii.remove(iii)
+                        break
     def login_help_message(self):
         """Generates the help message with all of the login commands."""
         msg = """
@@ -587,6 +626,7 @@ Advanced Server by DrSquid"""
 [+] !leaveroom                             - Leaves the current room you are in.
 [+] !roomban [user]                        - Bans a user from the chat-room(you need to be room admin).
 [+] !roomunban [user]                      - Unbans a user from the chat-room(you need to be room admin).
+[+] !roomkick [user]                       - Kicks a user from the chat room(they can re-enter with the same password).
 [+] !promoteuser [user]                    - Promotes a user to room-admin(you need to be room admin).
 [+] !demoteuser [user]                     - Demotes a user down to regular room client(you need to be room admin)."""
         return msg
@@ -622,7 +662,10 @@ Advanced Server by DrSquid"""
         dmconn = None
         dmusername = None
         serverowner = False
+        roomowner = False
+        kicked_from_room = False
         selfroomname = ""
+        prev_roomname = ""
         timer = time.time()
         login_attempts = 0
         max_login_attempts = 5
@@ -984,6 +1027,11 @@ Advanced Server by DrSquid"""
                                         if roomname.strip() in i.strip():
                                             in_room = True
                                         if in_room:
+                                            if i.startswith("Owner: "):
+                                                if selfname in i:
+                                                    roomowner = True
+                                                    roommember = True
+                                                    roomadmin = True
                                             if i.startswith("Admins: "):
                                                 if selfname in i:
                                                     roommember = True
@@ -1012,6 +1060,7 @@ Advanced Server by DrSquid"""
                                                 in_room = True
                                                 inroom = True
                                         if inroom:
+                                            prev_roomname = selfroomname
                                             correct_ls = False
                                             ls = []
                                             self.show_server_com_with_client(conn, selfname, "You have joined the room. Say hi!")
@@ -1050,6 +1099,8 @@ Advanced Server by DrSquid"""
                                         self.log("\n"+logmsg)
                                         self.sendall(f"\n[(SERVER)]: {selfname} has left the chat!", room)
                                         room_admin = False
+                                        roomowner = False
+                                        roomadmin = False
                                         selfroomname = ""
                                         break
                             else:
@@ -1061,6 +1112,7 @@ Advanced Server by DrSquid"""
                                         name = msg.split()[1]
                                         self.add_to_roomdata(name, selfroomname, "Banlist:")
                                         self.show_server_com_with_client(conn, selfname, f"{name} has been banned from the room.")
+                                        self.kick_user_fr_room(name,selfroomname,True)
                                     except self.ServerError.PermissionError:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                         self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -1083,6 +1135,39 @@ Advanced Server by DrSquid"""
                                     except Exception as e:
                                         self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                         self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomunban <username>")
+                                else:
+                                    self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                        elif msg.startswith("!roomkick"):
+                            if inroom:
+                                if roomadmin:
+                                    try:
+                                        name = msg.split()[1]
+                                        self.del_from_roomdata(name, selfroomname, "Members:")
+                                        self.show_server_com_with_client(conn, selfname, f"{name} has been kicked from the room.")
+                                        self.kick_user_fr_room(name, selfroomname)
+                                    except self.ServerError.PermissionError:
+                                        self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    except Exception as e:
+                                        self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                        self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomkick <username>")
+                                else:
+                                    self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                        elif msg.startswith("!changeroompass"):
+                            if inroom:
+                                if roomowner:
+                                    try:
+                                        newpass = msg.split()[1]
+                                        self.change_room_password(selfroomname, newpass)
+                                        self.show_server_com_with_client(conn, selfname, f"Changed the room's password to: {newpass}.")
+                                    except self.ServerError.PermissionError:
+                                        self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
+                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    except Exception as e:
+                                        self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                        self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomkick <username>")
                                 else:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -1117,13 +1202,31 @@ Advanced Server by DrSquid"""
                             pass
                         else:
                             if inroom:
-                                for room in self.rooms:
-                                    if selfroomname in room[0]:
-                                        for person in room:
-                                            try:
-                                                person.send(this_main_msg.encode())
-                                            except:
-                                                pass
+                                kicked_from_room = False
+                                for kicked in self.roomkicked:
+                                    if selfroomname in kicked[0]:
+                                        for person in kicked:
+                                            if person == selfname:
+                                                inroom = False
+                                                in_room = False
+                                                kicked_from_room = True
+                                                room_admin = False
+                                                roomowner = False
+                                                roomadmin = False
+                                                selfroomname = ""
+                                                try:
+                                                    self.roomkicked.remove(selfname)
+                                                except:
+                                                    pass
+                                                break
+                                if not kicked_from_room:
+                                    for room in self.rooms:
+                                        if selfroomname in room[0]:
+                                            for person in room:
+                                                try:
+                                                    person.send(this_main_msg.encode())
+                                                except:
+                                                    pass
                             if indm:
                                 try:
                                     dmconn.send("\n[(DM)]".encode() + this_main_msg.strip().encode())
@@ -1141,6 +1244,8 @@ Advanced Server by DrSquid"""
                             print(f"[({datetime.datetime.today()})]" + this_main_msg.strip())
                 except Exception as e:
                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Client Error with {ip}(known as {selfname}): {e}")
+                    if inroom:
+                        self.kick_user_fr_room(selfname, selfroomname)
                     if logged_in:
                         try:
                             self.remove_user_from_db(selfname)
