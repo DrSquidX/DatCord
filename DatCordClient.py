@@ -130,8 +130,7 @@ Client Script For DatCord by DrSquid"""
     def send(self):
         """This function is what the client uses to send messages to the server.
         All of the logging in code is here as well."""
-        print("[+] Sign-in")
-        print("[+] Before you are able to communicate.\n[+] You are needed to either sign in or create an account for Datcord.")
+        print("[+] Sign-in\n[+] Before you are able to communicate.\n[+] You are needed to either sign in or create an account for Datcord.")
         print("\n[+] Don't have an account?\n[+] Not to worry. Enter the credentials you wish to use, and you will be prompted to register for a new account.")
         msg = None
         while True:
