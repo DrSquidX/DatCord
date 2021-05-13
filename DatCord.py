@@ -1509,19 +1509,19 @@ class OptionParse:
         args.add_option("--ou", "--owneruser", dest="ou")
         args.add_option("--op", "--ownerpass", dest="op")
         args.add_option("--mc", "--maxconn", dest="mc")
-        args.add_option("--wN", "--whatsnew",dest="wn")
+        args.add_option("--wN", "--whatsnew",dest="wn", action="store_true")
         args.add_option("--i",  "--info",dest="i", action="store_true")
         arg, opt = args.parse_args()
         if arg.i is not None:
             self.usage()
             sys.exit()
+        if arg.wn is not None:
+            self.whatsnew()
+            sys.exit()
         if arg.ip is not None:
             ip = arg.ip
         else:
             self.usage()
-            sys.exit()
-        if arg.wn is not None:
-            self.whatsnew()
             sys.exit()
         if arg.port is not None:
             try:
