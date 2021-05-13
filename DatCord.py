@@ -1495,8 +1495,9 @@ class OptionParse:
 [+] Note: These optional arguments have defaults, so you are able to leave them.
 
 [+] Usage:
-[+] python3 Datcord.py --ip <ip> --p <port> --db <dbfile> --au <aufile> --rd <roomdata> --sl <servlog> --ou <owneruser> --op <ownerpass> --mc <maxconn>
-[+] python3 Datcord.py --i""")
+[+] python3 DatCord.py --ip <ip> --p <port> --db <dbfile> --au <aufile> --rd <roomdata> --sl <servlog> --ou <owneruser> --op <ownerpass> --mc <maxconn>
+[+] python3 DatCord.py --wn
+[+] python3 DatCord.py --i""")
     def parse_args(self):
         """This function parses the arguments."""
         args = OptionParser()
@@ -1509,7 +1510,7 @@ class OptionParse:
         args.add_option("--ou", "--owneruser", dest="ou")
         args.add_option("--op", "--ownerpass", dest="op")
         args.add_option("--mc", "--maxconn", dest="mc")
-        args.add_option("--wN", "--whatsnew",dest="wn", action="store_true")
+        args.add_option("--wn", "--whatsnew",dest="wn", action="store_true")
         args.add_option("--i",  "--info",dest="i", action="store_true")
         arg, opt = args.parse_args()
         if arg.i is not None:
