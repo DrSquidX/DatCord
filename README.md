@@ -26,6 +26,10 @@ This is a school project for one of my Design classes. This server is a sophisti
 
 * Special Client Script   - Official Client script used for connecting to the server.
 
+* Friends System          - A system to help you know when youre friends are online and available to chat with.
+
+* Blocking System         - Block annoying people with the blocking system.
+
 # Secure Password Storage
 Due to some recent learning of SQL, I have changed my old way of password storage of a plain text file, to a more advanced alternative - SQL Databases. This way I can store passwords in a more secure way, where the server would have to run a certain SQL Command to extract a username and password from the Database(this command is similar to "select * from users). This password storage system is more quick than the old text file system, as I can run a certain SQL Command to extract, remove or insert something in the Database, whereas I would have to read a whole text file to extract information from it(this would be worse if the server had a lot of clients, as the reading of the file would take very long). This system is more secure than any system I have made so far. 
 
@@ -116,6 +120,16 @@ There is a client script that is suggested to be used to connect to the server. 
 
 Client Script in Use:
 ![clientscript](/clientscript.png)
+
+# Friends System
+In the server, there is a friends system that allows for easier usage in the server. If you want to see which of your friends are online, you can run a simple command and a list of your online friends will show up. To become friends on the server with someone, you need to first send a friend request to the other user, where the other user needs to accept said request. If they accept, you are friends. You could now see if they are online or not.
+
+(Photo Coming Soon)
+
+# Blocking System
+Got any annoying people that are spamming you non-stop in DatCord? Not to worry. The new blocking system allows for the easy blocking of users, so that they won't be able to spam you in direct messages, and also so that they can't friend request you. This system is for if you don't want someone to direct message nor be able to friend request you, if you really don't like that user.
+
+(Photo Coming Soon)
 
 # Overall
 DatCord is a secure chat server that is safe to use, DoS-Free, as well as a lot of capibilites for clients. They can create their own chat rooms for their friends, chat privately one-to-one with them, and more. The Owner account on the server can also manage and moderate the server, to stop attackers and hackers(if they have the knowledge), if the server is to be compromised. This server shows the improvement of my skills in networking, and also a bit in cybersecurity.
