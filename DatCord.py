@@ -878,18 +878,6 @@ Advanced Server by DrSquid"""
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
-                        elif msg.startswith("!allipban"):
-                            if self.banningallincomingconn:
-                                self.banningallincomingconn = False
-                                self.manualbanall = False
-                                logmsg = f"[({datetime.datetime.today()})][(INFO)]: Stopped banning all incoming IP's."
-                            else:
-                                self.banningallincomingconn = True
-                                self.manualbanall = True
-                                logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began banning all incoming IP's."
-                            self.show_server_com_with_client(conn, selfname, f"Set Banning all incoming connections to: {self.banningallincomingconn}.")
-                            print(logmsg)
-                            self.log("\n" + logmsg)
                     if logged_in:
                         if serverowner:
                             if msg.startswith("!nick"):
@@ -911,6 +899,18 @@ Advanced Server by DrSquid"""
                                 self.show_server_com_with_client(conn, selfname, f"Set Listening for connections to {self.listening}.")
                                 print(logmsg)
                                 self.log("\n"+logmsg)
+                            elif msg.startswith("!allipban"):
+                                if self.banningallincomingconn:
+                                    self.banningallincomingconn = False
+                                    self.manualbanall = False
+                                    logmsg = f"[({datetime.datetime.today()})][(INFO)]: Stopped banning all incoming IP's."
+                                else:
+                                    self.banningallincomingconn = True
+                                    self.manualbanall = True
+                                    logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began banning all incoming IP's."
+                                self.show_server_com_with_client(conn, selfname, f"Set Banning all incoming connections to: {self.banningallincomingconn}.")
+                                print(logmsg)
+                                self.log("\n" + logmsg)
                             elif msg.startswith("!ipban"):
                                 try:
                                     ip_addr = msg.split()[1]
