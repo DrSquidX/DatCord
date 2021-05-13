@@ -115,6 +115,18 @@ class Server:
             cursor.execute("select * from ipwhitelist")
         except:
             cursor.execute("create table ipwhitelist(ip)")
+        try:
+            cursor.execute("select * from friendslist")
+        except:
+            cursor.execute("create table friendslist(user, friends)")
+        try:
+            cursor.execute("select * from friendrequests")
+        except:
+            cursor.execute("create table friendrequests(user, requests)")
+        try:
+            cursor.execute("select * from blocklists")
+        except:
+            cursor.execute("create table blocklists(user, blockedusers)")
         userdbcursor.execute("create table loggedinusers(username, connection)")
         userdb.commit()
         userdbcursor.close()
@@ -132,7 +144,7 @@ class Server:
         print(logmsg)
         self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
         self.log(logmsg)
-    def logo(self):
+    def logo(self=None):
         """Logo of this script."""
         logo = """
  _____        _    _____              _           __   ___  
@@ -572,6 +584,18 @@ Advanced Server by DrSquid"""
                 conn.send(msg.encode())
             except:
                 pass
+    def get_online_friends(self, selfname):
+        """Gets a list of all the users online friends."""
+        db = sqlite3.connect(self.userdbfile)
+        cursor = db.cursor()
+        cursor.execute(f"select username from loggedinusers")
+        items = cursor.fetchall()
+        online_friends = []
+        friends = self.get_friends_list(selfname)
+        for i in items:
+            if i[0] in friends:
+                online_friends.append(i[0])
+        return online_friends
     def kick_user_fr_room(self, user, chatroomname, banned=False):
         """This function deletes the user from the connections list
         in the room."""
@@ -604,6 +628,64 @@ Advanced Server by DrSquid"""
                                             break
                                 ii.remove(iii)
                         break
+    def get_friends_list(self, name):
+        """Gets the friendlist of the username provided."""
+        db = sqlite3.connect(self.dbfile)
+        cursor = db.cursor()
+        cursor.execute(f"select * from friendslist where user = '{name}'")
+        ls = cursor.fetchall()[0][1]
+        return str(ls).split()
+    def add_friend(self, selfname, friend):
+        """Adds a friend to the selfname's friendlist."""
+        old_ls = self.get_friends_list(selfname)
+        new_ls = ""
+        for i in old_ls:
+            new_ls = new_ls + " " + i
+        items = new_ls + " " + friend
+        self.exec_sqlcmd(self.dbfile, f'update friendslist set friends = "{items}" where user = "{selfname}"')
+    def rm_friend(self, selfuser, user):
+        """Removes a friend from the selfusers friendlist."""
+        old_ls = self.get_friends_list(selfuser)
+        try:
+            old_ls.remove(user)
+        except:
+            pass
+        new_ls = ""
+        for i in old_ls:
+            new_ls = new_ls + " " + i
+        self.exec_sqlcmd(self.dbfile, f"update friendslist set friends = '{new_ls}' where user = '{user}'")
+    def block_user(self, selfname, user):
+        """Blocks a user and add their name to the original Usernames blocklist."""
+        db = sqlite3.connect(self.dbfile)
+        cursor = db.cursor()
+        cursor.execute(f"select * from blocklists where user = '{selfname}'")
+        item = cursor.fetchall()
+        items = str(item[0][1]) + " " + user
+        self.exec_sqlcmd(self.dbfile, f"update blocklists set blockedusers = '{items}' where user = '{selfname}'")
+    def unblock_user(self, selfname, user):
+        """Unblocks a user from the original users blocklist."""
+        old_ls = self.get_block_list(selfname)
+        old_ls.remove(user)
+        new_ls = ""
+        for i in old_ls:
+            new_ls = new_ls + " " + i
+        self.exec_sqlcmd(self.dbfile, f"update blocklists set blockedusers = '{new_ls}' where user = '{selfname}'")
+    def get_block_list(self, user):
+        """Gets a list of all of the blocked users a username has blocked."""
+        db = sqlite3.connect(self.dbfile)
+        cursor = db.cursor()
+        cursor.execute("select * from blocklists")
+        ls = cursor.fetchall()[0][1]
+        return str(ls).split()
+    def get_userlist(self):
+        """Gets a list of all the registered users in the database."""
+        db = sqlite3.connect(self.dbfile)
+        cursor = db.cursor()
+        cursor.execute("select username from users")
+        users = []
+        for i in cursor.fetchall():
+            users.append(i[0])
+        return users
     def login_help_message(self):
         """Generates the help message with all of the login commands."""
         msg = """
@@ -780,6 +862,9 @@ Advanced Server by DrSquid"""
                                 self.log("\n" + othermsg)
                                 display_msg = f"[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}."
                                 self.log("\n" + display_msg)
+                                self.exec_sqlcmd(self.dbfile, f"insert into friendslist values('{selfname}', '')")
+                                self.exec_sqlcmd(self.dbfile, f"insert into friendrequests values('{selfname}', '')")
+                                self.exec_sqlcmd(self.dbfile, f"insert into blocklists values('{selfname}', '')")
                             except self.ServerError.NameAlreadyRegisteredError:
                                 self.show_server_com_with_client(conn, selfname, "The account name is already registered in the database. Please use another name for your account.")
                             except Exception as e:
@@ -893,20 +978,24 @@ Advanced Server by DrSquid"""
                                     if banned_user == self.ownername:
                                         self.show_server_com_with_client(conn, selfname, f"You can't ban yourself!")
                                     else:
-                                        self.ban_user_fr_server(banned_user)
-                                        self.show_server_com_with_client(conn, selfname, f"The Ban Hammer has spoken! {banned_user} has been banned from the server!")
-                                        db = sqlite3.connect(self.userdbfile)
-                                        cursor = db.cursor()
-                                        cursor.execute(f"select * from loggedinusers where username = '{banned_user}'")
-                                        for i in cursor.fetchall():
-                                            if banned_user.strip() == i[0].strip():
-                                                connectionnum = i[1]
-                                                for i in self.conn_list:
-                                                    if connectionnum.split()[0] in str(i) and connectionnum.split()[1] in str(i):
-                                                        self.show_server_com_with_client(i, banned_user, "You have been banned from the server!")
-                                                        i.close()
-                                        cursor.close()
-                                        db.close()
+                                        if banned_user in self.get_userlist():
+                                            self.ban_user_fr_server(banned_user)
+                                            self.show_server_com_with_client(conn, selfname, f"The Ban Hammer has spoken! {banned_user} has been banned from the server!")
+                                            db = sqlite3.connect(self.userdbfile)
+                                            cursor = db.cursor()
+                                            cursor.execute(f"select * from loggedinusers where username = '{banned_user}'")
+                                            for i in cursor.fetchall():
+                                                if banned_user.strip() == i[0].strip():
+                                                    connectionnum = i[1]
+                                                    for i in self.conn_list:
+                                                        if connectionnum.split()[0] in str(i) and connectionnum.split()[
+                                                            1] in str(i):
+                                                            self.show_server_com_with_client(i, banned_user, "You have been banned from the server!")
+                                                            i.close()
+                                            cursor.close()
+                                            db.close()
+                                        else:
+                                            self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                                 except Exception as e:
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ban <username>")
@@ -916,19 +1005,22 @@ Advanced Server by DrSquid"""
                                     if kick_user == self.ownername:
                                         self.show_server_com_with_client(conn, selfname, f"You can't kick yourself!")
                                     else:
-                                        self.show_server_com_with_client(conn, selfname, f"{kick_user} has been kicked from the server!")
-                                        db = sqlite3.connect(self.userdbfile)
-                                        cursor = db.cursor()
-                                        cursor.execute(f"select * from loggedinusers where username = '{kick_user}'")
-                                        for i in cursor.fetchall():
-                                            if kick_user.strip() == i[0].strip():
-                                                connectionnum = i[1]
-                                                for i in self.conn_list:
-                                                    if connectionnum.split()[0] in str(i) and connectionnum.split()[1] in str(i):
-                                                        self.show_server_com_with_client(i, kick_user, "You have been kicked from the server!")
-                                                        i.close()
-                                        cursor.close()
-                                        db.close()
+                                        if banned_user in self.get_userlist():
+                                            self.show_server_com_with_client(conn, selfname, f"{kick_user} has been kicked from the server!")
+                                            db = sqlite3.connect(self.userdbfile)
+                                            cursor = db.cursor()
+                                            cursor.execute(f"select * from loggedinusers where username = '{kick_user}'")
+                                            for i in cursor.fetchall():
+                                                if kick_user.strip() == i[0].strip():
+                                                    connectionnum = i[1]
+                                                    for i in self.conn_list:
+                                                        if connectionnum.split()[0] in str(i) and connectionnum.split()[1] in str(i):
+                                                            self.show_server_com_with_client(i, kick_user, "You have been kicked from the server!")
+                                                            i.close()
+                                            cursor.close()
+                                            db.close()
+                                        else:
+                                            self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                                 except Exception as e:
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !kick <username>")
@@ -966,13 +1058,16 @@ Advanced Server by DrSquid"""
                         elif msg.startswith("!dm"):
                             try:
                                 username = msg.split()[1]
-                                if username == selfname:
-                                    self.show_server_com_with_client(conn, selfname, f"You can't dm yourself!")
+                                if selfname in self.get_block_list(username):
+                                    self.show_server_com_with_client(conn, selfname, "You have been blocked by this user.")
                                 else:
-                                    dmconn = self.opendm(username)
-                                    indm = True
-                                    dmusername = username
-                                    self.show_server_com_with_client(conn, selfname, f"Opened a DM with {username}. You can directly speak to them privately!")
+                                    if username == selfname:
+                                        self.show_server_com_with_client(conn, selfname, f"You can't dm yourself!")
+                                    else:
+                                        dmconn = self.opendm(username)
+                                        indm = True
+                                        dmusername = username
+                                        self.show_server_com_with_client(conn, selfname, f"Opened a DM with {username}. You can directly speak to them privately!")
                             except self.ServerError.NameNotInDatabaseError:
                                 self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
                             except:
@@ -1143,9 +1238,12 @@ Advanced Server by DrSquid"""
                                 if roomadmin:
                                     try:
                                         name = msg.split()[1]
-                                        self.del_from_roomdata(name, selfroomname, "Members:")
-                                        self.show_server_com_with_client(conn, selfname, f"{name} has been kicked from the room.")
-                                        self.kick_user_fr_room(name, selfroomname)
+                                        if name in self.get_userlist():
+                                            self.del_from_roomdata(name, selfroomname, "Members:")
+                                            self.show_server_com_with_client(conn, selfname, f"{name} has been kicked from the room.")
+                                            self.kick_user_fr_room(name, selfroomname)
+                                        else:
+                                            self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                                     except self.ServerError.PermissionError:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                         self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -1162,9 +1260,6 @@ Advanced Server by DrSquid"""
                                         newpass = msg.split()[1]
                                         self.change_room_password(selfroomname, newpass)
                                         self.show_server_com_with_client(conn, selfname, f"Changed the room's password to: {newpass}.")
-                                    except self.ServerError.PermissionError:
-                                        self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                     except Exception as e:
                                         self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                         self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomkick <username>")
@@ -1176,7 +1271,10 @@ Advanced Server by DrSquid"""
                                 try:
                                     if roomadmin:
                                         usertopromote = msg.split()[1]
-                                        self.add_to_roomdata(usertopromote, selfroomname, "Admins: ")
+                                        if usertopromote in self.get_userlist():
+                                            self.add_to_roomdata(usertopromote, selfroomname, "Admins: ")
+                                        else:
+                                            self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                                     else:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                         self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -1198,6 +1296,107 @@ Advanced Server by DrSquid"""
                                 except Exception as e:
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                        elif msg.startswith("!showonlinefriends"):
+                            friends = self.get_online_friends(selfname)
+                            self.show_server_com_with_client(conn, selfname, f"Online Friends: {friends}")
+                        elif msg.startswith("!block"):
+                            try:
+                                user = msg.split()[1]
+                                in_list = False
+                                try:
+                                    if user in self.get_friends_list(selfname) or user in self.get_block_list(user):
+                                        self.show_server_com_with_client(conn, selfname, "This user is in your friends list! Unfriend them to block them!")
+                                        in_list = True
+                                except:
+                                    in_list = False
+                                if not in_list:
+                                    if user in self.get_userlist():
+                                        self.show_server_com_with_client(conn, selfname, f"Blocking {user}.")
+                                        self.block_user(selfname, user)
+                                    else:
+                                        self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
+                            except Exception as e:
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !block <user>")
+                        elif msg.startswith("!unblock"):
+                            try:
+                                user = msg.split()[1]
+                                if user not in self.get_block_list(user):
+                                    self.show_server_com_with_client(conn, selfname, "The user is not blocked.")
+                                else:
+                                    self.show_server_com_with_client(conn, selfname, f"Unblocking {user}.")
+                                    self.unblock_user(selfname, user)
+                            except Exception as e:
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !block <user>")
+                        elif msg.startswith("!friendremove"):
+                            try:
+                                user = msg.split()[1]
+                                if user in self.get_friends_list(selfname):
+                                    self.show_server_com_with_client(conn, selfname, f"Removing {user} from your friends list.")
+                                    self.rm_friend(selfname, user)
+                                    self.rm_friend(user, selfname)
+                                else:
+                                    self.show_server_com_with_client(conn, selfname, f"The user is not in your friends list!")
+                            except Exception as e:
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !friendremove <user>")
+                        elif msg.startswith("!friendreq"):
+                            try:
+                                user = msg.split()[1]
+                                friends_list = self.get_friends_list(user)
+                                if selfname in self.get_block_list(user):
+                                    self.show_server_com_with_client(conn, selfname, "You have been blocked by this user.")
+                                else:
+                                    if selfname in friends_list:
+                                        self.show_server_com_with_client(conn, selfname, "You are already friends with that user.")
+                                    else:
+                                        if user in self.get_userlist():
+                                            db = sqlite3.connect(self.dbfile)
+                                            cursor = db.cursor()
+                                            cursor.execute(f"select * from friendrequests where user = '{user}'")
+                                            info = cursor.fetchall()
+                                            i = str(info[0][1]).split()
+                                            if selfname in i:
+                                                self.show_server_com_with_client(conn, selfname, "You have already sent a request to that user.")
+                                            else:
+                                                self.show_server_com_with_client(conn, selfname, f"Sending a friend request to {user}.")
+                                                self.show_server_com_with_client(self.opendm(user), user,  f"Friend Request from: {selfname}. Do '!friendaccept {selfname}' to accept it.")
+                                                item = str(info[0][1]) + " " + selfname
+                                                cursor.execute(f'update friendrequests set requests = "{item}" where user = "{user}"')
+                                                cursor.execute(f"select * from friendrequests where user = '{user}'")
+                                            db.commit()
+                                            cursor.close()
+                                            db.close()
+                                        else:
+                                            self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
+                            except Exception as e:
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !friendreq <user>")
+                        elif msg.startswith("!friendaccept"):
+                            try:
+                                user = msg.split()[1]
+                                db = sqlite3.connect(self.dbfile)
+                                cursor = db.cursor()
+                                cursor.execute(f"select * from friendrequests where user = '{selfname}'")
+                                ls = str(cursor.fetchall()[0][1]).split()
+                                if user in ls:
+                                    self.show_server_com_with_client(conn, selfname, f"Accepting friend request from {user}.")
+                                    self.add_friend(selfname, user)
+                                    self.add_friend(user, selfname)
+                                    ls.remove(user)
+                                    new_ls = ""
+                                    for i in ls:
+                                        new_ls = new_ls + " " + i
+                                    cursor.execute(f'update friendrequests set requests = "{new_ls}" where user = "{selfname}"')
+                                else:
+                                    self.show_server_com_with_client(conn, selfname, f"You have not been sent a request from {user}.")
+                                db.commit()
+                                cursor.close()
+                                db.close()
+                            except Exception as e:
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !friendaccept <user>")
                         elif msg.strip() == "":
                             pass
                         else:
@@ -1258,9 +1457,17 @@ class OptionParse:
     def __init__(self):
         """Starts to parse the arguments."""
         self.parse_args()
+    def whatsnew(self):
+        """Displays all of the new features added to DatCord in the current version."""
+        print(Server.logo())
+        print("""
+[+] Whats New in DatCord Version v6.0:
+[+] - Added 'Whats New' feature.
+[+] - Added Friends system.
+[+] - Added User block system.""")
     def usage(self):
         """Displays the help message for option-parsing(in case you need it)."""
-        print(Server.logo(None))
+        print(Server.logo())
         print("""
 [+] Option-Parsing Help:
 
@@ -1271,6 +1478,7 @@ class OptionParse:
 
 [+] Optional Arguments:
 [+] --i,  --info       - Shows this message.
+[+] --wn, --whatsnew   - Shows a message of what all of the new features are.
 [+] --db, --database   - Specify the Database file to store passwords on(must be a .db).
 [+] --au, --activeuser - Specify the database file with all the current active users.
 [+] --rd, --roomdata   - Specify the room data file where room data is stored.
@@ -1295,6 +1503,7 @@ class OptionParse:
         args.add_option("--ou", "--owneruser", dest="ou")
         args.add_option("--op", "--ownerpass", dest="op")
         args.add_option("--mc", "--maxconn", dest="mc")
+        args.add_option("--wN", "--whatsnew",dest="wn")
         args.add_option("--i",  "--info",dest="i", action="store_true")
         arg, opt = args.parse_args()
         if arg.i is not None:
@@ -1304,6 +1513,9 @@ class OptionParse:
             ip = arg.ip
         else:
             self.usage()
+            sys.exit()
+        if arg.wn is not None:
+            self.whatsnew()
             sys.exit()
         if arg.port is not None:
             try:
