@@ -706,6 +706,12 @@ Advanced Server by DrSquid"""
 [+] !createroom [room_name] [room_pass]    - Creates a chat room(the password is optional).
 [+] !joinroom [room_name] [room_pass]      - Joins a chat room(the password is optional)
 [+] !leaveroom                             - Leaves the current room you are in.
+[+] !block [user]                          - Blocks a user(they cannot dm or friend request you).
+[+] !unblock [user]                        - Unblocks a user.
+[+] !friendreq [user]                      - Sends a friend request to the user.
+[+] !friendaccept [user]                   - Accepts a friend request from a user.
+[+] !friendremove [user]                   - Removes a user from your friends list.
+[+] !showonlinefriends                     - Gets a list of all your online friends.
 [+] !roomban [user]                        - Bans a user from the chat-room(you need to be room admin).
 [+] !roomunban [user]                      - Unbans a user from the chat-room(you need to be room admin).
 [+] !roomkick [user]                       - Kicks a user from the chat room(they can re-enter with the same password).
