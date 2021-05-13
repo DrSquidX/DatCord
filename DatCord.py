@@ -674,8 +674,9 @@ Advanced Server by DrSquid"""
         """Gets a list of all of the blocked users a username has blocked."""
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
-        cursor.execute("select * from blocklists")
-        ls = cursor.fetchall()[0][1]
+        cursor.execute(f"select * from blocklists where user = '{user}'")
+        item = cursor.fetchall()
+        ls = item[0][1]
         return str(ls).split()
     def get_userlist(self):
         """Gets a list of all the registered users in the database."""
@@ -711,6 +712,7 @@ Advanced Server by DrSquid"""
 [+] !friendreq [user]                      - Sends a friend request to the user.
 [+] !friendaccept [user]                   - Accepts a friend request from a user.
 [+] !friendremove [user]                   - Removes a user from your friends list.
+[+] !getrequests                           - Gets a list of all the people who have sent friend requests to you.
 [+] !showonlinefriends                     - Gets a list of all your online friends.
 [+] !roomban [user]                        - Bans a user from the chat-room(you need to be room admin).
 [+] !roomunban [user]                      - Unbans a user from the chat-room(you need to be room admin).
@@ -1066,6 +1068,8 @@ Advanced Server by DrSquid"""
                                 username = msg.split()[1]
                                 if selfname in self.get_block_list(username):
                                     self.show_server_com_with_client(conn, selfname, "You have been blocked by this user.")
+                                elif username in self.get_block_list(selfname):
+                                    self.show_server_com_with_client(conn, selfname, "You cannot direct message peope whom you've blocked!")
                                 else:
                                     if username == selfname:
                                         self.show_server_com_with_client(conn, selfname, f"You can't dm yourself!")
@@ -1317,8 +1321,11 @@ Advanced Server by DrSquid"""
                                     in_list = False
                                 if not in_list:
                                     if user in self.get_userlist():
-                                        self.show_server_com_with_client(conn, selfname, f"Blocking {user}.")
-                                        self.block_user(selfname, user)
+                                        if user == selfname:
+                                            self.show_server_com_with_client(conn, selfname, "Dont block yourself!")
+                                        else:
+                                            self.show_server_com_with_client(conn, selfname, f"Blocking {user}.")
+                                            self.block_user(selfname, user)
                                     else:
                                         self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                             except Exception as e:
@@ -1327,7 +1334,7 @@ Advanced Server by DrSquid"""
                         elif msg.startswith("!unblock"):
                             try:
                                 user = msg.split()[1]
-                                if user not in self.get_block_list(user):
+                                if user not in self.get_block_list(selfname):
                                     self.show_server_com_with_client(conn, selfname, "The user is not blocked.")
                                 else:
                                     self.show_server_com_with_client(conn, selfname, f"Unblocking {user}.")
@@ -1347,6 +1354,17 @@ Advanced Server by DrSquid"""
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !friendremove <user>")
+                        elif msg.startswith("!getrequests"):
+                            db = sqlite3.connect(self.dbfile)
+                            cursor = db.cursor()
+                            cursor.execute(f"select * from friendrequests where user = '{selfname}'")
+                            item = str(cursor.fetchall()[0][1]).split()
+                            if len(item) == 0:
+                                self.show_server_com_with_client(conn, selfname, f"Nobody wants to be friends with you :( .")
+                            else:
+                                self.show_server_com_with_client(conn, selfname, f"Here is a list of the people who want to friends with you: {item}")
+                            cursor.close()
+                            db.close()
                         elif msg.startswith("!friendreq"):
                             try:
                                 user = msg.split()[1]
@@ -1358,22 +1376,28 @@ Advanced Server by DrSquid"""
                                         self.show_server_com_with_client(conn, selfname, "You are already friends with that user.")
                                     else:
                                         if user in self.get_userlist():
-                                            db = sqlite3.connect(self.dbfile)
-                                            cursor = db.cursor()
-                                            cursor.execute(f"select * from friendrequests where user = '{user}'")
-                                            info = cursor.fetchall()
-                                            i = str(info[0][1]).split()
-                                            if selfname in i:
-                                                self.show_server_com_with_client(conn, selfname, "You have already sent a request to that user.")
+                                            if user == selfname:
+                                                self.show_server_com_with_client(conn, selfname, "You can't friend yourself!")
                                             else:
-                                                self.show_server_com_with_client(conn, selfname, f"Sending a friend request to {user}.")
-                                                self.show_server_com_with_client(self.opendm(user), user,  f"Friend Request from: {selfname}. Do '!friendaccept {selfname}' to accept it.")
-                                                item = str(info[0][1]) + " " + selfname
-                                                cursor.execute(f'update friendrequests set requests = "{item}" where user = "{user}"')
+                                                db = sqlite3.connect(self.dbfile)
+                                                cursor = db.cursor()
                                                 cursor.execute(f"select * from friendrequests where user = '{user}'")
-                                            db.commit()
-                                            cursor.close()
-                                            db.close()
+                                                info = cursor.fetchall()
+                                                i = str(info[0][1]).split()
+                                                if selfname in i:
+                                                    self.show_server_com_with_client(conn, selfname, "You have already sent a request to that user.")
+                                                else:
+                                                    self.show_server_com_with_client(conn, selfname, f"Sending a friend request to {user}.")
+                                                    try:
+                                                        self.show_server_com_with_client(self.opendm(user), user, f"Friend Request from: {selfname}. Do '!friendaccept {selfname}' to accept it.")
+                                                    except:
+                                                        pass
+                                                    item = str(info[0][1]) + " " + selfname
+                                                    cursor.execute(f'update friendrequests set requests = "{item}" where user = "{user}"')
+                                                    cursor.execute(f"select * from friendrequests where user = '{user}'")
+                                                db.commit()
+                                                cursor.close()
+                                                db.close()
                                         else:
                                             self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                             except Exception as e:
