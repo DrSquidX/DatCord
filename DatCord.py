@@ -147,12 +147,12 @@ class Server:
     def logo(self=None):
         """Logo of this script."""
         logo = """
- _____        _    _____              _           __   ___  
-|  __ \      | |  / ____|            | |         / /  / _ \ 
-| |  | | __ _| |_| |     ___  _ __ __| | __   __/ /_ | | | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / / '_ \| | | |
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V /| (_) | |_| |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/  \___(_)___/                                                          
+ _____        _    _____              _           __  __ 
+|  __ \      | |  / ____|            | |         / / /_ |
+| |  | | __ _| |_| |     ___  _ __ __| | __   __/ /_  | |
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / / '_ \ | |
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V /| (_) || |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/  \___(_)_|                                                   
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -564,16 +564,19 @@ Advanced Server by DrSquid"""
         tag = 0
         cursor = db.cursor()
         cursor.execute(f"select * from loggedinusers where username = '{username}'")
-        for i in cursor.fetchall():
-            if username in i[0]:
-                ipandsrcport = str(i[1]).split()
-                tag = 1
-        if tag == 1:
-            for i in self.conn_list:
-                if ipandsrcport[0] in str(i) and ipandsrcport[1] in str(i):
-                    return i
-                    break
-        else:
+        try:
+            for i in cursor.fetchall():
+                if username in i[0]:
+                    ipandsrcport = str(i[1]).split()
+                    tag = 1
+            if tag == 1:
+                for i in self.conn_list:
+                    if ipandsrcport[0] in str(i) and ipandsrcport[1] in str(i):
+                        return i
+                        break
+            else:
+                raise self.ServerError.NameNotInDatabaseError
+        except:
             raise self.ServerError.NameNotInDatabaseError
     def sendall(self,msg,ls=None):
         """This sends a message to everyone in the connection list."""
@@ -717,6 +720,7 @@ Advanced Server by DrSquid"""
 [+] !roomban [user]                        - Bans a user from the chat-room(you need to be room admin).
 [+] !roomunban [user]                      - Unbans a user from the chat-room(you need to be room admin).
 [+] !roomkick [user]                       - Kicks a user from the chat room(they can re-enter with the same password).
+[+] !changeroompass [new_pass]             - Changes the room password for a room(need to be room owner).
 [+] !promoteuser [user]                    - Promotes a user to room-admin(you need to be room admin).
 [+] !demoteuser [user]                     - Demotes a user down to regular room client(you need to be room admin)."""
         return msg
@@ -1066,22 +1070,31 @@ Advanced Server by DrSquid"""
                         elif msg.startswith("!dm"):
                             try:
                                 username = msg.split()[1]
-                                if selfname in self.get_block_list(username):
-                                    self.show_server_com_with_client(conn, selfname, "You have been blocked by this user.")
-                                elif username in self.get_block_list(selfname):
-                                    self.show_server_com_with_client(conn, selfname, "You cannot direct message peope whom you've blocked!")
-                                else:
-                                    if username == selfname:
-                                        self.show_server_com_with_client(conn, selfname, f"You can't dm yourself!")
+                                valid = False
+                                try:
+                                    if selfname in self.get_block_list(username):
+                                        self.show_server_com_with_client(conn, selfname, "You have been blocked by this user.")
+                                    elif username in self.get_block_list(selfname):
+                                        self.show_server_com_with_client(conn, selfname, "You cannot direct message peope whom you've blocked!")
                                     else:
+                                        valid = True
+                                except:
+                                    pass
+                                if username == selfname:
+                                    self.show_server_com_with_client(conn, selfname, f"You can't dm yourself!")
+                                else:
+                                    if valid:
                                         dmconn = self.opendm(username)
                                         indm = True
                                         dmusername = username
                                         self.show_server_com_with_client(conn, selfname, f"Opened a DM with {username}. You can directly speak to them privately!")
+                                    else:
+                                        self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
                             except self.ServerError.NameNotInDatabaseError:
                                 self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
-                            except:
-                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                            except Exception as e:
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !dm <username>")
                         elif msg.startswith("!closedm"):
                             if not indm:
                                 self.show_server_com_with_client(conn, selfname, "You are not currently in a DM.")
@@ -1189,7 +1202,7 @@ Advanced Server by DrSquid"""
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(AUTENTICATION-ERROR)]: {selfname} has provided incorrect credentials!")
                                 self.show_server_com_with_client(conn, selfname, "Password provided for the room is incorrect.")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing argumentss: {e}")
+                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                         elif msg.startswith("!leaveroom"):
                             if inroom:
@@ -1419,6 +1432,11 @@ Advanced Server by DrSquid"""
                                     for i in ls:
                                         new_ls = new_ls + " " + i
                                     cursor.execute(f'update friendrequests set requests = "{new_ls}" where user = "{selfname}"')
+                                    try:
+                                        userconn = self.opendm(user)
+                                        self.show_server_com_with_client(userconn, user, f"{selfname} has accepted your friend request.")
+                                    except:
+                                        pass
                                 else:
                                     self.show_server_com_with_client(conn, selfname, f"You have not been sent a request from {user}.")
                                 db.commit()
@@ -1458,10 +1476,14 @@ Advanced Server by DrSquid"""
                                                     pass
                             if indm:
                                 try:
-                                    dmconn.send("\n[(DM)]".encode() + this_main_msg.strip().encode())
-                                    logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
-                                    print(logmsg)
-                                    self.log("\n"+logmsg)
+                                    if selfname in self.get_block_list(dmusername):
+                                        self.show_server_com_with_client(conn, selfname, "You have been blocked by the user you were trying to DM. Closing your DM.")
+                                        indm = False
+                                    else:
+                                        dmconn.send("\n[(DM)]".encode() + this_main_msg.strip().encode())
+                                        logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
+                                        print(logmsg)
+                                        self.log("\n" + logmsg)
                                 except:
                                     self.show_server_com_with_client(conn, selfname, f"There was an error with sending your DM Message! The person may have gone offline. Closing your DM.")
                                     indm = False
@@ -1491,10 +1513,13 @@ class OptionParse:
         """Displays all of the new features added to DatCord in the current version."""
         print(Server.logo())
         print("""
-[+] Whats New in DatCord Version v6.0:
+[+] Whats New in DatCord Version v6.1:
 [+] - Added 'Whats New' feature.
 [+] - Added Friends system.
-[+] - Added User block system.""")
+[+] - Added User block system.
+[+] - Fixed typos.
+[+] - Fixed a small vulnerability in the code.
+[+] - Fixed error messages in the DM system.""")
     def usage(self):
         """Displays the help message for option-parsing(in case you need it)."""
         print(Server.logo())
