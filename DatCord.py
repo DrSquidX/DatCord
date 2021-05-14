@@ -792,17 +792,18 @@ Advanced Server by DrSquid"""
                     this_main_msg = f"\n[({selfname})]: {msg}"
                     current_timer = time.time()
                     if round(current_timer-timer) >= 1:
-                        if msgspersec >= max_msg_persec:
-                            spam_warnings += 1
-                            if max_spam_warns - spam_warnings == 1:
-                                self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warning left until you are kicked.")
-                            else:
-                                self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warnings left until you are kicked.")
-                        if spam_warnings >= max_spam_warns:
-                            self.show_server_com_with_client(conn, selfname, f"You have been kicked for spamming.")
-                            conn.close()
-                        timer = time.time()
-                        msgspersec = 0
+                        if selfname != self.ownername:
+                            if msgspersec >= max_msg_persec:
+                                spam_warnings += 1
+                                if max_spam_warns - spam_warnings == 1:
+                                    self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warning left until you are kicked.")
+                                else:
+                                    self.show_server_com_with_client(conn, selfname, f"Spam warning number {spam_warnings}. Please do not spam in the server. You have {max_spam_warns - spam_warnings} warnings left until you are kicked.")
+                            if spam_warnings >= max_spam_warns:
+                                self.show_server_com_with_client(conn, selfname, f"You have been kicked for spamming.")
+                                conn.close()
+                            timer = time.time()
+                            msgspersec = 0
                     if not logged_in:
                         if msg.startswith("!login"):
                             try:
@@ -1081,6 +1082,8 @@ Advanced Server by DrSquid"""
                                         valid = True
                                 except:
                                     pass
+                                if selfname == self.ownername:
+                                    valid = True
                                 if username == selfname:
                                     self.show_server_com_with_client(conn, selfname, f"You can't dm yourself!")
                                 else:
@@ -1529,7 +1532,8 @@ class OptionParse:
 [+] - Added User block system.
 [+] - Fixed typos.
 [+] - Fixed a small vulnerability in the code.
-[+] - Fixed error messages in the DM system.""")
+[+] - Fixed error messages in the DM system.
+[+] - Allowed DatCord Account to bypass anti-spam and blocking from other users.""")
     def usage(self):
         """Displays the help message for option-parsing(in case you need it)."""
         print(Server.logo())
