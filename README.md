@@ -137,10 +137,12 @@ The accepting of said request:
 Got any annoying people that are spamming you non-stop in DatCord? Not to worry. The new blocking system allows for the easy blocking of users, so that they won't be able to spam you in direct messages, and also so that they can't friend request you. This system is for if you don't want someone to direct message nor be able to friend request you, if you really don't like that user.
 
 Person blocked from Direct messaging and Friend Requesting:
+
 ![blockdm](/blockdm.png)
 ![friendreqblocked](/reqblocked.png)
 
 However the person blocking the other user cannot DM the other user:
+
 ![cantdm](/cantdm.png)
 
 # Overall
