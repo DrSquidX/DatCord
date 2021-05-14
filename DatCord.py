@@ -717,6 +717,7 @@ Advanced Server by DrSquid"""
 [+] !friendremove [user]                   - Removes a user from your friends list.
 [+] !getrequests                           - Gets a list of all the people who have sent friend requests to you.
 [+] !showonlinefriends                     - Gets a list of all your online friends.
+[+] !showfriendslist                       - Gets your friends list.
 [+] !roomban [user]                        - Bans a user from the chat-room(you need to be room admin).
 [+] !roomunban [user]                      - Unbans a user from the chat-room(you need to be room admin).
 [+] !roomkick [user]                       - Kicks a user from the chat room(they can re-enter with the same password).
@@ -1321,7 +1322,16 @@ Advanced Server by DrSquid"""
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                         elif msg.startswith("!showonlinefriends"):
                             friends = self.get_online_friends(selfname)
-                            self.show_server_com_with_client(conn, selfname, f"Online Friends: {friends}")
+                            if len(friends) == 0:
+                                self.show_server_com_with_client(conn, selfname, f"You don't have any online friends :( .")
+                            else:
+                                self.show_server_com_with_client(conn, selfname, f"Online Friends: {friends}")
+                        elif msg.startswith("!showfriendslist"):
+                            friends = self.get_friends_list(selfname)
+                            if len(friends) == 0:
+                                self.show_server_com_with_client(conn, selfname, f"You don't have any friends :( .")
+                            else:
+                                self.show_server_com_with_client(conn, selfname, f"Current Friends List: {friends}")
                         elif msg.startswith("!block"):
                             try:
                                 user = msg.split()[1]
