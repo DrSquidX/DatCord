@@ -420,19 +420,19 @@ Advanced Server by DrSquid"""
                 return True
             else:
                 raise self.ServerError.AuthenticationError(f"Incorrect password for Room '{name}'")
-    def check_for_sameitems(self, name, cmd):
+    def check_for_sameitems(self, file, name, cmd):
         """This checks for same items that already in the server. If the name is
         already in the database, then the value the function is assigned to will
         return as False(bool object). It was recently made into one function. There
         was one for checking for the same names in the database as well as one
         for checking if there is a session with the account opened."""
-        db = sqlite3.connect(self.userdbfile)
+        db = sqlite3.connect(file)
         cursor = db.cursor()
         tag = 0
         try:
             cursor.execute(cmd)
             for i in cursor.fetchall():
-                if username in i[0]:
+                if name in i[0]:
                     tag = 1
                     return True
             if tag == 0:
@@ -811,7 +811,7 @@ Advanced Server by DrSquid"""
                                 password = msg.split()[2].strip("'").strip('"')
                                 authentication = self.attempt_login(username, password)
                                 if authentication:
-                                    namealreadylogged = self.check_for_sameitems(username, f"select * from loggedinusers where username = '{username}'")
+                                    namealreadylogged = self.check_for_sameitems(self.userdbfile, username, f"select * from loggedinusers where username = '{username}'")
                                     if namealreadylogged:
                                         self.show_server_com_with_client(conn, selfname, "Your account is already being used in another location!")
                                     else:
@@ -1116,7 +1116,7 @@ Advanced Server by DrSquid"""
                                 room_password = msg.split()[2]
                             except:
                                 room_password = "None"
-                            conflicting_rooms = self.check_for_sameitems(roomname, f"select * from open_rooms where roomname = '{roomname}'")
+                            conflicting_rooms = self.check_for_sameitems(self.dbfile, roomname, f"select * from open_rooms where roomname = '{roomname}'")
                             if not conflicting_rooms:
                                 conn.send(f"\n[(SERVER)]: Creating a room.\n[+] Room Name: {roomname}\n[+] Room Password: {room_password.strip()}".encode())
                                 logmsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent room creation message(Name: {roomname}, Pass: {room_password})."
@@ -1533,6 +1533,7 @@ class OptionParse:
 [+] - Fixed typos.
 [+] - Fixed a small vulnerability in the code.
 [+] - Fixed error messages in the DM system.
+[+] - Fixed variable when preventing more than 1 account session.
 [+] - Allowed DatCord Account to bypass anti-spam and blocking from other users.""")
     def usage(self):
         """Displays the help message for option-parsing(in case you need it)."""
