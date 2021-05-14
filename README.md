@@ -124,12 +124,24 @@ Client Script in Use:
 # Friends System
 In the server, there is a friends system that allows for easier usage in the server. If you want to see which of your friends are online, you can run a simple command and a list of your online friends will show up. To become friends on the server with someone, you need to first send a friend request to the other user, where the other user needs to accept said request. If they accept, you are friends. You could now see if they are online or not.
 
-(Photo Coming Soon)
+Example of Sending a friend request:
+![friendreqsent](/reqsent.png)
+
+The friend request being recieved by the other user:
+![friendreqrecv](/recvreq.png)
+
+The accepting of said request:
+![friendreqaccept](/acceptreq.png)
 
 # Blocking System
 Got any annoying people that are spamming you non-stop in DatCord? Not to worry. The new blocking system allows for the easy blocking of users, so that they won't be able to spam you in direct messages, and also so that they can't friend request you. This system is for if you don't want someone to direct message nor be able to friend request you, if you really don't like that user.
 
-(Photo Coming Soon)
+Person blocked from Direct messaging and Friend Requesting:
+![blockdm](/blockdm.png)
+![friendreqblocked](/reqblocked.png)
+
+However the person blocking the other user cannot DM the other user:
+![cantdm](/cantdm.png)
 
 # Overall
 DatCord is a secure chat server that is safe to use, DoS-Free, as well as a lot of capibilites for clients. They can create their own chat rooms for their friends, chat privately one-to-one with them, and more. The Owner account on the server can also manage and moderate the server, to stop attackers and hackers(if they have the knowledge), if the server is to be compromised. This server shows the improvement of my skills in networking, and also a bit in cybersecurity.
