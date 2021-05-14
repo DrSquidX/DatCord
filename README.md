@@ -125,12 +125,14 @@ Client Script in Use:
 In the server, there is a friends system that allows for easier usage in the server. If you want to see which of your friends are online, you can run a simple command and a list of your online friends will show up. To become friends on the server with someone, you need to first send a friend request to the other user, where the other user needs to accept said request. If they accept, you are friends. You could now see if they are online or not.
 
 Example of Sending a friend request:
+
 ![friendreqsent](/reqsent.png)
 
 The friend request being recieved by the other user:
 ![friendreqrecv](/recvreq.png)
 
 The accepting of said request:
+
 ![friendreqaccept](/acceptreq.png)
 
 # Blocking System
