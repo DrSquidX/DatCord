@@ -1073,6 +1073,7 @@ Advanced Server by DrSquid"""
                             try:
                                 username = msg.split()[1]
                                 valid = False
+                                blocked = True
                                 try:
                                     if selfname in self.get_block_list(username):
                                         self.show_server_com_with_client(conn, selfname, "You have been blocked by this user.")
@@ -1080,10 +1081,12 @@ Advanced Server by DrSquid"""
                                         self.show_server_com_with_client(conn, selfname, "You cannot direct message peope whom you've blocked!")
                                     else:
                                         valid = True
+                                        blocked = False
                                 except:
                                     pass
                                 if selfname == self.ownername:
                                     valid = True
+                                    blocked = False
                                 if username == selfname:
                                     self.show_server_com_with_client(conn, selfname, f"You can't dm yourself!")
                                 else:
@@ -1093,7 +1096,8 @@ Advanced Server by DrSquid"""
                                         dmusername = username
                                         self.show_server_com_with_client(conn, selfname, f"Opened a DM with {username}. You can directly speak to them privately!")
                                     else:
-                                        self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
+                                        if not blocked:
+                                            self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
                             except self.ServerError.NameNotInDatabaseError:
                                 self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
                             except Exception as e:
