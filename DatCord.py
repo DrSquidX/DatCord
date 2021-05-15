@@ -51,8 +51,6 @@ class Server:
         data files. Once configured, the user can choose when to start listening for connections
         (however in this script the .listen() function is used right after being configured so
         the server starts listening on startup)."""
-        self.key = b'JxQ8VyTHAMfwbML3ZHnZjxRjG3Hpf434IBZLakFikiE='
-        self.fernet = Fernet(self.key)
         self.ip = ip
         self.port = port
         self.dbfile = dbfile
@@ -91,6 +89,8 @@ class Server:
         self.log(self.logo())
         try:
             self.server.bind((self.ip, self.port))
+            self.key = Fernet.generate_key()
+            self.fernet = Fernet(self.key)
         except Exception as e:
             print(f"\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
             self.log(f"\n\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
