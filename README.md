@@ -159,6 +159,9 @@ Intercepted Not Encrypted Traffic:
 Intercepted Encrypted Traffic:
 ![Encrypt](/encrypted.png)
 
+# Dependecies
+There is one module you need to install in order to run the script. You need to download 'cryptography' which is a module that is used for encryption. If you have 'pip' installed, you can run "pip install cryptography" in terminal/cmd.
+
 # Overall
 DatCord is a secure chat server that is safe to use, DoS-Free, as well as a lot of capibilites for clients. They can create their own chat rooms for their friends, chat privately one-to-one with them, and more. The Owner account on the server can also manage and moderate the server, to stop attackers and hackers(if they have the knowledge), if the server is to be compromised. This server shows the improvement of my skills in networking, and also a bit in cybersecurity.
 
