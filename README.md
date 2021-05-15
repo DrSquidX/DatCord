@@ -30,6 +30,8 @@ This is a school project for one of my Design classes. This server is a sophisti
 
 * Blocking System         - Block annoying people with the blocking system.
 
+* Encrypted               - Every message is encrypted so that messages cannot be intercepted by hackers.
+
 # Secure Password Storage
 Due to some recent learning of SQL, I have changed my old way of password storage of a plain text file, to a more advanced alternative - SQL Databases. This way I can store passwords in a more secure way, where the server would have to run a certain SQL Command to extract a username and password from the Database(this command is similar to "select * from users). This password storage system is more quick than the old text file system, as I can run a certain SQL Command to extract, remove or insert something in the Database, whereas I would have to read a whole text file to extract information from it(this would be worse if the server had a lot of clients, as the reading of the file would take very long). This system is more secure than any system I have made so far. 
 
@@ -146,6 +148,15 @@ Person blocked from Direct messaging and Friend Requesting:
 However the person blocking the other user cannot DM the other user:
 
 ![cantdm](/cantdm.png)
+
+# Encryption
+In DatCord, every message that is sent is encrypted. This makes it so that most of the messages sent are unrecognizable to any external source, and is only able to be decrypted with a key that is sent to the client after they connect. The encryption makes messages more secured and much less able to be intercepted externally from any attackers that are attempting to do Man-In-The-Middle Attacks. There is no noticable change when they are actually being used properly, however these messages look like gibberish when they are encrypted.
+
+Intercepted Not Encrypted Traffic:
+![Decrypted](/notencrypted.png)
+
+Intercepted Encrypted Traffic:
+![Encrypt](/encrypted.png)
 
 # Overall
 DatCord is a secure chat server that is safe to use, DoS-Free, as well as a lot of capibilites for clients. They can create their own chat rooms for their friends, chat privately one-to-one with them, and more. The Owner account on the server can also manage and moderate the server, to stop attackers and hackers(if they have the knowledge), if the server is to be compromised. This server shows the improvement of my skills in networking, and also a bit in cybersecurity.
