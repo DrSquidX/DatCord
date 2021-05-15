@@ -86,10 +86,10 @@ Logging in the Server:
 ![log](/log.png)
 
 # Developer Friendly
-Making scripts to connect to this server is very easy. The possibilities are endless, since there is barely any code(15 lines at most) needed to connect to the main server. This means other people can add more code, such as for GUI's, or making it overall more user friendly. The possibilities are endless, and people can add anything to the client side to make it better.
+Making scripts to connect to this server is very easy. The possibilities are endless, since there is barely any code(17 lines at most) needed to connect to the main server. This means other people can add more code, such as for GUI's, or making it overall more user friendly. The possibilities are endless, and people can add anything to the client side to make it better.
 
-Simple 15 Line client script needed for a minimally good experience on the server:
-![clientpic](/devfriendly.png)
+Simple 17 Line client script needed for a minimally good experience on the server:
+![clientpic](/simpleclient.png)
 
 # Option Parsing
 This server uses option-parsing. This would mean that it would first need to be ran in terminal, where the command that runs the script will check the arguments of the command. For this script, the arguments are parsed and identified into variables needed to run the server the best way possible. You need to specify the ip to host the server on, as well as the port. Many of the arguments are optional, and are merely for if you have other items for them. There is also a help message for the option-parsing, where if you don't provide an IP address to host the server on, that message will show up and give you more info on how to do it.
