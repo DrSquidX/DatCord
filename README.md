@@ -153,6 +153,7 @@ However the person blocking the other user cannot DM the other user:
 In DatCord, every message that is sent is encrypted. This makes it so that most of the messages sent are unrecognizable to any external source, and is only able to be decrypted with a key that is sent to the client after they connect. The encryption makes messages more secured and much less able to be intercepted externally from any attackers that are attempting to do Man-In-The-Middle Attacks. There is no noticable change when they are actually being used properly, however these messages look like gibberish when they are encrypted.
 
 Intercepted Not Encrypted Traffic:
+
 ![Decrypted](/notencrypted.png)
 
 Intercepted Encrypted Traffic:
