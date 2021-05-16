@@ -801,7 +801,7 @@ Advanced Server by DrSquid"""
                     this_main_msg = f"\n[({selfname})]: {msg}"
                     current_timer = time.time()
                     if round(current_timer-timer) >= 1:
-                        if selfname != self.ownername:
+                        if not serverowner:
                             if msgspersec >= max_msg_persec:
                                 spam_warnings += 1
                                 if max_spam_warns - spam_warnings == 1:
@@ -1091,9 +1091,11 @@ Advanced Server by DrSquid"""
                                     else:
                                         valid = True
                                         blocked = False
-                                except:
-                                    pass
-                                if selfname == self.ownername:
+                                except Exception as e:
+                                    if username == self.ownername:
+                                        valid = True
+                                        blocked = False
+                                if serverowner:
                                     valid = True
                                     blocked = False
                                 if username == selfname:
@@ -1180,6 +1182,11 @@ Advanced Server by DrSquid"""
                                             elif i.startswith("EndData"):
                                                 in_room = False
                                                 break
+                                            if serverowner:
+                                                roomowner = True
+                                                roommember = True
+                                                roomadmin = True
+                                                banned = False
                                     if not banned:
                                         if roomadmin:
                                             room_admin = True
@@ -1503,8 +1510,23 @@ Advanced Server by DrSquid"""
                             if indm:
                                 try:
                                     if selfname in self.get_block_list(dmusername):
-                                        self.show_server_com_with_client(conn, selfname, "You have been blocked by the user you were trying to DM. Closing your DM.")
-                                        indm = False
+                                        if not serverowner:
+                                            self.show_server_com_with_client(conn, selfname, "You have been blocked by the user you were trying to DM. Closing your DM.")
+                                            indm = False
+                                        else:
+                                            dmconn.send(self.fernet.encrypt("\n[(DM)]".encode() + this_main_msg.strip().encode()))
+                                            logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
+                                            print(logmsg)
+                                            self.log("\n" + logmsg)
+                                    elif dmusername in self.get_block_list(selfname):
+                                        if not serverowner:
+                                            self.show_server_com_with_client(conn, selfname, "You have recently blocked the user you were direct messaging. Closing your DM.")
+                                            indm = False
+                                        else:
+                                            dmconn.send(self.fernet.encrypt("\n[(DM)]".encode() + this_main_msg.strip().encode()))
+                                            logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
+                                            print(logmsg)
+                                            self.log("\n" + logmsg)
                                     else:
                                         dmconn.send(self.fernet.encrypt("\n[(DM)]".encode() + this_main_msg.strip().encode()))
                                         logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
