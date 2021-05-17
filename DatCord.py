@@ -78,6 +78,11 @@ class Server:
             file = open(self.dbfile,"w")
             file.close()
             db = sqlite3.connect(self.dbfile)
+        try:
+            file2 = open(self.roomdata, "r")
+        except:
+            file2 = open(self.roomdata, "w")
+        file2.close()
         cursor = db.cursor()
         userdb = sqlite3.connect(self.userdbfile)
         userdbcursor = userdb.cursor()
@@ -892,7 +897,7 @@ Advanced Server by DrSquid"""
                                 self.show_server_com_with_client(conn, selfname, "The account name is already registered in the database. Please use another name for your account.")
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !register <username> <password>")
                     if logged_in:
                         if serverowner:
                             if msg.startswith("!nick"):
@@ -1067,7 +1072,7 @@ Advanced Server by DrSquid"""
                                 self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !reregister <old_pass> <new_pass>")
                         elif msg.startswith("!help"):
                             conn.send(self.fernet.encrypt(self.regular_client_help_message().strip().encode()))
                             othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
@@ -1227,7 +1232,7 @@ Advanced Server by DrSquid"""
                                 self.show_server_com_with_client(conn, selfname, "Password provided for the room is incorrect.")
                             except Exception as e:
                                 self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                                self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !joinroom <roomname> <password>")
                         elif msg.startswith("!leaveroom"):
                             if inroom:
                                 self.show_server_com_with_client(conn, selfname, "Leaving your current room.")
@@ -1327,7 +1332,7 @@ Advanced Server by DrSquid"""
                                         self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 except:
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !promoteuser <user>")
                         elif msg.startswith("!demoteuser"):
                             if inroom:
                                 try:
@@ -1342,7 +1347,7 @@ Advanced Server by DrSquid"""
                                     self.show_server_com_with_client(conn, selfname, "Invalid Permissions to ban the user.")
                                 except Exception as e:
                                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
-                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
+                                    self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !demoteuser <username>")
                         elif msg.startswith("!showonlinefriends"):
                             friends = self.get_online_friends(selfname)
                             if len(friends) == 0:
@@ -1504,7 +1509,7 @@ Advanced Server by DrSquid"""
                                         if selfroomname in room[0]:
                                             for person in room:
                                                 try:
-                                                    person.send(self.fernet(this_main_msg.encode()))
+                                                    person.send(self.fernet.encrypt(this_main_msg.encode()))
                                                 except:
                                                     pass
                             if indm:
@@ -1569,7 +1574,7 @@ class OptionParse:
 [+] - Fixed a small vulnerability in the code.
 [+] - Fixed error messages in the DM system.
 [+] - Fixed variable when preventing more than 1 account session.
-[+] - Allowed DatCord Account to bypass anti-spam and blocking from other users.
+[+] - Allowed DatCord Account to bypass anti-spam and blocking from other users.`
 [+] - Added encryption.""")
     def usage(self):
         """Displays the help message for option-parsing(in case you need it)."""
