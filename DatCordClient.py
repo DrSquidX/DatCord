@@ -217,7 +217,7 @@ Client Script For DatCord by DrSquid"""
                     msg = input("[+] Enter your msg: ")
                     if msg == "!disconnect":
                         print("[+] Disconnecting you from the server.")
-                        self.client.close() 
+                        self.client.close()
                         raise Exception("Closed conn")
                     else:
                         self.client.send(self.fernet.encrypt(msg.encode()))
