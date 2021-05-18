@@ -1105,6 +1105,8 @@ Advanced Server by DrSquid"""
                                     blocked = False
                                 if username == selfname:
                                     self.show_server_com_with_client(conn, selfname, f"You can't dm yourself!")
+                                elif inroom:
+                                    self.show_server_com_with_client(conn, selfname, f"You are currently in a chatroom! Do !leaveroom to leave your room!")
                                 else:
                                     if valid:
                                         dmconn = self.opendm(username)
@@ -1152,6 +1154,8 @@ Advanced Server by DrSquid"""
                             try:
                                 if inroom:
                                     self.show_server_com_with_client(conn, selfname, "You are currently in a room! Do !leaveroom to leave your room!")
+                                elif indm:
+                                    self.show_server_com_with_client(conn, selfname, "You are currently in a DM! Do !leaveroom to leave your room!")
                                 else:
                                     roomname = msg.split()[1]
                                     try:
@@ -1509,6 +1513,8 @@ Advanced Server by DrSquid"""
                                         if selfroomname in room[0]:
                                             for person in room:
                                                 try:
+                                                    logmsg = f"[({datetime.datetime.today()})][({selfname})--->({selfroomname})]: {this_main_msg}"
+                                                    self.log("\n"+logmsg)
                                                     person.send(self.fernet.encrypt(this_main_msg.encode()))
                                                 except:
                                                     pass
@@ -1543,7 +1549,7 @@ Advanced Server by DrSquid"""
                     if msg.strip() == "":
                         pass
                     else:
-                        if not indm:
+                        if not indm and not inroom:
                             self.log(f"\n[({datetime.datetime.today()})]" + this_main_msg.strip())
                             print(f"[({datetime.datetime.today()})]" + this_main_msg.strip())
                 except Exception as e:
