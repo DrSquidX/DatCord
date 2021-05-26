@@ -9,6 +9,7 @@ class Client:
         print(self.logo())
         self.version = "3.5"
         self.dbfile = "servers.db"
+        self.update_check()
         try:
             file = open(self.dbfile,"rb")
             file.close()
@@ -40,7 +41,8 @@ class Client:
             req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordVersion.json")
             resp = urllib.request.urlopen(req).read().decode()
             loaded = json.load(resp)
-            latest_version = loaded[1]["DatCordVersion"]
+            latest_version = loaded[1]["DatCordClientVersion"]
+            self.latest_serv_version = loaded[0]["DatCordVersion"]
             if float(latest_version) < float(self.version):
                 print(f"[+] DatCord Client Update v{latest_version} available.")
                 while True:
@@ -144,6 +146,9 @@ class Client:
         if self.inserver:
             self.logged_in = False
             version = self.client.recv(10240).decode()
+            print(f"[+] DatCord Server Version: {version.split()[2]}")
+            if float(self.latest_serv_version) > float(version.split()[2]):
+                print("[+] The DatCord Server is outdated. Your experience may be different.")
             try:
                 key = self.client.recv(10240)
                 self.fernet = Fernet(key)
