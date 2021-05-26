@@ -1,4 +1,4 @@
-import socket, threading, sqlite3, os, sys, urllib.request
+import socket, threading, sqlite3, os, sys, urllib.request, json
 
 class Client:
     """Configures the database files if they don't exist, as well as
@@ -40,7 +40,10 @@ class Client:
         try:
             req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordVersion.json")
             resp = urllib.request.urlopen(req).read().decode()
-            loaded = json.load(resp)
+            file = open("DatCordVersion.json", "w")
+            file.write(resp)
+            file.close()
+            loaded = json.load(open("DatCordVersion.json","r"))
             latest_version = loaded[1]["DatCordClientVersion"]
             self.latest_serv_version = loaded[0]["DatCordVersion"]
             if float(latest_version) < float(self.version):
@@ -64,7 +67,7 @@ class Client:
                         break
                     else:
                         print("[+] Invalid Input.")
-        except:
+        except Exception as e:
             pass
     def join_serv(self):
         """This is the function that is used to connect to the server. If first prompts the user
@@ -146,8 +149,11 @@ class Client:
         if self.inserver:
             self.logged_in = False
             version = self.client.recv(10240).decode()
-            print(f"[+] DatCord Server Version: {version.split()[2]}")
-            if float(self.latest_serv_version) > float(version.split()[2]):
+            try:
+                print(f"[+] DatCord Server Version: {version.split()[2]}")
+                if float(self.latest_serv_version) > float(version.split()[2].replace("v", "")):
+                    print("[+] The DatCord Server is outdated. Your experience may be different.")
+            except:
                 print("[+] The DatCord Server is outdated. Your experience may be different.")
             try:
                 key = self.client.recv(10240)
