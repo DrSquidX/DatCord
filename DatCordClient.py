@@ -1,4 +1,5 @@
-import socket, threading, sqlite3, os, sys
+import socket, threading, sqlite3, os, sys, urllib.request
+
 class Client:
     """Configures the database files if they don't exist, as well as
     also configuring the database tables if they also don't exist.
@@ -33,6 +34,36 @@ class Client:
         cursor.close()
         db.close()
         self.join_serv()
+    def update_check(self):
+        try:
+            req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordVersion.json")
+            resp = urllib.request.urlopen(req).read().decode()
+            loaded = json.load(resp)
+            latest_version = loaded[1]["DatCordVersion"]
+            if float(latest_version) < float(self.version):
+                print(f"[+] DatCord Client Update v{latest_version} available.")
+                while True:
+                    item = input("[+] Do you wish to download it(yes/no)?: ")
+                    if item.lower() == "yes":
+                        print("[+] Updating DatCord...........")
+                        req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordClient.py")
+                        resp = urllib.request.urlopen(req).read().decode()
+                        file = open(sys.argv[0], "w")
+                        file.write(resp)
+                        file.close()
+                        print("\n[+] Successfully Updated.")
+                        time.sleep(1)
+                        print("[+] Restarting DatCord.....")
+                        subprocess.call(sys.argv)
+                        sys.exit()
+                        break
+                    elif item.lower() == "no":
+                        print("[+] Choosing not to update.")
+                        break
+                    else:
+                        print("[+] Invalid Input.")
+        except:
+            pass
     def join_serv(self):
         """This is the function that is used to connect to the server. If first prompts the user
         if they want to connect to an existing server in their directory, or if they want to
@@ -112,15 +143,18 @@ class Client:
                 print("[+] Please answer with either 'yes' or 'no'.")
         if self.inserver:
             self.logged_in = False
-            print("[+] Successfully connected to Datcord Servers!\n")
+            version = self.client.recv(10240).decode()
             try:
                 key = self.client.recv(10240)
                 self.fernet = Fernet(key)
                 msg = self.client.recv(10240).decode()
+                self.sender = threading.Thread(target=self.send)
+                self.sender.start()
+                print("[+] Successfully connected to Datcord Servers!\n")
             except:
-                pass
-            self.sender = threading.Thread(target=self.send)
-            self.sender.start()
+                print("[+] Encryption key is invalid! Check if you are connecting to the correct Server.")
+                servjoiner = threading.Thread(target=self.join_serv)
+                servjoiner.start()
     def logo(self):
         """Logo of the script."""
         logo = """
