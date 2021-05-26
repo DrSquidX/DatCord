@@ -164,8 +164,8 @@ Intercepted Encrypted Traffic:
 
 ![Encrypt](/encrypted.png)
 
-# Automatic Update Checking
-In DatCord, there is automatic update checking. This allows you to stay up to date on the latest code whenever there is a new update. It makes a request to the server which gets the latest version available to the public. Afterwards, it compares that version to the users server version. If it is lower than the latest version, you will be asked to update your code to the newest version. You do not have to do it of course, but it is a nice feature to have.
+# Update Checking
+In DatCord, there is update checking. This allows you to stay up to date on the latest code whenever there is a new update. It makes a request to the server which gets the latest version available to the public. Afterwards, it compares that version to the users server version. If it is lower than the latest version, you will be asked to update your code to the newest version. You do not have to do it of course, but it is a nice feature to have.
 
 An Update happening from Version 7.0 to Version 7.1:
 
