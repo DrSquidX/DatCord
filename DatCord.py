@@ -59,7 +59,7 @@ class Server:
         self.logfile = logfile
         self.ownername = ownername
         self.ownerpassword = ownerpassword
-        self.version = "7.0"
+        self.version = "7.1"
         self.check_update()
         try:
             self.maxconnpersec = int(connpersec)
