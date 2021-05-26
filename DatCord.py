@@ -1,4 +1,4 @@
-import socket, threading, sqlite3, hashlib, datetime, time, sys, random, os, json, subprocess
+import socket, threading, sqlite3, hashlib, datetime, time, sys, random, os, json, subprocess, urllib.request
 from optparse import OptionParser
 class Server:
     """Note: This server was made for a school project.
