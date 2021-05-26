@@ -7,6 +7,7 @@ class Client:
     the user with connecting to the server."""
     def __init__(self):
         print(self.logo())
+        self.version = "3.5"
         self.dbfile = "servers.db"
         try:
             file = open(self.dbfile,"rb")
@@ -148,9 +149,9 @@ class Client:
                 key = self.client.recv(10240)
                 self.fernet = Fernet(key)
                 msg = self.client.recv(10240).decode()
+                print("[+] Successfully connected to Datcord Servers!\n")
                 self.sender = threading.Thread(target=self.send)
                 self.sender.start()
-                print("[+] Successfully connected to Datcord Servers!\n")
             except:
                 print("[+] Encryption key is invalid! Check if you are connecting to the correct Server.")
                 servjoiner = threading.Thread(target=self.join_serv)
@@ -158,12 +159,12 @@ class Client:
     def logo(self):
         """Logo of the script."""
         logo = """
- _____        _    _____              _    _____ _ _            _          ____   ___  
-|  __ \      | |  / ____|            | |  / ____| (_)          | |        |___ \ / _ \ 
-| |  | | __ _| |_| |     ___  _ __ __| | | |    | |_  ___ _ __ | |_  __   ____) | | | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | | |    | | |/ _ \ '_ \| __| \ \ / /__ <| | | |
-| |__| | (_| | |_| |___| (_) | | | (_| | | |____| | |  __/ | | | |_   \ V /___) | |_| |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|  \_____|_|_|\___|_| |_|\__|   \_/|____(_)___/                                                                                      
+ _____        _    _____              _    _____ _ _            _          ____   _____ 
+|  __ \      | |  / ____|            | |  / ____| (_)          | |        |___ \ | ____|
+| |  | | __ _| |_| |     ___  _ __ __| | | |    | |_  ___ _ __ | |_  __   ____) || |__  
+| |  | |/ _` | __| |    / _ \| '__/ _` | | |    | | |/ _ \ '_ \| __| \ \ / /__ < |___ \ 
+| |__| | (_| | |_| |___| (_) | | | (_| | | |____| | |  __/ | | | |_   \ V /___) | ___) |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|  \_____|_|_|\___|_| |_|\__|   \_/|____(_)____/                                                                          
 Client Script For DatCord by DrSquid"""
         return logo
     def send(self):
