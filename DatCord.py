@@ -145,6 +145,7 @@ class Server:
         db.close()
         self.configure_rooms()
         logmsg = f"""
+[({datetime.datetime.today()})][(INFO)]: Running on DatCord Version {self.version}.
 [({datetime.datetime.today()})][(INFO)]: Server is hosted on: {self.ip}:{self.port}                                       
 [({datetime.datetime.today()})][(INFO)]: Owner Account Info: Username: {self.ownername} Password: {self.ownerpassword}      
 [({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}                                    
