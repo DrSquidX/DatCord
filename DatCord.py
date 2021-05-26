@@ -1,4 +1,4 @@
-import socket, threading, sqlite3, hashlib, datetime, time, sys, random, os
+import socket, threading, sqlite3, hashlib, datetime, time, sys, random, os, json, subprocess
 from optparse import OptionParser
 class Server:
     """Note: This server was made for a school project.
@@ -59,6 +59,8 @@ class Server:
         self.logfile = logfile
         self.ownername = ownername
         self.ownerpassword = ownerpassword
+        self.version = "7.0"
+        self.check_update()
         try:
             self.maxconnpersec = int(connpersec)
         except:
@@ -151,6 +153,36 @@ class Server:
         print(logmsg)
         self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
         self.log(logmsg)
+    def check_update(self):
+        try:
+            req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordVersion.json")
+            resp = urllib.request.urlopen(req).read().decode()
+            loaded = json.load(resp)
+            latest_version = loaded[0]["DatCordVersion"]
+            if latest_version != self.version:
+                print(f"[+] DatCord Update v{latest_version} available.")
+                while True:
+                    item = input("[+] Do you wish to download it(yes/no)?: ")
+                    if item.lower() == "yes":
+                        print("[+] Updating DatCord...........")
+                        req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCord.py")
+                        resp = urllib.request.urlopen(req).read().decode()
+                        file = open(sys.argv[0], "w")
+                        file.write(resp)
+                        file.close()
+                        print("\n[+] Successfully Updated.")
+                        time.sleep(1)
+                        print("[+] Restarting DatCord.....")
+                        subprocess.call(sys.argv)
+                        sys.exit()
+                        break
+                    elif item.lower() == "no":
+                        print("[+] Choosing not to update.")
+                        break
+                    else:
+                        print("[+] Invalid Input.")
+        except:
+            pass
     def logo(self=None):
         """Logo of this script."""
         logo = """  
@@ -784,6 +816,8 @@ Advanced Server by DrSquid"""
             max_msg_persec = 4
         valid_conn = False
         try:
+            conn.send(f"DatCord Server v{self.version}".encode())
+            time.sleep(0.1)
             conn.send(self.key)
             time.sleep(0.1)
             conn.send(self.fernet.encrypt(self.login_help_message().encode()))
