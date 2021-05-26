@@ -283,7 +283,6 @@ Advanced Server by DrSquid"""
         that is provided, and executes a command that is provided within the
         arguments. This function was made for optimization, and to help to
         avoid making too-repetitive code."""
-        cmd = cmd.replace("'","").replace('"',"")
         db = sqlite3.connect(file)
         cursor = db.cursor()
         cursor.execute(cmd)
@@ -1581,16 +1580,8 @@ class OptionParse:
         """Displays all of the new features added to DatCord in the current version."""
         print(Server.logo())
         print("""
-[+] Whats New in DatCord Version v6.5:
-[+] - Added 'Whats New' feature.
-[+] - Added Friends system.
-[+] - Added User block system.
-[+] - Fixed typos.
-[+] - Fixed a small vulnerability in the code.
-[+] - Fixed error messages in the DM system.
-[+] - Fixed variable when preventing more than 1 account session.
-[+] - Allowed DatCord Account to bypass anti-spam and blocking from other users.`
-[+] - Added encryption.""")
+[+] Whats New in DatCord Version v7.0:
+[+] - Bug Fixes.""")
     def usage(self):
         """Displays the help message for option-parsing(in case you need it)."""
         print(Server.logo())
