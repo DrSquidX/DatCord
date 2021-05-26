@@ -47,7 +47,7 @@ class Client:
             latest_version = loaded[1]["DatCordClientVersion"]
             self.latest_serv_version = loaded[0]["DatCordVersion"]
             if float(latest_version) < float(self.version):
-                print(f"[+] DatCord Client Update v{latest_version} available.")
+                print(f"[+] DatCord Client Update v{latest_version} available. Your current version is DatCord Client v{self.version}.")
                 while True:
                     item = input("[+] Do you wish to download it(yes/no)?: ")
                     if item.lower() == "yes":
