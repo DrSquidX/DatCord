@@ -157,6 +157,9 @@ class Server:
             self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
             self.log(logmsg)
     def check_update(self):
+        """Automatically checks for any updates in the version. It compares the current 
+        version with the latest version in the server to determine whether it should be 
+        updated or not."""
         try:
             req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordVersion.json")
             resp = urllib.request.urlopen(req).read().decode()
