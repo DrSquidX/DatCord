@@ -51,6 +51,7 @@ class Server:
         data files. Once configured, the user can choose when to start listening for connections
         (however in this script the .listen() function is used right after being configured so
         the server starts listening on startup)."""
+        print(self.logo())
         self.ip = ip
         self.port = port
         self.dbfile = dbfile
@@ -60,6 +61,7 @@ class Server:
         self.ownername = ownername
         self.ownerpassword = ownerpassword
         self.version = "7.1"
+        self.start = True
         self.check_update()
         try:
             self.maxconnpersec = int(connpersec)
@@ -69,91 +71,91 @@ class Server:
         self.connpersec = 0
         self.uptime = 0
         self.manualbanall = False
-        print(self.logo())
-        file = open(self.userdbfile,"w")
-        file.close()
-        file2 = open(self.logfile,"w")
-        file2.close()
-        try:
-            db = sqlite3.connect(self.dbfile)
-        except:
-            file = open(self.dbfile,"w")
+        if self.start:
+            file = open(self.userdbfile, "w")
             file.close()
-            db = sqlite3.connect(self.dbfile)
-        try:
-            file2 = open(self.roomdata, "r")
-        except:
-            file2 = open(self.roomdata, "w")
-        file2.close()
-        cursor = db.cursor()
-        userdb = sqlite3.connect(self.userdbfile)
-        userdbcursor = userdb.cursor()
-        self.listening = True
-        self.banningallincomingconn = False
-        self.conn_list = []
-        self.roomkicked = []
-        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.log(self.logo())
-        try:
-            self.server.bind((self.ip, self.port))
-            self.key = Fernet.generate_key()
-            self.fernet = Fernet(self.key)
-        except Exception as e:
-            print(f"\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
-            self.log(f"\n\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
-            sys.exit()
-        try:
-            cursor.execute("select * from users")
-        except:
-            cursor.execute("create table users(username, password)")
-        cursor.execute(f"delete from users where username = '{self.ownername}'")
-        cursor.execute(f"insert into users values('{self.ownername}','{hashlib.sha256(self.ownerpassword.encode()).hexdigest()}')")
-        try:
-            cursor.execute("select * from open_rooms")
-        except:
-            cursor.execute("create table open_rooms(roomname, roompass)")
-        try:
-            cursor.execute("select * from banlist")
-        except:
-            cursor.execute("create table banlist(username)")
-        try:
-            cursor.execute("select * from ipbanlist")
-        except:
-            cursor.execute("create table ipbanlist(ip)")
-        try:
-            cursor.execute("select * from ipwhitelist")
-        except:
-            cursor.execute("create table ipwhitelist(ip)")
-        try:
-            cursor.execute("select * from friendslist")
-        except:
-            cursor.execute("create table friendslist(user, friends)")
-        try:
-            cursor.execute("select * from friendrequests")
-        except:
-            cursor.execute("create table friendrequests(user, requests)")
-        try:
-            cursor.execute("select * from blocklists")
-        except:
-            cursor.execute("create table blocklists(user, blockedusers)")
-        userdbcursor.execute("create table loggedinusers(username, connection)")
-        userdb.commit()
-        userdbcursor.close()
-        userdb.close()
-        db.commit()
-        cursor.close()
-        db.close()
-        self.configure_rooms()
-        logmsg = f"""
+            file2 = open(self.logfile, "w")
+            file2.close()
+            try:
+                db = sqlite3.connect(self.dbfile)
+            except:
+                file = open(self.dbfile, "w")
+                file.close()
+                db = sqlite3.connect(self.dbfile)
+            try:
+                file2 = open(self.roomdata, "r")
+            except:
+                file2 = open(self.roomdata, "w")
+            file2.close()
+            cursor = db.cursor()
+            userdb = sqlite3.connect(self.userdbfile)
+            userdbcursor = userdb.cursor()
+            self.listening = True
+            self.banningallincomingconn = False
+            self.conn_list = []
+            self.roomkicked = []
+            self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.log(self.logo())
+            try:
+                self.server.bind((self.ip, self.port))
+                self.key = Fernet.generate_key()
+                self.fernet = Fernet(self.key)
+            except Exception as e:
+                print(f"\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
+                self.log(f"\n\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
+                sys.exit()
+            try:
+                cursor.execute("select * from users")
+            except:
+                cursor.execute("create table users(username, password)")
+            cursor.execute(f"delete from users where username = '{self.ownername}'")
+            cursor.execute(f"insert into users values('{self.ownername}','{hashlib.sha256(self.ownerpassword.encode()).hexdigest()}')")
+            try:
+                cursor.execute("select * from open_rooms")
+            except:
+                cursor.execute("create table open_rooms(roomname, roompass)")
+            try:
+                cursor.execute("select * from banlist")
+            except:
+                cursor.execute("create table banlist(username)")
+            try:
+                cursor.execute("select * from ipbanlist")
+            except:
+                cursor.execute("create table ipbanlist(ip)")
+            try:
+                cursor.execute("select * from ipwhitelist")
+            except:
+                cursor.execute("create table ipwhitelist(ip)")
+            try:
+                cursor.execute("select * from friendslist")
+            except:
+                cursor.execute("create table friendslist(user, friends)")
+            try:
+                cursor.execute("select * from friendrequests")
+            except:
+                cursor.execute("create table friendrequests(user, requests)")
+            try:
+                cursor.execute("select * from blocklists")
+            except:
+                cursor.execute("create table blocklists(user, blockedusers)")
+            userdbcursor.execute("create table loggedinusers(username, connection)")
+            userdb.commit()
+            userdbcursor.close()
+            userdb.close()
+            db.commit()
+            cursor.close()
+            db.close()
+            self.configure_rooms()
+            logmsg = f"""
 [({datetime.datetime.today()})][(INFO)]: Running on DatCord Version {self.version}.
 [({datetime.datetime.today()})][(INFO)]: Server is hosted on: {self.ip}:{self.port}                                       
 [({datetime.datetime.today()})][(INFO)]: Owner Account Info: Username: {self.ownername} Password: {self.ownerpassword}      
 [({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}                                    
 [({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}                                  
 [({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}"""
-        print(logmsg)
-        self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
-        self.log(logmsg)
+            print(logmsg)
+            self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
+            self.log(logmsg)
     def check_update(self):
         try:
             req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordVersion.json")
@@ -161,7 +163,7 @@ class Server:
             loaded = json.load(resp)
             latest_version = loaded[0]["DatCordVersion"]
             if float(latest_version) < float(self.version):
-                print(f"[+] DatCord Update v{latest_version} available.")
+                print(f"\n[+] DatCord Update v{latest_version} available.")
                 while True:
                     item = input("[+] Do you wish to download it(yes/no)?: ")
                     if item.lower() == "yes":
@@ -174,8 +176,8 @@ class Server:
                         print("\n[+] Successfully Updated.")
                         time.sleep(1)
                         print("[+] Restart DatCord to apply the new update!")
+                        self.start = False
                         sys.exit()
-                        break
                     elif item.lower() == "no":
                         print("[+] Choosing not to update.")
                         break
@@ -220,96 +222,97 @@ Advanced Server by DrSquid"""
         banning function starts to take place if the DDoS Attacks last longer than 5 seconds. It
         will start to ban all of the IP Addresses that connect to the server. While not perfect, as
         it may ban innocent IP Addresses, it will help stop the DDoS Attack on the server."""
-        self.uptimeadder = threading.Thread(target=self.add_to_connvar)
-        self.uptimeadder.start()
-        print(f"[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
-        self.log(f"\n[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
-        self.being_attacked = False
-        self.auto_ban = False
-        self.waitingforautoban = False
-        timetoauto_ban = 0
-        while True:
-            try:
-                if self.listening:
-                    self.server.listen()
-                    conn, ip = self.server.accept()
-                    if not self.listening:
-                        conn.close()
-                    else:
-                        closed = False
-                        if ip[0] in self.get_iplist("ipbanlist"):
-                            closed = True
+        if self.start:
+            self.uptimeadder = threading.Thread(target=self.add_to_connvar)
+            self.uptimeadder.start()
+            print(f"[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
+            self.log(f"\n[({datetime.datetime.today()})][(LISTEN))]: Server is listening......")
+            self.being_attacked = False
+            self.auto_ban = False
+            self.waitingforautoban = False
+            timetoauto_ban = 0
+            while True:
+                try:
+                    if self.listening:
+                        self.server.listen()
+                        conn, ip = self.server.accept()
+                        if not self.listening:
                             conn.close()
                         else:
-                            self.conncount += 1
-                            self.connpersec = self.conncount / self.uptime
-                        if self.connpersec >= self.maxconnpersec:
-                            self.connpersec = self.maxconnpersec + 5
-                        if not closed:
-                            if not self.being_attacked:
-                                if self.uptime == 60:
-                                    self.uptime = 0
-                                    self.conncount = 0
-                            if self.connpersec <= self.maxconnpersec:
-                                self.being_attacked = False
-                                self.waitingforautoban = False
-                                if not self.manualbanall and self.banningallincomingconn:
-                                    self.banningallincomingconn = False
-                                    logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
-                                    self.log(f"\n" + logmsg)
-                                    if not self.listening:
-                                        self.listening = True
-                            elif self.connpersec >= self.maxconnpersec:
-                                if not self.waitingforautoban:
-                                    timetoauto_ban = time.time()
-                                    self.waitingforautoban = True
-                                if round(time.time() - timetoauto_ban) >= 5 and not self.banningallincomingconn:
-                                    self.banningallincomingconn = True
-                                    logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
-                                    print(logmsg)
-                                    self.log(f"\n" + logmsg)
-                                self.being_attacked = True
-                                if ip[0] in self.get_iplist("ipwhitelist"):
-                                    pass
-                                else:
-                                    if not closed:
-                                        print(f"[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
-                                        self.log(f"\n[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
-                                        conn.close()
-                            if self.banningallincomingconn:
-                                if ip[0] == "127.0.0.1":
-                                    self.listening = False
-                                    logmsg = f"[({datetime.datetime.today()})][(INFO)]: Server is being hosted on LOCALHOST! Setting Listening for connections to: {self.listening}"
-                                    print(logmsg)
-                                    self.log("\n"+logmsg)
-                                else:
-                                    if ip[0] not in self.get_iplist("ipwhitelist"):
-                                        if ip[0] not in self.get_iplist("ipbanlist"):
-                                            self.ban_ip_fr_server(ip[0])
-                            if self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
-                                msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
-                                print(msg)
-                                self.log("\n" + msg)
-                                isbanned = False
-                                if ip[0] in self.get_iplist("ipbanlist"):
-                                    isbanned = True
-                                if not isbanned:
-                                    handler = threading.Thread(target=self.handler, args=(conn, ip))
-                                    handler.start()
-                                else:
-                                    msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
-                                    print(msg2)
-                                    self.log("\n" + msg2)
-                                    conn.close()
+                            closed = False
+                            if ip[0] in self.get_iplist("ipbanlist"):
+                                closed = True
+                                conn.close()
                             else:
-                                try:
-                                    conn.close()
-                                except:
-                                    pass
-                else:
-                    pass
-            except Exception as e:
-                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error when listening for connections: {e}")
+                                self.conncount += 1
+                                self.connpersec = self.conncount / self.uptime
+                            if self.connpersec >= self.maxconnpersec:
+                                self.connpersec = self.maxconnpersec + 5
+                            if not closed:
+                                if not self.being_attacked:
+                                    if self.uptime == 60:
+                                        self.uptime = 0
+                                        self.conncount = 0
+                                if self.connpersec <= self.maxconnpersec:
+                                    self.being_attacked = False
+                                    self.waitingforautoban = False
+                                    if not self.manualbanall and self.banningallincomingconn:
+                                        self.banningallincomingconn = False
+                                        logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
+                                        self.log(f"\n" + logmsg)
+                                        if not self.listening:
+                                            self.listening = True
+                                elif self.connpersec >= self.maxconnpersec:
+                                    if not self.waitingforautoban:
+                                        timetoauto_ban = time.time()
+                                        self.waitingforautoban = True
+                                    if round(time.time() - timetoauto_ban) >= 5 and not self.banningallincomingconn:
+                                        self.banningallincomingconn = True
+                                        logmsg = f"[({datetime.datetime.today()})][(ANTI-DDOS)]: Automatically setting banning all incoming IP's to: {self.banningallincomingconn}."
+                                        print(logmsg)
+                                        self.log(f"\n" + logmsg)
+                                    self.being_attacked = True
+                                    if ip[0] in self.get_iplist("ipwhitelist"):
+                                        pass
+                                    else:
+                                        if not closed:
+                                            print(f"[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                                            self.log(f"\n[({datetime.datetime.today()})][(DDOS-WARN)]: Server may be under attack! Source IP of Attacker: {ip}")
+                                            conn.close()
+                                if self.banningallincomingconn:
+                                    if ip[0] == "127.0.0.1":
+                                        self.listening = False
+                                        logmsg = f"[({datetime.datetime.today()})][(INFO)]: Server is being hosted on LOCALHOST! Setting Listening for connections to: {self.listening}"
+                                        print(logmsg)
+                                        self.log("\n" + logmsg)
+                                    else:
+                                        if ip[0] not in self.get_iplist("ipwhitelist"):
+                                            if ip[0] not in self.get_iplist("ipbanlist"):
+                                                self.ban_ip_fr_server(ip[0])
+                                if self.connpersec < self.maxconnpersec or ip[0] in self.get_iplist("ipwhitelist"):
+                                    msg = f"[({datetime.datetime.today()})][(CONN)]: {ip} has connected."
+                                    print(msg)
+                                    self.log("\n" + msg)
+                                    isbanned = False
+                                    if ip[0] in self.get_iplist("ipbanlist"):
+                                        isbanned = True
+                                    if not isbanned:
+                                        handler = threading.Thread(target=self.handler, args=(conn, ip))
+                                        handler.start()
+                                    else:
+                                        msg2 = f"[({datetime.datetime.today()})][(WARN)]: {ip} is in the IP Banlist! Closing connection...."
+                                        print(msg2)
+                                        self.log("\n" + msg2)
+                                        conn.close()
+                                else:
+                                    try:
+                                        conn.close()
+                                    except:
+                                        pass
+                    else:
+                        pass
+                except Exception as e:
+                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error when listening for connections: {e}")
     def exec_sqlcmd(self, file, cmd):
         """This function connects to an SQL Database. It connects to the filename
         that is provided, and executes a command that is provided within the
