@@ -154,12 +154,12 @@ class Server:
     def logo(self=None):
         """Logo of this script."""
         logo = """  
- _____        _    _____              _           __   _____ 
-|  __ \      | |  / ____|            | |         / /  | ____|
-| |  | | __ _| |_| |     ___  _ __ __| | __   __/ /_  | |__  
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / / '_ \ |___ \ 
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V /| (_) | ___) |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_/  \___(_)____/                                                                                                 
+ _____        _    _____              _       ______ ___  
+|  __ \      | |  / ____|            | |     |____  / _ \ 
+| |  | | __ _| |_| |     ___  _ __ __| | __   __ / / | | |
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // /| | | |
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // / | |_| |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_) \___/                                                                                            
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -283,6 +283,7 @@ Advanced Server by DrSquid"""
         that is provided, and executes a command that is provided within the
         arguments. This function was made for optimization, and to help to
         avoid making too-repetitive code."""
+        cmd = cmd.replace("'","").replace('"',"")
         db = sqlite3.connect(file)
         cursor = db.cursor()
         cursor.execute(cmd)
@@ -687,7 +688,10 @@ Advanced Server by DrSquid"""
         cursor = db.cursor()
         cursor.execute(f"select * from blocklists where user = '{user}'")
         item = cursor.fetchall()
-        ls = item[0][1]
+        try:
+            ls = item[0][1]
+        except:
+            ls = ""
         return str(ls).split()
     def get_userlist(self):
         """Gets a list of all the registered users in the database."""
@@ -1100,6 +1104,8 @@ Advanced Server by DrSquid"""
                                     if username == self.ownername:
                                         valid = True
                                         blocked = False
+                                    if selfname not in self.get_block_list(username) and username not in self.get_block_list(selfname):
+                                        blocked = False
                                 if serverowner:
                                     valid = True
                                     blocked = False
@@ -1109,10 +1115,13 @@ Advanced Server by DrSquid"""
                                     self.show_server_com_with_client(conn, selfname, f"You are currently in a chatroom! Do !leaveroom to leave your room!")
                                 else:
                                     if valid:
-                                        dmconn = self.opendm(username)
-                                        indm = True
-                                        dmusername = username
-                                        self.show_server_com_with_client(conn, selfname, f"Opened a DM with {username}. You can directly speak to them privately!")
+                                        if indm:
+                                            self.show_server_com_with_client(conn, selfname, "You are already in a DM! Do '!closedm' to close it.")
+                                        else:
+                                            dmconn = self.opendm(username)
+                                            indm = True
+                                            dmusername = username
+                                            self.show_server_com_with_client(conn, selfname, f"Opened a DM with {username}. You can directly speak to them privately!")
                                     else:
                                         if not blocked:
                                             self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
