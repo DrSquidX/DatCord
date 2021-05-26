@@ -34,6 +34,8 @@ This is a school project for one of my Design classes. This server is a sophisti
 
 * Dependecies             - Figure out what things you may need to download to run the scripts correctly.
 
+* Checking For Updates    - DatCord checks for updates so you can be up to date on the latest software!
+
 # Secure Password Storage
 Due to some recent learning of SQL, I have changed my old way of password storage of a plain text file, to a more advanced alternative - SQL Databases. This way I can store passwords in a more secure way, where the server would have to run a certain SQL Command to extract a username and password from the Database(this command is similar to "select * from users). This password storage system is more quick than the old text file system, as I can run a certain SQL Command to extract, remove or insert something in the Database, whereas I would have to read a whole text file to extract information from it(this would be worse if the server had a lot of clients, as the reading of the file would take very long). This system is more secure than any system I have made so far. 
 
@@ -161,6 +163,13 @@ Intercepted Not Encrypted Traffic:
 Intercepted Encrypted Traffic:
 
 ![Encrypt](/encrypted.png)
+
+# Automatic Update Checking
+In DatCord, there is automatic update checking. This allows you to stay up to date on the latest code whenever there is a new update. It makes a request to the server which gets the latest version available to the public. Afterwards, it compares that version to the users server version. If it is lower than the latest version, you will be asked to update your code to the newest version. You do not have to do it of course, but it is a nice feature to have.
+
+An Update happening from Version 7.0 to Version 7.1:
+
+![Updates](/updating.png)
 
 # Dependecies
 There is one module you need to install in order to run the script. You need to download 'cryptography' which is a module that is used for encryption. If you have 'pip' installed, you can run "pip install cryptography" in terminal/cmd.
