@@ -37,6 +37,9 @@ class Client:
         db.close()
         self.join_serv()
     def update_check(self):
+        """Automatically checks for any updates in the version. It compares the current 
+        version with the latest version in the server to determine whether it should be 
+        updated or not."""
         try:
             req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordVersion.json")
             resp = urllib.request.urlopen(req).read().decode()
