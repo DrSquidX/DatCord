@@ -159,7 +159,7 @@ class Server:
             resp = urllib.request.urlopen(req).read().decode()
             loaded = json.load(resp)
             latest_version = loaded[0]["DatCordVersion"]
-            if latest_version != self.version:
+            if float(latest_version) < float(self.version):
                 print(f"[+] DatCord Update v{latest_version} available.")
                 while True:
                     item = input("[+] Do you wish to download it(yes/no)?: ")
@@ -186,12 +186,12 @@ class Server:
     def logo(self=None):
         """Logo of this script."""
         logo = """  
- _____        _    _____              _       ______ ___  
-|  __ \      | |  / ____|            | |     |____  / _ \ 
-| |  | | __ _| |_| |     ___  _ __ __| | __   __ / / | | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // /| | | |
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // / | |_| |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_) \___/                                                                                            
+ _____        _    _____              _       ______ __ 
+|  __ \      | |  / ____|            | |     |____  /_ |
+| |  | | __ _| |_| |     ___  _ __ __| | __   __ / / | |
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // /  | |
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /   | |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_)  |_|                                                                                      
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -1614,7 +1614,7 @@ class OptionParse:
         """Displays all of the new features added to DatCord in the current version."""
         print(Server.logo())
         print("""
-[+] Whats New in DatCord Version v7.0:
+[+] Whats New in DatCord Version v7.1:
 [+] - Bug Fixes.
 [+] - Added update checking.""")
     def usage(self):
