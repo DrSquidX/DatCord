@@ -113,9 +113,12 @@ class Client:
         if self.inserver:
             self.logged_in = False
             print("[+] Successfully connected to Datcord Servers!\n")
-            key = self.client.recv(10240)
-            self.fernet = Fernet(key)
-            msg = self.client.recv(10240).decode()
+            try:
+                key = self.client.recv(10240)
+                self.fernet = Fernet(key)
+                msg = self.client.recv(10240).decode()
+            except:
+                pass
             self.sender = threading.Thread(target=self.send)
             self.sender.start()
     def logo(self):
@@ -132,7 +135,7 @@ Client Script For DatCord by DrSquid"""
     def send(self):
         """This function is what the client uses to send messages to the server.
         All of the logging in code is here as well."""
-        print("[+] Sign-in\n[+] Before you are able to communicate.\n[+] You are needed to either sign in or create an account for Datcord.")
+        print("[+] Sign-in\n[+] Before you are able to communicate,\n[+] You are needed to either sign in or create an account for Datcord.")
         print("\n[+] Don't have an account?\n[+] Not to worry. Enter the credentials you wish to use, and you will be prompted to register for a new account.")
         msg = None
         while True:
@@ -217,7 +220,7 @@ Client Script For DatCord by DrSquid"""
                     msg = input("[+] Enter your msg: ")
                     if msg == "!disconnect":
                         print("[+] Disconnecting you from the server.")
-                        self.client.close()
+                        self.client.close() 
                         raise Exception("Closed conn")
                     else:
                         self.client.send(self.fernet.encrypt(msg.encode()))
