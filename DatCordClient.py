@@ -54,8 +54,7 @@ class Client:
                         file.close()
                         print("\n[+] Successfully Updated.")
                         time.sleep(1)
-                        print("[+] Restarting DatCord.....")
-                        subprocess.call(sys.argv)
+                        print("[+] Restart DatCord to apply the new update!")
                         sys.exit()
                         break
                     elif item.lower() == "no":
