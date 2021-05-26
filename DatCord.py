@@ -1615,7 +1615,8 @@ class OptionParse:
         print(Server.logo())
         print("""
 [+] Whats New in DatCord Version v7.0:
-[+] - Bug Fixes.""")
+[+] - Bug Fixes.
+[+] - Added update checking.""")
     def usage(self):
         """Displays the help message for option-parsing(in case you need it)."""
         print(Server.logo())
