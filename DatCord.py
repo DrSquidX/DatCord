@@ -1638,7 +1638,7 @@ class OptionParse:
 [+] Required Arguments:
 [+] --ip, --ipaddr     - Specify the IP to host the server on.
 [+] --p,  --port       - Specify the Port to host the server on.
-[+] These are needed to host the server.
+[+] Note: These are needed to host the server.
 
 [+] Optional Arguments:
 [+] --i,  --info       - Shows this message.
