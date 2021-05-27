@@ -1638,7 +1638,7 @@ class OptionParse:
 [+] Required Arguments:
 [+] --ip, --ipaddr     - Specify the IP to host the server on.
 [+] --p,  --port       - Specify the Port to host the server on.
-[+] Note: These are needed to host the server.
+[+] These are needed to host the server.
 
 [+] Optional Arguments:
 [+] --i,  --info       - Shows this message.
@@ -1740,7 +1740,7 @@ if __name__ == '__main__':
         item = input("[+] Would you like to try and install it?(yes/no): ")
         if item.lower() == "yes":
             print("\n[+] Attempting to install....")
-            os.system("pip install cryptography")
+            os.system("python -m install cryptography")
             print("[+] If cryptography was installed, re-run the script.")
         else:
             print("[+] If you have PIP installed, run 'pip install cryptography'.")
