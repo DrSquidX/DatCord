@@ -188,9 +188,8 @@ class Server:
                         break
                     else:
                         print("[+] Invalid Input.")
-        except Exception as e:
-            while True:
-                print(e)
+        except:
+            pass
     def logo(self=None):
         """Logo of this script."""
         logo = """  
@@ -1684,8 +1683,9 @@ class OptionParse:
         if arg.ip is not None:
             ip = arg.ip
         else:
-            self.usage()
-            sys.exit()
+            while True:
+                self.usage()
+                print(sys.argv)
         if arg.port is not None:
             try:
                 port = int(arg.port)
