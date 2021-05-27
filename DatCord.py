@@ -1683,8 +1683,8 @@ class OptionParse:
         if arg.ip is not None:
             ip = arg.ip
         else:
-            self.usage()
-            sys.exit()
+            while True:
+                self.usage()
         if arg.port is not None:
             try:
                 port = int(arg.port)
