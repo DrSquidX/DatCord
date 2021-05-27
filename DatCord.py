@@ -163,9 +163,12 @@ class Server:
         try:
             req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordVersion.json")
             resp = urllib.request.urlopen(req).read().decode()
-            loaded = json.load(resp)
+            file = open("DatCordVersion.json", "w")
+            file.write(resp)
+            file.close()
+            loaded = json.load(open("DatCordVersion.json","r"))
             latest_version = loaded[0]["DatCordVersion"]
-            if float(latest_version) < float(self.version):
+            if float(latest_version) > float(self.version):
                 print(f"\n[+] DatCord Update v{latest_version} available. Your current version is DatCord v{self.version}.")
                 while True:
                     item = input("[+] Do you wish to download it(yes/no)?: ")
