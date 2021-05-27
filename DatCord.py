@@ -359,7 +359,8 @@ Advanced Server by DrSquid"""
         db.close()
     def add_to_connvar(self):
         """Adds 1 to the up time variable after every second.
-        This function is used for the Anti-DDoS Function."""
+        This function is used for the Anti-DDoS Function.
+        It additionally changes the connections per second var."""
         while True:
             time.sleep(1)
             if self.connpersec <= self.maxconnpersec:
@@ -852,6 +853,28 @@ Advanced Server by DrSquid"""
                     except:
                         msg = str(msg)
                     this_main_msg = f"\n[({selfname})]: {msg}"
+                    if not logged_in:
+                        if msg.startswith("!register"):
+                            try:
+                                username = msg.split()[1].strip("'").strip('"')
+                                this_main_msg = f"\n[({selfname})]: Attempting to register as {username}."
+                            except:
+                                pass
+                        elif msg.startswith("!login"):
+                            try:
+                                username = msg.split()[1].strip("'").strip('"')
+                                this_main_msg = f"\n[({selfname})]: Attempting to Log into {username}."
+                            except:
+                                pass
+                    else:
+                        if msg.startswith("!reregister"):
+                            this_main_msg = f"\n[({selfname})]: Attempting to change password."
+                    if msg.strip() == "":
+                        pass
+                    else:
+                        if not indm and not inroom:
+                            self.log(f"\n[({datetime.datetime.today()})]" + this_main_msg.strip())
+                            print(f"[({datetime.datetime.today()})]" + this_main_msg.strip())
                     current_timer = time.time()
                     if round(current_timer-timer) >= 1:
                         if not serverowner:
@@ -871,7 +894,6 @@ Advanced Server by DrSquid"""
                             try:
                                 username = msg.split()[1].strip("'").strip('"')
                                 password = msg.split()[2].strip("'").strip('"')
-                                this_main_msg = f"\n[({selfname})]: Attempting to Log into {username}."
                                 authentication = self.attempt_login(username, password)
                                 if authentication:
                                     namealreadylogged = self.check_for_sameitems(self.userdbfile, username, f"select * from loggedinusers where username = '{username}'")
@@ -932,7 +954,6 @@ Advanced Server by DrSquid"""
                             try:
                                 username = msg.split()[1].strip("'").strip('"')
                                 password = msg.split()[2].strip("'").strip('"')
-                                this_main_msg = f"\n[({selfname})]: Attempting to register as {username}."
                                 self.register_accounts(username, password)
                                 logged_in = True
                                 selfname = username
@@ -1145,7 +1166,6 @@ Advanced Server by DrSquid"""
                                 old_pass = msg.split()[1].strip("'").strip('"')
                                 newpass = msg.split()[2].strip("'").strip('"')
                                 authentication = self.attempt_login(selfname, old_pass)
-                                this_main_msg = f"\n[({selfname})]: Attempting to change password."
                                 if authentication:
                                     self.show_server_com_with_client(conn, selfname, f"Changing your password to: {newpass}")
                                     self.change_password(selfname, newpass)
@@ -1633,12 +1653,6 @@ Advanced Server by DrSquid"""
                                 except:
                                     self.show_server_com_with_client(conn, selfname, f"There was an error with sending your DM Message! The person may have gone offline. Closing your DM.")
                                     indm = False
-                    if msg.strip() == "":
-                        pass
-                    else:
-                        if not indm and not inroom:
-                            self.log(f"\n[({datetime.datetime.today()})]" + this_main_msg.strip())
-                            print(f"[({datetime.datetime.today()})]" + this_main_msg.strip())
                 except Exception as e:
                     self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Client Error with {ip}(known as {selfname}): {e}")
                     if inroom:
@@ -1664,6 +1678,7 @@ class OptionParse:
 [+] - Added Banner(Allows clients to see current version of server).
 [+] - Added more logging commands.
 [+] - Renamed function 'show_errors()' to 'show_info()' to prevent confusing code readability.
+[+] - Passwords are no longer logged(for privacy reasons).
 [+] - Fixed Bug that prevents room messages from displaying.
 [+] - Fixed update checking bugs.""")
     def usage(self):
