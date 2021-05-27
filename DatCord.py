@@ -60,7 +60,7 @@ class Server:
         self.logfile = logfile
         self.ownername = ownername
         self.ownerpassword = ownerpassword
-        self.version = "7.1"
+        self.version = "7.2"
         self.start = True
         self.check_update()
         try:
@@ -157,8 +157,8 @@ class Server:
             self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
             self.log(logmsg)
     def check_update(self):
-        """Automatically checks for any updates in the version. It compares the current 
-        version with the latest version in the server to determine whether it should be 
+        """Automatically checks for any updates in the version. It compares the current
+        version with the latest version in the server to determine whether it should be
         updated or not."""
         try:
             req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordVersion.json")
@@ -178,9 +178,8 @@ class Server:
                         file.close()
                         print("\n[+] Successfully Updated.")
                         time.sleep(1)
-                        print("[+] Restart DatCord to apply the new update!")
                         self.start = False
-                        sys.exit()
+                        break
                     elif item.lower() == "no":
                         print("[+] Choosing not to update.")
                         break
@@ -191,12 +190,12 @@ class Server:
     def logo(self=None):
         """Logo of this script."""
         logo = """  
- _____        _    _____              _       ______ __ 
-|  __ \      | |  / ____|            | |     |____  /_ |
-| |  | | __ _| |_| |     ___  _ __ __| | __   __ / / | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // /  | |
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /   | |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_)  |_|                                                                                      
+ _____        _    _____              _       ______ ___  
+|  __ \      | |  / ____|            | |     |____  |__ \ 
+| |  | | __ _| |_| |     ___  _ __ __| | __   __ / /   ) |
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // /   / / 
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /   / /_ 
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_) |____|                                                                        
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -316,6 +315,10 @@ Advanced Server by DrSquid"""
                         pass
                 except Exception as e:
                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error when listening for connections: {e}")
+        else:
+            print("[+] Restarting DatCord......")
+            subprocess.call(sys.argv)
+            sys.exit()
     def exec_sqlcmd(self, file, cmd):
         """This function connects to an SQL Database. It connects to the filename
         that is provided, and executes a command that is provided within the
