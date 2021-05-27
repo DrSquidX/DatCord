@@ -168,7 +168,7 @@ class Server:
             file.close()
             loaded = json.load(open("DatCordVersion.json","r"))
             latest_version = loaded[0]["DatCordVersion"]
-            if float(latest_version) == float(self.version):
+            if float(latest_version) > float(self.version):
                 print(f"\n[+] DatCord Update v{latest_version} available. Your current version is DatCord v{self.version}.")
                 while True:
                     item = input("[+] Do you wish to download it(yes/no)?: ")
@@ -319,11 +319,7 @@ Advanced Server by DrSquid"""
                 except Exception as e:
                     self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error when listening for connections: {e}")
         else:
-            print("[+] Restarting DatCord......")
-            new_args = ""
-            for i in sys.argv:
-                new_args += f" {i}"
-            os.system(new_args)
+            print("[+] Restart DatCord to apply the update!")
             sys.exit()
     def exec_sqlcmd(self, file, cmd):
         """This function connects to an SQL Database. It connects to the filename
@@ -1683,9 +1679,8 @@ class OptionParse:
         if arg.ip is not None:
             ip = arg.ip
         else:
-            while True:
-                self.usage()
-                print(sys.argv)
+            self.usage()
+            sys.exit()
         if arg.port is not None:
             try:
                 port = int(arg.port)
@@ -1731,26 +1726,22 @@ class OptionParse:
         server = Server(ip, port, db, au, rd, sl, ou, op, mc)
         server.listen()
 if __name__ == '__main__':
+    """Initiates the script."""
+    if sys.platform == "win32":
+        os.system("cls")
+    else:
+        os.system("clear")
     try:
-        """Initiates the script."""
-        if sys.platform == "win32":
-            os.system("cls")
-        else:
-            os.system("clear")
-        try:
-            from cryptography.fernet import Fernet
-        except Exception as e:
-            print(Server.logo())
-            print("[+] You have not installed the module 'cryptography'.")
-            item = input("[+] Would you like to try and install it?(yes/no): ")
-            if item.lower() == "yes":
-                print("\n[+] Attempting to install....")
-                os.system("pip install cryptography")
-                print("[+] If cryptography was installed, re-run the script.")
-            else:
-                print("[+] If you have PIP installed, run 'pip install cryptography'.")
-            sys.exit()
-        parse = OptionParse()
+        from cryptography.fernet import Fernet
     except Exception as e:
-        while True:
-            print(e)
+        print(Server.logo())
+        print("[+] You have not installed the module 'cryptography'.")
+        item = input("[+] Would you like to try and install it?(yes/no): ")
+        if item.lower() == "yes":
+            print("\n[+] Attempting to install....")
+            os.system("pip install cryptography")
+            print("[+] If cryptography was installed, re-run the script.")
+        else:
+            print("[+] If you have PIP installed, run 'pip install cryptography'.")
+        sys.exit()
+    parse = OptionParse()
