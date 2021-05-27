@@ -60,7 +60,7 @@ class Server:
         self.logfile = logfile
         self.ownername = ownername
         self.ownerpassword = ownerpassword
-        self.version = "7.5"
+        self.version = "7.6"
         self.start = True
         self.check_update()
         try:
@@ -193,12 +193,12 @@ class Server:
     def logo(self=None):
         """Logo of this script."""
         logo = """  
- _____        _    _____              _       ______ _____ 
-|  __ \      | |  / ____|            | |     |____  | ____|
-| |  | | __ _| |_| |     ___  _ __ __| | __   __ / /| |__  
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // / |___ \ 
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /   ___) |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_) |____/                                                                 
+ _____        _    _____              _       ______ __  
+|  __ \      | |  / ____|            | |     |____  / /  
+| |  | | __ _| |_| |     ___  _ __ __| | __   __ / / /_  
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // / '_ \ 
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /| (_) |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_)\___/                                                             
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -317,7 +317,7 @@ Advanced Server by DrSquid"""
                     else:
                         pass
                 except Exception as e:
-                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error when listening for connections: {e}")
+                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error when listening for connections: {e}")
         else:
             print("[+] Restart DatCord to apply the update!")
             sys.exit()
@@ -503,7 +503,7 @@ Advanced Server by DrSquid"""
             files.write(text)
             files.close()
         except Exception as e:
-            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with updating file({file}): {e}")
+            self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with updating file({file}): {e}")
     def add_to_roomdata(self, selfname, roomname, stat):
         """This function adds names to room-data. It adds the name to the
         provided room stat(admin, member, etc)."""
@@ -597,7 +597,7 @@ Advanced Server by DrSquid"""
                 break
             item += 1
         pass
-    def show_errors(self, msg):
+    def show_info(self, msg):
         """This displays and logs errors that happen in the server."""
         self.log(msg)
         print(msg.strip())
@@ -871,11 +871,13 @@ Advanced Server by DrSquid"""
                             try:
                                 username = msg.split()[1].strip("'").strip('"')
                                 password = msg.split()[2].strip("'").strip('"')
+                                this_main_msg = f"\n[({selfname})]: Attempting to Log into {username}."
                                 authentication = self.attempt_login(username, password)
                                 if authentication:
                                     namealreadylogged = self.check_for_sameitems(self.userdbfile, username, f"select * from loggedinusers where username = '{username}'")
                                     if namealreadylogged:
                                         self.show_server_com_with_client(conn, selfname, "Your account is already being used in another location!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {ip} is unable to log into {username} due to it currently being used in another location!")
                                     else:
                                         selfname = username
                                         isbanned = False
@@ -891,6 +893,7 @@ Advanced Server by DrSquid"""
                                             self.conn_list.append(conn)
                                             self.add_name_to_db(selfname, str(ip[0]) + " " + str(ip).strip('()').split()[1])
                                             self.show_server_com_with_client(conn, selfname, "Successfully logged in!")
+                                            self.show_info(f"\n[({datetime.datetime.today()})][(SUCCESSAUTH)]: {ip} has logged into the account {selfname}.")
                                             if self.ip == "localhost":
                                                 time.sleep(0.5)
                                             conn.send(self.fernet.encrypt(self.regular_client_help_message().encode()))
@@ -910,28 +913,33 @@ Advanced Server by DrSquid"""
                                                 print(othermsg)
                                                 self.log("\n"+othermsg)
                                         else:
+                                            self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: ({selfname}) tried to log into {username} but it banned from the server!")
                                             self.show_server_com_with_client(conn, selfname, "Your account has been banned from the server.")
                             except self.ServerError.AuthenticationError:
+                                self.show_info(f"\n[({datetime.datetime.today()})][(AUTHENTICATIONERROR)]: ({selfname}) tried to log into {username} but the credentials provided were incorrect!")
                                 self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
                                 login_attempts += 1
                                 if login_attempts >= max_login_attempts:
                                     self.show_server_com_with_client(conn, selfname, "You have exceeded the amount of login attempts. You have been kicked from the server.")
                                     conn.close()
                             except self.ServerError.NameNotInDatabaseError:
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: ({selfname}) tried to log into {username} but it is not registered in the database!")
                                 self.show_server_com_with_client(conn, selfname, "Your account is not registered in the database. Please register your account.")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !login <username> <password>")
                         elif msg.startswith("!register"):
                             try:
                                 username = msg.split()[1].strip("'").strip('"')
                                 password = msg.split()[2].strip("'").strip('"')
+                                this_main_msg = f"\n[({selfname})]: Attempting to register as {username}."
                                 self.register_accounts(username, password)
                                 logged_in = True
                                 selfname = username
                                 self.conn_list.append(conn)
                                 self.add_name_to_db(selfname, str(ip[0])+" "+str(ip).strip('()').split()[1])
                                 self.show_server_com_with_client(conn, selfname, "Successfully Registered. You have been logged in with this account!")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(NEWACC)]: {ip} has registered the account {selfname} to the database.")
                                 conn.send(self.fernet.encrypt(self.regular_client_help_message().encode()))
                                 othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
                                 print(othermsg)
@@ -942,20 +950,23 @@ Advanced Server by DrSquid"""
                                 self.exec_sqlcmd(self.dbfile, f"insert into friendrequests values('{selfname}', '')")
                                 self.exec_sqlcmd(self.dbfile, f"insert into blocklists values('{selfname}', '')")
                             except self.ServerError.NameAlreadyRegisteredError:
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: ({selfname}) tried to register as {username} but it was already registered in the database!")
                                 self.show_server_com_with_client(conn, selfname, "The account name is already registered in the database. Please use another name for your account.")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !register <username> <password>")
                     if logged_in:
                         if serverowner:
                             if msg.startswith("!nick"):
                                 try:
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(NICKCHANGE)]: {selfname} has changed their nick to {msg.split()[1]}.")
                                     selfname = msg.split()[1]
                                     self.show_server_com_with_client(conn, selfname, f"Changed your name to: {selfname}")
                                 except:
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !nick <username>")
                             elif msg.startswith("!unnick"):
                                 selfname = self.ownername
+                                self.show_info(f"\n[({datetime.datetime.today()})][(NICKCHANGE)]: {selfname} has changed their nick back to normal.")
                                 self.show_server_com_with_client(conn, selfname, f"Changed your name back to: {selfname}")
                             elif msg.startswith("!togglelisten"):
                                 if self.listening:
@@ -985,14 +996,18 @@ Advanced Server by DrSquid"""
                                     actual_ip = socket.gethostbyname(ip_addr)
                                     if ip_addr in self.get_iplist("ipbanlist"):
                                         self.show_server_com_with_client(conn, selfname, f"The IP is already in the banlist!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to ban {ip_addr} but it was already in the banlist!")
                                     elif ip_addr == "127.0.0.1":
                                         self.show_server_com_with_client(conn, selfname, f"You can't ban localhost!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to ban localhost but failed!")
                                     else:
                                         self.ban_ip_fr_server(ip_addr)
                                         self.show_server_com_with_client(conn, selfname, f"Successfully banned {ip_addr}. They won't be able to join the server the next time they try to.")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(IPBAN)]: {selfname} has banned {ip_addr}.")
                                 except socket.error:
                                     self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
-                                except:
+                                except Exception as e:
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ipban <ip>")
                             elif msg.startswith("!ipunban"):
                                 try:
@@ -1000,12 +1015,15 @@ Advanced Server by DrSquid"""
                                     actual_ip = socket.gethostbyname(ip_addr)
                                     if ip_addr not in self.get_iplist("ipbanlist"):
                                         self.show_server_com_with_client(conn, selfname, f"The IP Is not in the banlist!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to unban {ip_addr} but it wasn't in the banlist!")
                                     else:
                                         self.unban_ip_fr_server(ip_addr)
                                         self.show_server_com_with_client(conn, selfname, f"Successfully unbanned {ip_addr}.")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(IPUNBAN)]: {selfname} has unbanned {ip_addr}.")
                                 except socket.error:
                                     self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
-                                except:
+                                except Exception as e:
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ipunban <ip>")
                             elif msg.startswith("!whitelistip"):
                                 try:
@@ -1013,12 +1031,15 @@ Advanced Server by DrSquid"""
                                     actual_ip = socket.gethostbyname(ip_addr)
                                     if ip_addr in self.get_iplist("ipbanlist"):
                                         self.show_server_com_with_client(conn, selfname, f"The IP Is in the banlist! Unban them first.")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to whitelist {ip_addr} but it was in the banlist!")
                                     else:
                                         self.whitelist_ip_to_server(ip_addr)
                                         self.show_server_com_with_client(conn, selfname, f"Successfully whitelisted {ip_addr}.")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(IPWHITELIST)]: {selfname} has whitelisted {ip_addr}.")
                                 except socket.error:
                                     self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
-                                except:
+                                except Exception as e:
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !whitelistip <ip>")
                             elif msg.startswith("!unwhitelistip"):
                                 try:
@@ -1026,12 +1047,15 @@ Advanced Server by DrSquid"""
                                     actual_ip = socket.gethostbyname(ip_addr)
                                     if ip_addr not in self.get_iplist("ipwhitelist"):
                                         self.show_server_com_with_client(conn, selfname, f"The IP Is not in the whitelist!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to unban {ip_addr} but it wasn't in the whitelist!")
                                     else:
                                         self.unwhitelist_ip_fr_server(ip_addr)
                                         self.show_server_com_with_client(conn, selfname, f"Successfully unwhitelisted {ip_addr}.")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(IPUNWHITELIST)]: {selfname} has unwhitelisted {ip_addr}.")
                                 except socket.error:
                                     self.show_server_com_with_client(conn, selfname, f"You Have provided an invalid IP Address!")
-                                except:
+                                except Exception as e:
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !unwhitelistip <ip>")
                             elif msg.startswith("!broadcast"):
                                 try:
@@ -1046,17 +1070,20 @@ Advanced Server by DrSquid"""
                                     logmsg = f"[({datetime.datetime.today()})][(BROADCAST)]: {_main_msg}"
                                     print(logmsg)
                                     self.log("\n"+logmsg)
-                                except:
+                                except Exception as e:
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !broadcast <msg>")
                             elif msg.startswith("!ban"):
                                 try:
                                     banned_user = msg.split()[1]
                                     if banned_user == self.ownername:
                                         self.show_server_com_with_client(conn, selfname, f"You can't ban yourself!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to ban themself!")
                                     else:
                                         if banned_user in self.get_userlist():
                                             self.ban_user_fr_server(banned_user)
                                             self.show_server_com_with_client(conn, selfname, f"The Ban Hammer has spoken! {banned_user} has been banned from the server!")
+                                            self.show_info(f"\n[({datetime.datetime.today()})][(USERBAN)]: {selfname} has banned {banned_user}!")
                                             db = sqlite3.connect(self.userdbfile)
                                             cursor = db.cursor()
                                             cursor.execute(f"select * from loggedinusers where username = '{banned_user}'")
@@ -1071,21 +1098,24 @@ Advanced Server by DrSquid"""
                                             cursor.close()
                                             db.close()
                                         else:
+                                            self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to ban {banned_user} but the name wasn't registered!")
                                             self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                                 except Exception as e:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !ban <username>")
                             elif msg.startswith("!kick"):
                                 try:
                                     kick_user = msg.split()[1]
                                     if kick_user == self.ownername:
                                         self.show_server_com_with_client(conn, selfname, f"You can't kick yourself!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to kick themself!")
                                     else:
                                         if banned_user in self.get_userlist():
                                             self.show_server_com_with_client(conn, selfname, f"{kick_user} has been kicked from the server!")
                                             db = sqlite3.connect(self.userdbfile)
                                             cursor = db.cursor()
                                             cursor.execute(f"select * from loggedinusers where username = '{kick_user}'")
+                                            self.show_info(f"\n[({datetime.datetime.today()})][(USERKICK)]: {selfname} has kicked {kick_user}!")
                                             for i in cursor.fetchall():
                                                 if kick_user.strip() == i[0].strip():
                                                     connectionnum = i[1]
@@ -1096,30 +1126,33 @@ Advanced Server by DrSquid"""
                                             cursor.close()
                                             db.close()
                                         else:
+                                            self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to kick {kick_user} but the name wasn't registered!")
                                             self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                                 except Exception as e:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !kick <username>")
                             elif msg.startswith("!unban"):
                                 try:
                                     unbanned_user = msg.split()[1]
                                     self.unban_user_fr_server(unbanned_user)
                                     self.show_server_com_with_client(conn, selfname, f"Successfully unbanned {unbanned_user} from the banlist.")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(USERUNBAN)]: {selfname} has unbanned {unbanned_user}!")
                                 except Exception as e:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"There was an error.")
                         if msg.startswith("!reregister"):
                             try:
                                 old_pass = msg.split()[1].strip("'").strip('"')
                                 newpass = msg.split()[2].strip("'").strip('"')
                                 authentication = self.attempt_login(selfname, old_pass)
+                                this_main_msg = f"\n[({selfname})]: Attempting to change password."
                                 if authentication:
                                     self.show_server_com_with_client(conn, selfname, f"Changing your password to: {newpass}")
                                     self.change_password(selfname, newpass)
                             except self.ServerError.AuthenticationError:
                                 self.show_server_com_with_client(conn, selfname, "Authentication Failed.")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !reregister <old_pass> <new_pass>")
                         elif msg.startswith("!help"):
                             conn.send(self.fernet.encrypt(self.regular_client_help_message().strip().encode()))
@@ -1172,7 +1205,7 @@ Advanced Server by DrSquid"""
                             except self.ServerError.NameNotInDatabaseError:
                                 self.show_server_com_with_client(conn, selfname, "The Username specified is not online or is not registered in the database.")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !dm <username>")
                         elif msg.startswith("!closedm"):
                             if not indm:
@@ -1285,10 +1318,10 @@ Advanced Server by DrSquid"""
                             except self.ServerError.NameNotInDatabaseError:
                                 self.show_server_com_with_client(conn, selfname, "The room provided is not in the database.")
                             except self.ServerError.AuthenticationError:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(AUTENTICATION-ERROR)]: {selfname} has provided incorrect credentials!")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(AUTHENTICATION-ERROR)]: {selfname} has provided incorrect credentials!")
                                 self.show_server_com_with_client(conn, selfname, "Password provided for the room is incorrect.")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !joinroom <roomname> <password>")
                         elif msg.startswith("!leaveroom"):
                             if inroom:
@@ -1319,13 +1352,13 @@ Advanced Server by DrSquid"""
                                         self.kick_user_fr_room(name,selfroomname,True)
                                     except self.ServerError.PermissionError:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                     except Exception as e:
-                                        self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                         self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomban <username>")
                                 else:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                         elif msg.startswith("!roomunban"):
                             if inroom:
                                 if roomadmin:
@@ -1335,13 +1368,13 @@ Advanced Server by DrSquid"""
                                         self.show_server_com_with_client(conn, selfname, f"{name} has been unbanned from the room.")
                                     except self.ServerError.PermissionError:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                     except Exception as e:
-                                        self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                         self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomunban <username>")
                                 else:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                         elif msg.startswith("!roomkick"):
                             if inroom:
                                 if roomadmin:
@@ -1355,13 +1388,13 @@ Advanced Server by DrSquid"""
                                             self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                                     except self.ServerError.PermissionError:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                     except Exception as e:
-                                        self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                         self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomkick <username>")
                                 else:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                         elif msg.startswith("!changeroompass"):
                             if inroom:
                                 if roomowner:
@@ -1370,11 +1403,11 @@ Advanced Server by DrSquid"""
                                         self.change_room_password(selfroomname, newpass)
                                         self.show_server_com_with_client(conn, selfname, f"Changed the room's password to: {newpass}.")
                                     except Exception as e:
-                                        self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                         self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomkick <username>")
                                 else:
                                     self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                         elif msg.startswith("!promoteuser"):
                             if inroom:
                                 try:
@@ -1386,9 +1419,9 @@ Advanced Server by DrSquid"""
                                             self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                                     else:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
-                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                 except:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !promoteuser <user>")
                         elif msg.startswith("!demoteuser"):
                             if inroom:
@@ -1397,13 +1430,13 @@ Advanced Server by DrSquid"""
                                         usertodemote = msg.split()[1]
                                         self.del_from_roomdata(usertodemote, selfroomname, "Admins: ")
                                     else:
-                                        self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                 except self.ServerError.PermissionError:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                     self.show_server_com_with_client(conn, selfname, "Invalid Permissions to ban the user.")
                                 except Exception as e:
-                                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !demoteuser <username>")
                         elif msg.startswith("!showonlinefriends"):
                             friends = self.get_online_friends(selfname)
@@ -1437,7 +1470,7 @@ Advanced Server by DrSquid"""
                                     else:
                                         self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !block <user>")
                         elif msg.startswith("!unblock"):
                             try:
@@ -1448,7 +1481,7 @@ Advanced Server by DrSquid"""
                                     self.show_server_com_with_client(conn, selfname, f"Unblocking {user}.")
                                     self.unblock_user(selfname, user)
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !block <user>")
                         elif msg.startswith("!friendremove"):
                             try:
@@ -1460,7 +1493,7 @@ Advanced Server by DrSquid"""
                                 else:
                                     self.show_server_com_with_client(conn, selfname, f"The user is not in your friends list!")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !friendremove <user>")
                         elif msg.startswith("!getrequests"):
                             db = sqlite3.connect(self.dbfile)
@@ -1509,7 +1542,7 @@ Advanced Server by DrSquid"""
                                         else:
                                             self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !friendreq <user>")
                         elif msg.startswith("!friendaccept"):
                             try:
@@ -1538,7 +1571,7 @@ Advanced Server by DrSquid"""
                                 cursor.close()
                                 db.close()
                             except Exception as e:
-                                self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !friendaccept <user>")
                         elif msg.strip() == "":
                             pass
@@ -1567,6 +1600,7 @@ Advanced Server by DrSquid"""
                                             for person in room:
                                                 try:
                                                     logmsg = f"[({datetime.datetime.today()})][({selfname})--->({selfroomname})]: {this_main_msg}"
+                                                    print(logmsg)
                                                     self.log("\n"+logmsg)
                                                     person.send(self.fernet.encrypt(this_main_msg.encode()))
                                                 except:
@@ -1606,14 +1640,14 @@ Advanced Server by DrSquid"""
                             self.log(f"\n[({datetime.datetime.today()})]" + this_main_msg.strip())
                             print(f"[({datetime.datetime.today()})]" + this_main_msg.strip())
                 except Exception as e:
-                    self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Client Error with {ip}(known as {selfname}): {e}")
+                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Client Error with {ip}(known as {selfname}): {e}")
                     if inroom:
                         self.kick_user_fr_room(selfname, selfroomname)
                     if logged_in:
                         try:
                             self.remove_user_from_db(selfname)
                         except Exception as e:
-                            self.show_errors(f"\n[({datetime.datetime.today()})][(ERROR)]: Error whilst removing name from database: {e}")
+                            self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error whilst removing name from database: {e}")
                     conn.close()
                     break
 class OptionParse:
@@ -1625,9 +1659,12 @@ class OptionParse:
         """Displays all of the new features added to DatCord in the current version."""
         print(Server.logo())
         print("""
-[+] Whats New in DatCord Version v7.5:
+[+] Whats New in DatCord Version v7.6:
 [+] - Bug Fixes.
 [+] - Added Banner(Allows clients to see current version of server).
+[+] - Added more logging commands.
+[+] - Renamed function 'show_errors()' to 'show_info()' to prevent confusing code readability.
+[+] - Fixed Bug that prevents room messages from displaying.
 [+] - Fixed update checking bugs.""")
     def usage(self):
         """Displays the help message for option-parsing(in case you need it)."""
