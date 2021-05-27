@@ -60,7 +60,7 @@ class Server:
         self.logfile = logfile
         self.ownername = ownername
         self.ownerpassword = ownerpassword
-        self.version = "7.2"
+        self.version = "7.5"
         self.start = True
         self.check_update()
         try:
@@ -193,12 +193,12 @@ class Server:
     def logo(self=None):
         """Logo of this script."""
         logo = """  
- _____        _    _____              _       ______ ___  
-|  __ \      | |  / ____|            | |     |____  |__ \ 
-| |  | | __ _| |_| |     ___  _ __ __| | __   __ / /   ) |
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // /   / / 
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /   / /_ 
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_) |____|                                                                        
+ _____        _    _____              _       ______ _____ 
+|  __ \      | |  / ____|            | |     |____  | ____|
+| |  | | __ _| |_| |     ___  _ __ __| | __   __ / /| |__  
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // / |___ \ 
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /   ___) |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_) |____/                                                                 
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -1625,9 +1625,10 @@ class OptionParse:
         """Displays all of the new features added to DatCord in the current version."""
         print(Server.logo())
         print("""
-[+] Whats New in DatCord Version v7.1:
+[+] Whats New in DatCord Version v7.5:
 [+] - Bug Fixes.
-[+] - Added update checking.""")
+[+] - Added Banner(Allows clients to see current version of server).
+[+] - Fixed update checking bugs.""")
     def usage(self):
         """Displays the help message for option-parsing(in case you need it)."""
         print(Server.logo())
