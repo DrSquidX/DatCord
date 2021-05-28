@@ -1738,9 +1738,15 @@ class OptionParse:
             try:
                 port = int(arg.port)
             except:
-                port = 80
+                if sys.platform == "win32":
+                    port = 80
+                else:
+                    port = 5050
         else:
-            port = 80
+            if sys.platform == "win32":
+                port = 80
+            else:
+                port = 5050
         if arg.db is not None:
             db = arg.db
             if not db.endswith(".db"):
