@@ -9,33 +9,37 @@ class Client:
         print(self.logo())
         self.version = "3.6"
         self.dbfile = "servers.db"
+        self.start = True
         self.update_check()
-        try:
-            file = open(self.dbfile,"rb")
-            file.close()
-        except:
-            file = open(self.dbfile, "wb")
-            file.close()
-        db = sqlite3.connect(self.dbfile)
-        cursor = db.cursor()
-        try:
-            cursor.execute("select * from servers")
-        except:
-            cursor.execute("create table servers(server)")
-        try:
-            cursor.execute("select * from userinfo")
-        except:
-            cursor.execute("create table userinfo(username, password)")
-        try:
-            cursor.execute("select * from userinfo")
-            self.userinfo = cursor.fetchall()[0]
-        except:
-            self.userinfo = None
-        self.userinfo1 = self.userinfo
-        db.commit()
-        cursor.close()
-        db.close()
-        self.join_serv()
+        if self.start:
+            try:
+                file = open(self.dbfile,"rb")
+                file.close()
+            except:
+                file = open(self.dbfile, "wb")
+                file.close()
+            db = sqlite3.connect(self.dbfile)
+            cursor = db.cursor()
+            try:
+                cursor.execute("select * from servers")
+            except:
+                cursor.execute("create table servers(server)")
+            try:
+                cursor.execute("select * from userinfo")
+            except:
+                cursor.execute("create table userinfo(username, password)")
+            try:
+                cursor.execute("select * from userinfo")
+                self.userinfo = cursor.fetchall()[0]
+            except:
+                self.userinfo = None
+            self.userinfo1 = self.userinfo
+            db.commit()
+            cursor.close()
+            db.close()
+            self.join_serv()
+        else:
+            pass
     def update_check(self):
         """Automatically checks for any updates in the version. It compares the current 
         version with the latest version in the server to determine whether it should be 
@@ -55,6 +59,7 @@ class Client:
                     item = input("[+] Do you wish to download it(yes/no)?: ")
                     if item.lower() == "yes":
                         print("[+] Updating DatCord...........")
+                        self.start = False
                         req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordClient.py")
                         resp = urllib.request.urlopen(req).read().decode()
                         file = open(sys.argv[0], "w")
