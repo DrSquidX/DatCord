@@ -1662,6 +1662,7 @@ class OptionParse:
 [+] - Renamed function 'show_errors()' to 'show_info()' to prevent confusing code readability.
 [+] - Passwords are no longer logged(for privacy reasons).
 [+] - Optimized and cut off useless lines with useful functions.
+[+] - Corrected OS Command to execute to pip install cryptography.
 [+] - Fixed Permission Error that turns up when the owner joins their own room.
 [+] - Fixed Bug that prevents room messages from displaying.
 [+] - Fixed update checking bugs.""")
@@ -1776,7 +1777,7 @@ if __name__ == '__main__':
         item = input("[+] Would you like to try and install it?(yes/no): ")
         if item.lower() == "yes":
             print("\n[+] Attempting to install....")
-            os.system("python -m install cryptography")
+            os.system("python -m pip install cryptography")
             print("[+] If cryptography was installed, re-run the script.")
         else:
             print("[+] If you have PIP installed, run 'pip install cryptography'.")
