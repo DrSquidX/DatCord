@@ -146,6 +146,7 @@ class Server:
             cursor.close()
             db.close()
             self.configure_rooms()
+            self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
             self.show_info(f"""
 [({datetime.datetime.today()})][(INFO)]: Running on DatCord Version {self.version}.
 [({datetime.datetime.today()})][(INFO)]: Server is hosted on: {self.ip}:{self.port}                                       
@@ -153,8 +154,6 @@ class Server:
 [({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}                                    
 [({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}                                  
 [({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}""")
-            self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
-            self.log(logmsg)
     def check_update(self):
         """Automatically checks for any updates in the version. It compares the current
         version with the latest version in the server to determine whether it should be
