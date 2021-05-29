@@ -517,8 +517,9 @@ Advanced Server by DrSquid"""
             if i.startswith("Owner: "):
                 owner = i.split()[1]
                 if selfname.strip() == owner.strip():
-                    can_do = False
-                    raise self.ServerError.PermissionError
+                    if stat != "Members: ":
+                        can_do = False
+                        raise self.ServerError.PermissionError
         if can_do:
             del needed_items[len(needed_items)-1]
             for i in needed_items:
@@ -565,8 +566,9 @@ Advanced Server by DrSquid"""
                     if i.startswith("Owner: "):
                         owner = i.split()[1]
                         if user.strip() == owner.strip():
-                            can_do = False
-                            raise self.ServerError.PermissionError
+                            if stat != "Members: ":
+                                can_do = False
+                                raise self.ServerError.PermissionError
                 if can_do:
                     del needed_items[len(needed_items)-1]
                     for items in needed_line.split():
@@ -1319,7 +1321,7 @@ Advanced Server by DrSquid"""
                                                 in_room = True
                                                 inroom = True
                                         if inroom:
-                                            self.show_info(f"\n[({datetime.datetime.today()})][({selfname})]: Joined room {selfroomname}.")
+                                            self.show_info(f"\n[({datetime.datetime.today()})][({selfname})]: Joined room {roomname}.")
                                             prev_roomname = selfroomname
                                             correct_ls = False
                                             ls = []
@@ -1660,6 +1662,7 @@ class OptionParse:
 [+] - Renamed function 'show_errors()' to 'show_info()' to prevent confusing code readability.
 [+] - Passwords are no longer logged(for privacy reasons).
 [+] - Optimized and cut off useless lines with useful functions.
+[+] - Fixed Permission Error that turns up when the owner joins their own room.
 [+] - Fixed Bug that prevents room messages from displaying.
 [+] - Fixed update checking bugs.""")
     def usage(self):
