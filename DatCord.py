@@ -146,14 +146,13 @@ class Server:
             cursor.close()
             db.close()
             self.configure_rooms()
-            logmsg = f"""
+            self.show_info(f"""
 [({datetime.datetime.today()})][(INFO)]: Running on DatCord Version {self.version}.
 [({datetime.datetime.today()})][(INFO)]: Server is hosted on: {self.ip}:{self.port}                                       
 [({datetime.datetime.today()})][(INFO)]: Owner Account Info: Username: {self.ownername} Password: {self.ownerpassword}      
 [({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}                                    
 [({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}                                  
-[({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}"""
-            print(logmsg)
+[({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}""")
             self.log(f"\n\n[({datetime.datetime.today()})][(INFO)]: Began Logging!")
             self.log(logmsg)
     def check_update(self):
@@ -873,16 +872,15 @@ Advanced Server by DrSquid"""
                                 roomname = msg.split()[1]
                             except:
                                 roomname = len(self.rooms)
-                            this_main_msg = f"\n[({datetime.datetime.today()})][({selfname})]: Creating Room with name: {roomname}."
+                            this_main_msg = f"\n[({selfname})]: Creating Room with name: {roomname}."
                         elif msg.startswith("!changeroompass"):
                             if roomowner:
-                                this_main_msg = f"\n[({datetime.datetime.today()})][({selfname})]: Attempting to change room password of {selfroomname}."
+                                this_main_msg = f"\n[({selfname})]: Attempting to change room password of {selfroomname}."
                     if msg.strip() == "":
                         pass
                     else:
                         if not indm and not inroom:
-                            self.log(f"\n[({datetime.datetime.today()})]" + this_main_msg.strip())
-                            print(f"[({datetime.datetime.today()})]" + this_main_msg.strip())
+                            self.show_info(f"\n[({datetime.datetime.today()})]" + this_main_msg.strip())
                     if indm:
                         try:
                             if serverowner:
@@ -1268,7 +1266,7 @@ Advanced Server by DrSquid"""
                                 self.create_room(roomname, room_password)
                                 self.rooms.append([roomname])
                                 self.update_file(self.roomdata, f"\nRoomName: {roomname}\nOwner: {selfname}\nAdmins: {selfname}\nMembers: {selfname}\nBanlist: \nEndData\n")
-                                self.show_info(f"\n[({datetime.datetime.today()})][({selfname})]: Room {roomname} has been created.")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ROOMCREATE)]: Room {roomname} has been created by {selfname}.")
                                 self.show_server_com_with_client(conn, selfname, "You are free to join your room.")
                             else:
                                 self.show_server_com_with_client(conn, selfname, "There is already a room with the name you provided. Try to use another name.")
