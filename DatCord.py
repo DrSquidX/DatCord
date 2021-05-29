@@ -60,7 +60,7 @@ class Server:
         self.logfile = logfile
         self.ownername = ownername
         self.ownerpassword = ownerpassword
-        self.version = "7.6"
+        self.version = "7.7"
         self.start = True
         self.check_update()
         try:
@@ -193,12 +193,12 @@ class Server:
     def logo(self=None):
         """Logo of this script."""
         logo = """  
- _____        _    _____              _       ______ __  
-|  __ \      | |  / ____|            | |     |____  / /  
-| |  | | __ _| |_| |     ___  _ __ __| | __   __ / / /_  
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // / '_ \ 
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /| (_) |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_)\___/                                                             
+ _____        _    _____              _       ______ ______ 
+|  __ \      | |  / ____|            | |     |____  |____  |
+| |  | | __ _| |_| |     ___  _ __ __| | __   __ / /    / / 
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // /    / /  
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /    / /   
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_)  /_/                                                         
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -608,8 +608,7 @@ Advanced Server by DrSquid"""
         main_msg = self.fernet.encrypt("\n[(SERVER)]: ".encode()+msg.encode())
         conn.send(main_msg)
         new_msg = f"[({datetime.datetime.today()})][(SERVER)--->({clientname})]: {msg}"
-        print(new_msg.strip("\n"))
-        self.log("\n"+new_msg.strip("\n"))
+        self.show_info("\n"+new_msg.strip("\n"))
     def opendm(self, username):
         """This opens a direct message room with another user."""
         db = sqlite3.connect(self.userdbfile)
@@ -869,12 +868,40 @@ Advanced Server by DrSquid"""
                     else:
                         if msg.startswith("!reregister"):
                             this_main_msg = f"\n[({selfname})]: Attempting to change password."
+                        elif msg.startswith("!createroom"):
+                            try:
+                                roomname = msg.split()[1]
+                            except:
+                                roomname = len(self.rooms)
+                            this_main_msg = f"\n[({datetime.datetime.today()})][({selfname})]: Creating Room with name: {roomname}."
+                        elif msg.startswith("!changeroompass"):
+                            if roomowner:
+                                this_main_msg = f"\n[({datetime.datetime.today()})][({selfname})]: Attempting to change room password of {selfroomname}."
                     if msg.strip() == "":
                         pass
                     else:
                         if not indm and not inroom:
                             self.log(f"\n[({datetime.datetime.today()})]" + this_main_msg.strip())
                             print(f"[({datetime.datetime.today()})]" + this_main_msg.strip())
+                    if indm:
+                        try:
+                            if serverowner:
+                                self.show_info(f"\n[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}")
+                                dmconn.send(self.fernet.encrypt("\n[(DM)]".encode() + this_main_msg.strip().encode()))
+                            elif selfname in self.get_block_list(dmusername):
+                                if not serverowner:
+                                    self.show_server_com_with_client(conn, selfname, "You have been blocked by the user you were trying to DM. Closing your DM.")
+                                    indm = False
+                            elif dmusername in self.get_block_list(selfname):
+                                if not serverowner:
+                                    self.show_server_com_with_client(conn, selfname, "You have recently blocked the user you were direct messaging. Closing your DM.")
+                                    indm = False
+                            else:
+                                dmconn.send(self.fernet.encrypt("\n[(DM)]".encode() + this_main_msg.strip().encode()))
+                                self.show_info(f"\n[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}")
+                        except:
+                            self.show_server_com_with_client(conn, selfname, f"There was an error with sending your DM Message! The person may have gone offline. Closing your DM.")
+                            indm = False
                     current_timer = time.time()
                     if round(current_timer-timer) >= 1:
                         if not serverowner:
@@ -962,11 +989,8 @@ Advanced Server by DrSquid"""
                                 self.show_server_com_with_client(conn, selfname, "Successfully Registered. You have been logged in with this account!")
                                 self.show_info(f"\n[({datetime.datetime.today()})][(NEWACC)]: {ip} has registered the account {selfname} to the database.")
                                 conn.send(self.fernet.encrypt(self.regular_client_help_message().encode()))
-                                othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
-                                print(othermsg)
-                                self.log("\n" + othermsg)
-                                display_msg = f"[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}."
-                                self.log("\n" + display_msg)
+                                self.show_info(f"\n[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message.")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(INFO)]: {ip} is {selfname}.")
                                 self.exec_sqlcmd(self.dbfile, f"insert into friendslist values('{selfname}', '')")
                                 self.exec_sqlcmd(self.dbfile, f"insert into friendrequests values('{selfname}', '')")
                                 self.exec_sqlcmd(self.dbfile, f"insert into blocklists values('{selfname}', '')")
@@ -997,8 +1021,7 @@ Advanced Server by DrSquid"""
                                     logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began Listening For Connections....."
                                     self.listening = True
                                 self.show_server_com_with_client(conn, selfname, f"Set Listening for connections to {self.listening}.")
-                                print(logmsg)
-                                self.log("\n"+logmsg)
+                                self.show_info(f"\n{logmsg}")
                             elif msg.startswith("!allipban"):
                                 if self.banningallincomingconn:
                                     self.banningallincomingconn = False
@@ -1009,8 +1032,7 @@ Advanced Server by DrSquid"""
                                     self.manualbanall = True
                                     logmsg = f"[({datetime.datetime.today()})][(INFO)]: Began banning all incoming IP's."
                                 self.show_server_com_with_client(conn, selfname, f"Set Banning all incoming connections to: {self.banningallincomingconn}.")
-                                print(logmsg)
-                                self.log("\n" + logmsg)
+                                self.show_info(f"\n{logmsg}")
                             elif msg.startswith("!ipban"):
                                 try:
                                     ip_addr = msg.split()[1]
@@ -1088,9 +1110,7 @@ Advanced Server by DrSquid"""
                                     _main_msg = _main_msg.strip()
                                     main_msg2 = f"\n[(BROADCAST)]: {_main_msg}"
                                     self.sendall(main_msg2)
-                                    logmsg = f"[({datetime.datetime.today()})][(BROADCAST)]: {_main_msg}"
-                                    print(logmsg)
-                                    self.log("\n"+logmsg)
+                                    self.show_info(f"\n[({datetime.datetime.today()})][(BROADCAST)]: {_main_msg}")
                                 except Exception as e:
                                     self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, f"Invalid arguments! Proper Usage: !broadcast <msg>")
@@ -1176,14 +1196,10 @@ Advanced Server by DrSquid"""
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !reregister <old_pass> <new_pass>")
                         elif msg.startswith("!help"):
                             conn.send(self.fernet.encrypt(self.regular_client_help_message().strip().encode()))
-                            othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message."
-                            print(othermsg)
-                            self.log("\n"+othermsg)
+                            self.show_info(f"\n[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message.")
                             if serverowner:
                                 conn.send(self.fernet.encrypt(self.admin_help_message().strip().encode()))
-                                othermsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Admin Help Message."
-                                print(othermsg)
-                                self.log("\n"+othermsg)
+                                self.show_info(f"\n[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Admin Help Message.")
                         elif msg.startswith("!dm"):
                             try:
                                 username = msg.split()[1]
@@ -1247,12 +1263,12 @@ Advanced Server by DrSquid"""
                             conflicting_rooms = self.check_for_sameitems(self.dbfile, roomname, f"select * from open_rooms where roomname = '{roomname}'")
                             if not conflicting_rooms:
                                 conn.send(self.fernet.encrypt(f"\n[(SERVER)]: Creating a room.\n[+] Room Name: {roomname}\n[+] Room Password: {room_password.strip()}".encode()))
-                                logmsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent room creation message(Name: {roomname}, Pass: {room_password})."
-                                self.log("\n"+logmsg)
+                                self.show_info(f"\n[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent room creation message(Name: {roomname}).")
                                 room_password = hashlib.sha256(room_password.encode()).hexdigest()
                                 self.create_room(roomname, room_password)
                                 self.rooms.append([roomname])
                                 self.update_file(self.roomdata, f"\nRoomName: {roomname}\nOwner: {selfname}\nAdmins: {selfname}\nMembers: {selfname}\nBanlist: \nEndData\n")
+                                self.show_info(f"\n[({datetime.datetime.today()})][({selfname})]: Room {roomname} has been created.")
                                 self.show_server_com_with_client(conn, selfname, "You are free to join your room.")
                             else:
                                 self.show_server_com_with_client(conn, selfname, "There is already a room with the name you provided. Try to use another name.")
@@ -1317,6 +1333,7 @@ Advanced Server by DrSquid"""
                                                 in_room = True
                                                 inroom = True
                                         if inroom:
+                                            self.show_info(f"\n[({datetime.datetime.today()})][({selfname})]: Joined room {selfroomname}.")
                                             prev_roomname = selfroomname
                                             correct_ls = False
                                             ls = []
@@ -1338,7 +1355,7 @@ Advanced Server by DrSquid"""
                             except self.ServerError.NameNotInDatabaseError:
                                 self.show_server_com_with_client(conn, selfname, "The room provided is not in the database.")
                             except self.ServerError.AuthenticationError:
-                                self.show_info(f"\n[({datetime.datetime.today()})][(AUTHENTICATION-ERROR)]: {selfname} has provided incorrect credentials!")
+                                self.show_info(f"\n[({datetime.datetime.today()})][(AUTHENTICATION-ERROR)]: {selfname} has provided incorrect credentials to join {roomname}!")
                                 self.show_server_com_with_client(conn, selfname, "Password provided for the room is incorrect.")
                             except Exception as e:
                                 self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
@@ -1351,9 +1368,8 @@ Advanced Server by DrSquid"""
                                         item = 0
                                         room.remove(conn)
                                         inroom = False
-                                        logmsg = f"[({datetime.datetime.today()})][(SERVER)--->({selfroomname})]: {selfname} has left the chat!"
-                                        print(logmsg)
-                                        self.log("\n"+logmsg)
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(SERVER)--->({selfroomname})]: {selfname} has left the chat!")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][({selfname})]: Left room {selfroomname}.")
                                         self.sendall(f"\n[(SERVER)]: {selfname} has left the chat!", room)
                                         room_admin = False
                                         roomowner = False
@@ -1370,6 +1386,7 @@ Advanced Server by DrSquid"""
                                         self.add_to_roomdata(name, selfroomname, "Banlist:")
                                         self.show_server_com_with_client(conn, selfname, f"{name} has been banned from the room.")
                                         self.kick_user_fr_room(name,selfroomname,True)
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ROOMBAN)]: {name} has been banned from {selfroomname} by {selfname}.")
                                     except self.ServerError.PermissionError:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                         self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -1386,6 +1403,7 @@ Advanced Server by DrSquid"""
                                         name = msg.split()[1]
                                         self.del_from_roomdata(name, selfroomname, "Banlist:")
                                         self.show_server_com_with_client(conn, selfname, f"{name} has been unbanned from the room.")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ROOMUNBAN)]: {name} has been unbanned from {selfroomname} by {selfname}.")
                                     except self.ServerError.PermissionError:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                         self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -1403,9 +1421,11 @@ Advanced Server by DrSquid"""
                                         if name in self.get_userlist():
                                             self.del_from_roomdata(name, selfroomname, "Members:")
                                             self.show_server_com_with_client(conn, selfname, f"{name} has been kicked from the room.")
+                                            self.show_info(f"\n[({datetime.datetime.today()})][(ROOMKICK)]: {name} has been kicked from {selfroomname} by {selfname}.")
                                             self.kick_user_fr_room(name, selfroomname)
                                         else:
                                             self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
+                                            self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to kick {name} but their name is not registered!")
                                     except self.ServerError.PermissionError:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                         self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -1421,7 +1441,8 @@ Advanced Server by DrSquid"""
                                     try:
                                         newpass = msg.split()[1]
                                         self.change_room_password(selfroomname, newpass)
-                                        self.show_server_com_with_client(conn, selfname, f"Changed the room's password to: {newpass}.")
+                                        conn.send(f"Changed the room's password to: {newpass}.".encode())
+                                        self.show_info(f"\n[({datetime.datetime.today()})][({selfname})]: The room password for {selfroomname} has been changed by {selfname}.")
                                     except Exception as e:
                                         self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                         self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !roomkick <username>")
@@ -1435,8 +1456,10 @@ Advanced Server by DrSquid"""
                                         usertopromote = msg.split()[1]
                                         if usertopromote in self.get_userlist():
                                             self.add_to_roomdata(usertopromote, selfroomname, "Admins: ")
+                                            self.show_info(f"\n[({datetime.datetime.today()})][(ROOMPROMOTE)]: {name} has been promoted to a admin in {selfroomname} by {selfname}.")
                                         else:
                                             self.show_server_com_with_client(conn, selfname, f"The name is not in the database!")
+                                            self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: {selfname} tried to promote {name} but their name is not registered!")
                                     else:
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                         self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
@@ -1449,12 +1472,13 @@ Advanced Server by DrSquid"""
                                     if roomadmin:
                                         usertodemote = msg.split()[1]
                                         self.del_from_roomdata(usertodemote, selfroomname, "Admins: ")
+                                        self.show_info(f"\n[({datetime.datetime.today()})][(ROOMDEMOTE)]: {name} has been demoted to a member in {selfroomname} by {selfname}.")
                                     else:
                                         self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
                                         self.show_server_com_with_client(conn, selfname, "Your permissions are invalid for this command.")
                                 except self.ServerError.PermissionError:
                                     self.show_info(f"\n[({datetime.datetime.today()})][(PERMISSION-ERROR)]: {selfname} ran command '{msg.strip()}' that was forbidden!")
-                                    self.show_server_com_with_client(conn, selfname, "Invalid Permissions to ban the user.")
+                                    self.show_server_com_with_client(conn, selfname, "Invalid Permissions to demote the user.")
                                 except Exception as e:
                                     self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                     self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !demoteuser <username>")
@@ -1619,40 +1643,10 @@ Advanced Server by DrSquid"""
                                         if selfroomname in room[0]:
                                             for person in room:
                                                 try:
-                                                    logmsg = f"[({datetime.datetime.today()})][({selfname})--->({selfroomname})]: {this_main_msg}"
-                                                    print(logmsg)
-                                                    self.log("\n"+logmsg)
+                                                    self.show_info(f"\n[({datetime.datetime.today()})][({selfname})--->({selfroomname})]: {this_main_msg}")
                                                     person.send(self.fernet.encrypt(this_main_msg.encode()))
                                                 except:
                                                     pass
-                            if indm:
-                                try:
-                                    if selfname in self.get_block_list(dmusername):
-                                        if not serverowner:
-                                            self.show_server_com_with_client(conn, selfname, "You have been blocked by the user you were trying to DM. Closing your DM.")
-                                            indm = False
-                                        else:
-                                            dmconn.send(self.fernet.encrypt("\n[(DM)]".encode() + this_main_msg.strip().encode()))
-                                            logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
-                                            print(logmsg)
-                                            self.log("\n" + logmsg)
-                                    elif dmusername in self.get_block_list(selfname):
-                                        if not serverowner:
-                                            self.show_server_com_with_client(conn, selfname, "You have recently blocked the user you were direct messaging. Closing your DM.")
-                                            indm = False
-                                        else:
-                                            dmconn.send(self.fernet.encrypt("\n[(DM)]".encode() + this_main_msg.strip().encode()))
-                                            logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
-                                            print(logmsg)
-                                            self.log("\n" + logmsg)
-                                    else:
-                                        dmconn.send(self.fernet.encrypt("\n[(DM)]".encode() + this_main_msg.strip().encode()))
-                                        logmsg = f"[({datetime.datetime.today()})][({selfname})--->({dmusername})]: {msg.strip()}"
-                                        print(logmsg)
-                                        self.log("\n" + logmsg)
-                                except:
-                                    self.show_server_com_with_client(conn, selfname, f"There was an error with sending your DM Message! The person may have gone offline. Closing your DM.")
-                                    indm = False
                 except Exception as e:
                     self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Client Error with {ip}(known as {selfname}): {e}")
                     if inroom:
@@ -1673,12 +1667,13 @@ class OptionParse:
         """Displays all of the new features added to DatCord in the current version."""
         print(Server.logo())
         print("""
-[+] Whats New in DatCord Version v7.6:
+[+] Whats New in DatCord Version v7.7:
 [+] - Bug Fixes.
 [+] - Added Banner(Allows clients to see current version of server).
 [+] - Added more logging commands.
 [+] - Renamed function 'show_errors()' to 'show_info()' to prevent confusing code readability.
 [+] - Passwords are no longer logged(for privacy reasons).
+[+] - Optimized and cut off useless lines with useful functions.
 [+] - Fixed Bug that prevents room messages from displaying.
 [+] - Fixed update checking bugs.""")
     def usage(self):
@@ -1738,15 +1733,9 @@ class OptionParse:
             try:
                 port = int(arg.port)
             except:
-                if sys.platform == "win32":
-                    port = 80
-                else:
-                    port = 5050
-        else:
-            if sys.platform == "win32":
                 port = 80
-            else:
-                port = 5050
+        else:
+            port = 80
         if arg.db is not None:
             db = arg.db
             if not db.endswith(".db"):
