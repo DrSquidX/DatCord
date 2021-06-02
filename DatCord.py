@@ -152,12 +152,18 @@ class Server:
 [({datetime.datetime.today()})][(INFO)]: Server is hosted on: {self.ip}:{self.port}                                       
 [({datetime.datetime.today()})][(INFO)]: Owner Account Info: Username: {self.ownername} Password: {self.ownerpassword}      
 [({datetime.datetime.today()})][(INFO)]: Server is being logged. Logfile: {self.logfile}                                    
-[({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}                                  
+[({datetime.datetime.today()})][(INFO)]: Database file for password storage: {self.dbfile}          
+[({datetime.datetime.today()})][(INFO)]: Active Sessions Database File: {self.userdbfile}                        
 [({datetime.datetime.today()})][(INFO)]: Room-data file: {self.roomdata}""")
     def check_update(self):
         """Automatically checks for any updates in the version. It compares the current
         version with the latest version in the server to determine whether it should be
-        updated or not."""
+        updated or not. It makes a request to the .json file in my github repository,
+        where the json data is loaded into a dictionary and information can be extracted
+        from there. The latest version of the script then identified from the loaded data
+        and is compared to the scripts current version(indictated from a variable in the
+        '__init__' function). This would help the script decide whether to ask to update
+        or not."""
         try:
             req = urllib.request.Request(url="https://raw.githubusercontent.com/DrSquidX/DatCord/main/DatCordVersion.json")
             resp = urllib.request.urlopen(req).read().decode()
@@ -1656,6 +1662,7 @@ class OptionParse:
         print(Server.logo())
         print("""
 [+] Whats New in DatCord Version v7.7:
+[+] - Hit 1800 Lines!
 [+] - Bug Fixes.
 [+] - Added Banner(Allows clients to see current version of server).
 [+] - Added more logging commands.
@@ -1723,7 +1730,13 @@ class OptionParse:
             try:
                 port = int(arg.port)
             except:
-                port = 80
+                if sys.platform == "darwin" or sys.platform == "linux":
+                    if os.getlogin() == "root":
+                        port = 80
+                    else:
+                        port = 8081
+                else:
+                    port = 80
         else:
             port = 80
         if arg.db is not None:
@@ -1774,12 +1787,14 @@ if __name__ == '__main__':
     except Exception as e:
         print(Server.logo())
         print("[+] You have not installed the module 'cryptography'.")
+        print("[+] This is needed for sending Encrypted Messages, and it is missing.")
         item = input("[+] Would you like to try and install it?(yes/no): ")
         if item.lower() == "yes":
             print("\n[+] Attempting to install....")
             os.system("python -m pip install cryptography")
             print("[+] If cryptography was installed, re-run the script.")
+            print("[+] If it wasn't, make sure that you have 'pip' installed so you can install the correct packages.")
         else:
-            print("[+] If you have PIP installed, run 'pip install cryptography'.")
+            print("[+] If you have 'pip' installed, run 'pip install cryptography'.")
         sys.exit()
     parse = OptionParse()
