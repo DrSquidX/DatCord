@@ -60,7 +60,7 @@ class Server:
         self.logfile = logfile
         self.ownername = ownername
         self.ownerpassword = ownerpassword
-        self.version = "7.7"
+        self.version = "7.71"
         self.start = True
         self.check_update()
         try:
@@ -197,12 +197,12 @@ class Server:
     def logo(self=None):
         """Logo of this script."""
         logo = """  
- _____        _    _____              _       ______ ______ 
-|  __ \      | |  / ____|            | |     |____  |____  |
-| |  | | __ _| |_| |     ___  _ __ __| | __   __ / /    / / 
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // /    / /  
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /    / /   
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_)  /_/                                                         
+ _____        _    _____              _       ______ ______ __ 
+|  __ \      | |  / ____|            | |     |____  |____  /_ |
+| |  | | __ _| |_| |     ___  _ __ __| | __   __ / /    / / | |
+| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // /    / /  | |
+| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /    / /   | |
+|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_)  /_/    |_|                                           
 Advanced Server by DrSquid"""
         return logo
     def log(self, text):
@@ -310,7 +310,7 @@ Advanced Server by DrSquid"""
                     else:
                         pass
                 except Exception as e:
-                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error when listening for connections: {e}")
+                    self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error whilst listening for connections: {e}")
         else:
             print("[+] Restart DatCord to apply the update!")
             sys.exit()
@@ -497,7 +497,7 @@ Advanced Server by DrSquid"""
             files.write(text)
             files.close()
         except Exception as e:
-            self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with updating file({file}): {e}")
+            self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with updating file('{file}'): {e}")
     def add_to_roomdata(self, selfname, roomname, stat):
         """This function adds names to room-data. It adds the name to the
         provided room stat(admin, member, etc)."""
@@ -877,6 +877,7 @@ Advanced Server by DrSquid"""
                     else:
                         if not indm and not inroom:
                             self.show_info(f"\n[({datetime.datetime.today()})]" + this_main_msg.strip())
+
                     if indm:
                         try:
                             if serverowner:
@@ -1336,6 +1337,7 @@ Advanced Server by DrSquid"""
                                                 if roomname in room[0]:
                                                     room.append(conn)
                                                     correct_ls = True
+                                                    inroom = True
                                                     ls = room
                                                     break
                                             if correct_ls:
@@ -1633,11 +1635,17 @@ Advanced Server by DrSquid"""
                                                     pass
                                                 break
                                 if not kicked_from_room:
+                                    servermsg = ""
+                                    alt_main_msg = this_main_msg.strip().split()
+                                    del alt_main_msg[0]
+                                    for i in alt_main_msg:
+                                        servermsg += f" {i}"
+                                    servermsg = servermsg.strip("\n").strip()
+                                    self.show_info(f"\n[({datetime.datetime.today()})][({selfname})--->({selfroomname})]: {servermsg}")
                                     for room in self.rooms:
                                         if selfroomname in room[0]:
                                             for person in room:
                                                 try:
-                                                    self.show_info(f"\n[({datetime.datetime.today()})][({selfname})--->({selfroomname})]: {this_main_msg}")
                                                     person.send(self.fernet.encrypt(this_main_msg.encode()))
                                                 except:
                                                     pass
@@ -1661,7 +1669,7 @@ class OptionParse:
         """Displays all of the new features added to DatCord in the current version."""
         print(Server.logo())
         print("""
-[+] Whats New in DatCord Version v7.7:
+[+] Whats New in DatCord Version v7.71:
 [+] - Hit 1800 Lines!
 [+] - Bug Fixes.
 [+] - Added Banner(Allows clients to see current version of server).
