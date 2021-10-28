@@ -285,7 +285,7 @@ Client Script For DatCord by DrSquid"""
                         os.system(self.clear)
                     else:
                         if msg == "!help":
-                            print(self.help_msg)
+                            print(self.help_msg())
                         self.client.send(self.fernet.encrypt(msg.encode()))
             except Exception as e:
                 if msg != "!disconnect":
