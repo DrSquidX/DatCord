@@ -64,7 +64,6 @@ Advanced Encrypted Chat Server by DrSquid
         (however in this script the .listen() function is used right after being configured so
         the server starts listening on startup)."""
         print(self.logo())
-        print("\n[+] Github: https://github.com/DrSquidX")
         self.ip = ip
         self.port = port
         self.dbfile = dbfile
