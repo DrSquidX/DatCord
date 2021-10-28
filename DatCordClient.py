@@ -7,6 +7,7 @@ class Client:
     the user with connecting to the server."""
     def __init__(self):
         print(self.logo())
+        print("[+] Github: https://github.com/DrSquidX")
         self.version = "3.7"
         self.dbfile = "servers.db"
         if sys.platform == "win32":
@@ -282,6 +283,7 @@ Client Script For DatCord by DrSquid"""
                         self.client.close() 
                         raise Exception("Closed conn")
                     elif msg == "!clear":
+                        print(self.logo())
                         os.system(self.clear)
                     else:
                         if msg == "!help":
