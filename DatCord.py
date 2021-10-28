@@ -10,7 +10,8 @@ ________          __   _________                  .___       _________ _________
  |    `   \/ __ \|  |  \     \___(  <_> )  | \/ /_/ |   \   /   /    /    /    //       \ 
 /_______  (____  /__|   \______  /\____/|__|  \____ |    \_/   /____/ /\ /____/ \_______ \\
         \/     \/              \/                  \/                 \/                \/                                       
-Advanced Encrypted Chat Server by DrSquid"""
+Advanced Encrypted Chat Server by DrSquid
+[+] Github: https://github.com/DrSquidX"""
         return logo
     """Note: This server was made for a school project.
     This is the main class for the server where all of the important functions and
@@ -63,6 +64,7 @@ Advanced Encrypted Chat Server by DrSquid"""
         (however in this script the .listen() function is used right after being configured so
         the server starts listening on startup)."""
         print(self.logo())
+        print("\n[+] Github: https://github.com/DrSquidX")
         self.ip = ip
         self.port = port
         self.dbfile = dbfile
@@ -1650,8 +1652,6 @@ class OptionParse:
         """Displays the help message for option-parsing(in case you need it)."""
         print(Server.logo())
         print("""
-[+] Github: https://github.com/DrSquidX
-
 [+] Option-Parsing Help:
 
 [+] Required Arguments:
