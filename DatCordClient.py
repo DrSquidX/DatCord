@@ -1,6 +1,7 @@
 import socket, threading, sqlite3, os, sys, urllib.request, json, time
 
 class Client:
+    
     """Configures the database files if they don't exist, as well as
     also configuring the database tables if they also don't exist.
     This function also starts the connecting function, which helps
@@ -9,6 +10,11 @@ class Client:
         print(self.logo())
         self.version = "3.61"
         self.dbfile = "servers.db"
+        try:
+            file = open(self.dbfile,"rb")
+        except:
+            file = open(self.dbfile,"wb")
+        file.close()
         self.update_check()
         try:
             file = open(self.dbfile,"rb")
@@ -18,14 +24,8 @@ class Client:
             file.close()
         db = sqlite3.connect(self.dbfile)
         cursor = db.cursor()
-        try:
-            cursor.execute("select * from servers")
-        except:
-            cursor.execute("create table servers(server)")
-        try:
-            cursor.execute("select * from userinfo")
-        except:
-            cursor.execute("create table userinfo(username, password)")
+        cursor.execute("create table if not exists servers(server)")
+        cursor.execute("create table if not exists userinfo(username, password)")
         try:
             cursor.execute("select * from userinfo")
             self.userinfo = cursor.fetchall()[0]
@@ -36,6 +36,17 @@ class Client:
         cursor.close()
         db.close()
         self.join_serv()
+    def logo(self):
+        """Logo of the script."""
+        logo = """
+________          __   _________                  .____________ .__  .__               __          ________       ________________  
+\______ \ _____ _/  |_ \_   ___ \  ___________  __| _/\_   ___ \|  | |__| ____   _____/  |_  ___  _\_____  \     /  _____/\_____  \ 
+ |    |  \\\__  \\\   __\/    \  \/ /  _ \_  __ \/ __ | /    \  \/|  | |  |/ __ \ /    \   __\ \  \/ / _(__  <    /   __  \  /  ____/ 
+ |    `   \/ __ \|  |  \     \___(  <_> )  | \/ /_/ | \     \___|  |_|  \  ___/|   |  \  |    \   / /       \   \  |__\  \/       \ 
+/_______  (____  /__|   \______  /\____/|__|  \____ |  \______  /____/__|\___  >___|  /__|     \_/ /______  / /\ \_____  /\_______ \\
+        \/     \/              \/                  \/         \/             \/     \/                    \/  \/       \/         \/                                                        
+Client Script For DatCord by DrSquid"""
+        return logo
     def update_check(self):
         """Automatically checks for any updates in the version. It compares the current 
         version with the latest version in the server to determine whether it should be 
@@ -145,7 +156,7 @@ class Client:
                     cursor.close()
                     db.close()
                     break
-                except:
+                except Exception as e:
                     print("[+] Unable to connect to the server.")
             else:
                 print("[+] Please answer with either 'yes' or 'no'.")
@@ -169,17 +180,6 @@ class Client:
                 print("[+] Encryption key is invalid! Check if you are connecting to the correct Server.")
                 servjoiner = threading.Thread(target=self.join_serv)
                 servjoiner.start()
-    def logo(self):
-        """Logo of the script."""
-        logo = """
- _____        _    _____              _    _____ _ _            _          ____    __ __ 
-|  __ \      | |  / ____|            | |  / ____| (_)          | |        |___ \  / //_ |
-| |  | | __ _| |_| |     ___  _ __ __| | | |    | |_  ___ _ __ | |_  __   ____) |/ /_ | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | | |    | | |/ _ \ '_ \| __| \ \ / /__ <| '_ \| |
-| |__| | (_| | |_| |___| (_) | | | (_| | | |____| | |  __/ | | | |_   \ V /___) | (_) | |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|  \_____|_|_|\___|_| |_|\__|   \_/|____(_)___/|_|                                                             
-Client Script For DatCord by DrSquid"""
-        return logo
     def send(self):
         """This function is what the client uses to send messages to the server.
         All of the logging in code is here as well."""
@@ -192,7 +192,7 @@ Client Script For DatCord by DrSquid"""
                     if self.userinfo is not None:
                         useinfo = input(f"\n[+] Would you like to use the same userinfo from last time you logged in?(yes/no): ")
                         if useinfo.lower().strip() == "yes":
-                            self.client.send(f"!login {self.userinfo[0]} {self.userinfo[1]}".encode())
+                            self.client.send(self.fernet.encrypt(f"!login {self.userinfo[0]} {self.userinfo[1]}".encode()))
                             msg = self.client.recv(10240)
                             try:
                                 msg =  self.fernet.decrypt(msg)
@@ -203,6 +203,11 @@ Client Script For DatCord by DrSquid"""
                             except:
                                 msg = str(msg)
                             if "Successfully logged in!" in msg or "Commands For This Server" in msg:
+                                if sys.platform == "win32":
+                                    os.system("cls")
+                                else:
+                                    os.system("clear")
+                                print(self.logo())
                                 print("\n[+] Successfully logged into your account.")
                                 print("[+] You are able to communicate with users on Datcord now.")
                                 self.reciever = threading.Thread(target=self.recv)
@@ -217,7 +222,7 @@ Client Script For DatCord by DrSquid"""
                     else:
                         username = input("\n[+] Enter your username: ")
                         password = input("[+] Enter your password: ")
-                        self.client.send(f"!login {username} {password}".encode())
+                        self.client.send(self.fernet.encrypt(f"!login {username} {password}".encode()))
                         msg = self.client.recv(10240)
                         try:
                             msg = self.fernet.decrypt(msg)
@@ -228,6 +233,10 @@ Client Script For DatCord by DrSquid"""
                         except:
                             msg = str(msg)
                         if "Successfully logged in!" in msg or "Commands For This Server" in msg:
+                            if sys.platform == "win32":
+                                os.system("cls")
+                            else:
+                                os.system("clear")
                             print("\n[+] Successfully logged into your account.")
                             print("[+] You are able to communicate with users on Datcord now.")
                             self.logged_in = True
@@ -237,7 +246,7 @@ Client Script For DatCord by DrSquid"""
                             print("[+] Your account is not recognized by the database.")
                             register = input("[+] Would you like to register an account with the details provided?: ")
                             if register.lower() == "yes":
-                                self.client.send(f"!register {username} {password}".encode())
+                                self.client.send(self.fernet.encrypt(f"!register {username} {password}".encode()))
                                 self.logged_in = True
                             else:
                                 print("[+] Please re-enter your crentials.")
