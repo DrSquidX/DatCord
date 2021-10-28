@@ -108,7 +108,7 @@ Advanced Encrypted Chat Server by DrSquid"""
             self.sqltable_list = ["users(username, password)","open_rooms(roomname, roompass)",
                                 "banlist(username)","ipbanlist(ip)","ipwhitelist(ip)",
                                 "friendslist(user, friends)","friendrequests(user, requests)",
-                                "friendrequests(user, requests)","exists blocklists(user, blockedusers)"]
+                                "friendrequests(user, requests)","blocklists(user, blockedusers)"]
             self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.log(self.logo())
             try:
@@ -1650,6 +1650,8 @@ class OptionParse:
         """Displays the help message for option-parsing(in case you need it)."""
         print(Server.logo())
         print("""
+[+] Github: https://github.com/DrSquidX
+
 [+] Option-Parsing Help:
 
 [+] Required Arguments:
