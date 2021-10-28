@@ -7,8 +7,12 @@ class Client:
     the user with connecting to the server."""
     def __init__(self):
         print(self.logo())
-        self.version = "3.62"
+        self.version = "3.7"
         self.dbfile = "servers.db"
+        if sys.platform == "win32":
+            self.clear = "cls"
+        else:
+            self.clear = "clear"
         try:
             file = open(self.dbfile,"rb")
         except:
@@ -38,12 +42,12 @@ class Client:
     def logo(self):
         """Logo of the script."""
         logo = """
-________          __   _________                  .____________ .__  .__               __          ________       ________________  
-\______ \ _____ _/  |_ \_   ___ \  ___________  __| _/\_   ___ \|  | |__| ____   _____/  |_  ___  _\_____  \     /  _____/\_____  \ 
- |    |  \\\__  \\\   __\/    \  \/ /  _ \_  __ \/ __ | /    \  \/|  | |  |/ __ \ /    \   __\ \  \/ / _(__  <    /   __  \  /  ____/ 
- |    `   \/ __ \|  |  \     \___(  <_> )  | \/ /_/ | \     \___|  |_|  \  ___/|   |  \  |    \   / /       \   \  |__\  \/       \ 
-/_______  (____  /__|   \______  /\____/|__|  \____ |  \______  /____/__|\___  >___|  /__|     \_/ /______  / /\ \_____  /\_______ \\
-        \/     \/              \/                  \/         \/             \/     \/                    \/  \/       \/         \/                                                        
+________          __   _________                  .____________ .__  .__               __          ________    _________ 
+\______ \ _____ _/  |_ \_   ___ \  ___________  __| _/\_   ___ \|  | |__| ____   _____/  |_  ___  _\_____  \   \______  \\
+ |    |  \\\__  \\\   __\/    \  \/ /  _ \_  __ \/ __ | /    \  \/|  | |  |/ __ \ /    \   __\  \/ / _(__  <       /    /
+ |    `   \/ __ \|  |  \     \___(  <_> )  | \/ /_/ | \     \___|  |_|  \  ___/|   |  \  |    \   / /       \     /    / 
+/_______  (____  /__|   \______  /\____/|__|  \____ |  \______  /____/__|\___  >___|  /__|     \_/ /______  / /\ /____/  
+        \/     \/              \/                  \/         \/             \/     \/                    \/  \/                                                               
 Client Script For DatCord by DrSquid"""
         return logo
     def update_check(self):
@@ -82,6 +86,11 @@ Client Script For DatCord by DrSquid"""
                         print("[+] Invalid Input.")
         except Exception as e:
             pass
+    def help_msg(self):
+        return """[(SERVER)]: Commands for DatCordClient:
+[+] !help                                  - Displays this message(also prompts the server to send the help message).
+[+] !disconnect                            - Disconnects from the server you are connected to.
+[+] !clear                                 - Clears the screen."""
     def join_serv(self):
         """This is the function that is used to connect to the server. If first prompts the user
         if they want to connect to an existing server in their directory, or if they want to
@@ -202,10 +211,7 @@ Client Script For DatCord by DrSquid"""
                             except:
                                 msg = str(msg)
                             if "Successfully logged in!" in msg or "Commands For This Server" in msg:
-                                if sys.platform == "win32":
-                                    os.system("cls")
-                                else:
-                                    os.system("clear")
+                                os.system(self.clear)
                                 print(self.logo())
                                 print("\n[+] Successfully logged into your account.")
                                 print("[+] You are able to communicate with users on Datcord now.")
@@ -232,11 +238,7 @@ Client Script For DatCord by DrSquid"""
                         except:
                             msg = str(msg)
                         if "Successfully logged in!" in msg or "Commands For This Server" in msg:
-                            if sys.platform == "win32":
-                                os.system("cls")
-                            else:
-                                os.system("clear")
-                            print(self.logo())
+                            os.system(self.clear)
                             print("\n[+] Successfully logged into your account.")
                             print("[+] You are able to communicate with users on Datcord now.")
                             self.logged_in = True
@@ -279,7 +281,11 @@ Client Script For DatCord by DrSquid"""
                         print("[+] Disconnecting you from the server.")
                         self.client.close() 
                         raise Exception("Closed conn")
+                    elif msg == "!clear":
+                        os.system(self.clear)
                     else:
+                        if msg == "!help":
+                            print(self.help_msg)
                         self.client.send(self.fernet.encrypt(msg.encode()))
             except Exception as e:
                 if msg != "!disconnect":
