@@ -283,8 +283,8 @@ Client Script For DatCord by DrSquid"""
                         self.client.close() 
                         raise Exception("Closed conn")
                     elif msg == "!clear":
-                        print(self.logo())
                         os.system(self.clear)
+                        print(self.logo())
                     else:
                         if msg == "!help":
                             print(self.help_msg())
