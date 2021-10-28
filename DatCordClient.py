@@ -232,11 +232,11 @@ Client Script For DatCord by DrSquid"""
                         except:
                             msg = str(msg)
                         if "Successfully logged in!" in msg or "Commands For This Server" in msg:
-                            print(self.logo())
                             if sys.platform == "win32":
                                 os.system("cls")
                             else:
                                 os.system("clear")
+                            print(self.logo())
                             print("\n[+] Successfully logged into your account.")
                             print("[+] You are able to communicate with users on Datcord now.")
                             self.logged_in = True
