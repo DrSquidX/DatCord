@@ -1,6 +1,17 @@
 import socket, threading, sqlite3, hashlib, datetime, time, sys, random, os, json, urllib.request
 from optparse import OptionParser
 class Server:
+    def logo(self=None):
+        """Logo of this script."""
+        logo = """  
+________          __   _________                  .___       _________ _________________  
+\______ \ _____ _/  |_ \_   ___ \  ___________  __| _/ ___  _\______  \\\______  \_____  \ 
+ |    |  \\\__  \\\   __\/    \  \/ /  _ \_  __ \/ __ |  \  \/ /   /    /    /    //  ____/ 
+ |    `   \/ __ \|  |  \     \___(  <_> )  | \/ /_/ |   \   /   /    /    /    //       \ 
+/_______  (____  /__|   \______  /\____/|__|  \____ |    \_/   /____/ /\ /____/ \_______ \\
+        \/     \/              \/                  \/                 \/                \/                                       
+Advanced Encrypted Chat Server by DrSquid"""
+        return logo
     """Note: This server was made for a school project.
     This is the main class for the server where all of the important functions and
     variables needed for the server to work are inside of this class. Every server
@@ -60,7 +71,7 @@ class Server:
         self.logfile = logfile
         self.ownername = ownername
         self.ownerpassword = ownerpassword
-        self.version = "7.71"
+        self.version = "7.72"
         self.start = True
         self.check_update()
         try:
@@ -94,6 +105,10 @@ class Server:
             self.banningallincomingconn = False
             self.conn_list = []
             self.roomkicked = []
+            self.sqltable_list = ["users(username, password)","open_rooms(roomname, roompass)",
+                                "banlist(username)","ipbanlist(ip)","ipwhitelist(ip)",
+                                "friendslist(user, friends)","friendrequests(user, requests)",
+                                "friendrequests(user, requests)","exists blocklists(user, blockedusers)"]
             self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.log(self.logo())
             try:
@@ -104,41 +119,11 @@ class Server:
                 print(f"\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
                 self.log(f"\n\n[({datetime.datetime.today()})][(ERROR)]: There was an error with binding the server due to error: {e}")
                 sys.exit()
-            try:
-                cursor.execute("select * from users")
-            except:
-                cursor.execute("create table users(username, password)")
+            for i in self.sqltable_list:
+                cursor.execute(f"create table if not exists {i}")
             cursor.execute(f"delete from users where username = '{self.ownername}'")
             cursor.execute(f"insert into users values('{self.ownername}','{hashlib.sha256(self.ownerpassword.encode()).hexdigest()}')")
-            try:
-                cursor.execute("select * from open_rooms")
-            except:
-                cursor.execute("create table open_rooms(roomname, roompass)")
-            try:
-                cursor.execute("select * from banlist")
-            except:
-                cursor.execute("create table banlist(username)")
-            try:
-                cursor.execute("select * from ipbanlist")
-            except:
-                cursor.execute("create table ipbanlist(ip)")
-            try:
-                cursor.execute("select * from ipwhitelist")
-            except:
-                cursor.execute("create table ipwhitelist(ip)")
-            try:
-                cursor.execute("select * from friendslist")
-            except:
-                cursor.execute("create table friendslist(user, friends)")
-            try:
-                cursor.execute("select * from friendrequests")
-            except:
-                cursor.execute("create table friendrequests(user, requests)")
-            try:
-                cursor.execute("select * from blocklists")
-            except:
-                cursor.execute("create table blocklists(user, blockedusers)")
-            userdbcursor.execute("create table loggedinusers(username, connection)")
+            userdbcursor.execute("create table if not exists loggedinusers(username, connection)")
             userdb.commit()
             userdbcursor.close()
             userdb.close()
@@ -194,17 +179,6 @@ class Server:
                         print("[+] Invalid Input.")
         except:
             pass
-    def logo(self=None):
-        """Logo of this script."""
-        logo = """  
- _____        _    _____              _       ______ ______ __ 
-|  __ \      | |  / ____|            | |     |____  |____  /_ |
-| |  | | __ _| |_| |     ___  _ __ __| | __   __ / /    / / | |
-| |  | |/ _` | __| |    / _ \| '__/ _` | \ \ / // /    / /  | |
-| |__| | (_| | |_| |___| (_) | | | (_| |  \ V // /    / /   | |
-|_____/ \__,_|\__|\_____\___/|_|  \__,_|   \_//_(_)  /_/    |_|                                           
-Advanced Server by DrSquid"""
-        return logo
     def log(self, text):
         """Logs server output to the server log file."""
         self.update_file(self.logfile, text)
@@ -536,7 +510,6 @@ Advanced Server by DrSquid"""
                     needed_line = needed_line.strip()+"\nEndData\n"
                     needed_items.append(needed_line)
                     file = open(self.roomdata, "w")
-                    in_room = False
                     file.writelines(new_ls)
                     file.writelines(needed_items)
                     file.close()
@@ -619,7 +592,6 @@ Advanced Server by DrSquid"""
                 for i in self.conn_list:
                     if ipandsrcport[0] in str(i) and ipandsrcport[1] in str(i):
                         return i
-                        break
             else:
                 raise self.ServerError.NameNotInDatabaseError
         except:
@@ -800,7 +772,6 @@ Advanced Server by DrSquid"""
         selfname = str(ip).strip('()')
         logged_in = False
         inroom = False
-        room_admin = False
         roomadmin = False
         indm = False
         dmconn = None
@@ -809,7 +780,6 @@ Advanced Server by DrSquid"""
         roomowner = False
         kicked_from_room = False
         selfroomname = ""
-        prev_roomname = ""
         timer = time.time()
         login_attempts = 0
         max_login_attempts = 5
@@ -1315,7 +1285,6 @@ Advanced Server by DrSquid"""
                                                 banned = False
                                     if not banned:
                                         if roomadmin:
-                                            room_admin = True
                                             inroom = True
                                             selfroomname = roomname
                                         if roommember:
@@ -1329,7 +1298,6 @@ Advanced Server by DrSquid"""
                                                 inroom = True
                                         if inroom:
                                             self.show_info(f"\n[({datetime.datetime.today()})][({selfname})]: Joined room {roomname}.")
-                                            prev_roomname = selfroomname
                                             correct_ls = False
                                             ls = []
                                             self.show_server_com_with_client(conn, selfname, "You have joined the room. Say hi!")
@@ -1367,7 +1335,6 @@ Advanced Server by DrSquid"""
                                         self.show_info(f"\n[({datetime.datetime.today()})][(SERVER)--->({selfroomname})]: {selfname} has left the chat!")
                                         self.show_info(f"\n[({datetime.datetime.today()})][({selfname})]: Left room {selfroomname}.")
                                         self.sendall(f"\n[(SERVER)]: {selfname} has left the chat!", room)
-                                        room_admin = False
                                         roomowner = False
                                         roomadmin = False
                                         selfroomname = ""
@@ -1625,7 +1592,6 @@ Advanced Server by DrSquid"""
                                                 inroom = False
                                                 in_room = False
                                                 kicked_from_room = True
-                                                room_admin = False
                                                 roomowner = False
                                                 roomadmin = False
                                                 selfroomname = ""
@@ -1669,10 +1635,9 @@ class OptionParse:
         """Displays all of the new features added to DatCord in the current version."""
         print(Server.logo())
         print("""
-[+] Whats New in DatCord Version v7.71:
-[+] - Hit 1800 Lines!
+[+] Whats New in DatCord Version v7.72:
 [+] - Bug Fixes.
-[+] - Added Banner(Allows clients to see current version of server).
+[+] - Added Banner(Allows clients or port scanners to see current version of server).
 [+] - Added more logging commands.
 [+] - Renamed function 'show_errors()' to 'show_info()' to prevent confusing code readability.
 [+] - Passwords are no longer logged(for privacy reasons).
