@@ -1,14 +1,13 @@
 import socket, threading, sqlite3, os, sys, urllib.request, json, time
 
-class Client:
-    
+class Client: 
     """Configures the database files if they don't exist, as well as
     also configuring the database tables if they also don't exist.
     This function also starts the connecting function, which helps
     the user with connecting to the server."""
     def __init__(self):
         print(self.logo())
-        self.version = "3.61"
+        self.version = "3.62"
         self.dbfile = "servers.db"
         try:
             file = open(self.dbfile,"rb")
