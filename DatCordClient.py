@@ -232,6 +232,7 @@ Client Script For DatCord by DrSquid"""
                         except:
                             msg = str(msg)
                         if "Successfully logged in!" in msg or "Commands For This Server" in msg:
+                            print(self.logo())
                             if sys.platform == "win32":
                                 os.system("cls")
                             else:
