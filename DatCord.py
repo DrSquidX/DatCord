@@ -4,12 +4,12 @@ class Server:
     def logo(self=None):
         """Logo of this script."""
         logo = """  
-________          __   _________                  .___       _________ _________________  
-\______ \ _____ _/  |_ \_   ___ \  ___________  __| _/ ___  _\______  \\\______  \_____  \ 
- |    |  \\\__  \\\   __\/    \  \/ /  _ \_  __ \/ __ |  \  \/ /   /    /    /    //  ____/ 
- |    `   \/ __ \|  |  \     \___(  <_> )  | \/ /_/ |   \   /   /    /    /    //       \ 
-/_______  (____  /__|   \______  /\____/|__|  \____ |    \_/   /____/ /\ /____/ \_______ \\
-        \/     \/              \/                  \/                 \/                \/                                       
+________          __   _________                  .___       _________ _________.________
+\______ \ _____ _/  |_ \_   ___ \  ___________  __| _/ ___  _\______  \\\______  \   ____/
+ |    |  \\\__  \\\   __\/    \  \/ /  _ \_  __ \/ __ |  \  \/ /   /    /    /    /____  \ 
+ |    `   \/ __ \|  |  \     \___(  <_> )  | \/ /_/ |   \   /   /    /    /    //       \\
+/_______  (____  /__|   \______  /\____/|__|  \____ |    \_/   /____/ /\ /____//______  /
+        \/     \/              \/                  \/                 \/              \/                                 
 Advanced Encrypted Chat Server by DrSquid
 [+] Github: https://github.com/DrSquidX"""
         return logo
@@ -57,6 +57,12 @@ Advanced Encrypted Chat Server by DrSquid
                 """This displays the error(in error format)."""
                 self.msg = msg
                 super().__init__(self.msg)
+        class Deletion_Exception(Exception):
+            """This is an error that simply is raised for the deletion of an account.
+            It was made to end the client loop nice and cleanly."""
+            def __init__(self, msg="Account has been deleted."):
+                self.msg = msg
+                super().__init__(self.msg)
     def __init__(self, ip, port, dbfile, userdbfile, roomdata, logfile, ownername, ownerpassword, connpersec):
         """This is the function where all of the important variables are defined. The databases
         is configuyred here, as well as the owner account along with the logging files and room
@@ -72,7 +78,7 @@ Advanced Encrypted Chat Server by DrSquid
         self.logfile = logfile
         self.ownername = ownername
         self.ownerpassword = ownerpassword
-        self.version = "7.72"
+        self.version = "7.75"
         self.start = True
         self.check_update()
         try:
@@ -439,6 +445,32 @@ Advanced Encrypted Chat Server by DrSquid
                 return True
             else:
                 raise self.ServerError.AuthenticationError(f"Incorrect password for Room '{name}'")
+    def delete_account(self, username):
+        """Deletes the specified account. It first unfriends all of the people the 
+        user is friends with, where it removes its name from all of the SQL Tables."""
+        friendslist = self.get_friends_list(username)
+        for friend in friendslist:
+            self.rm_friend(friend, username)
+        tablenames = ["friendslist","friendrequests","blocklists"]
+        for i in tablenames:
+            self.exec_sqlcmd(f"delete from {i} where user = '{username}'")
+        self.exec_sqlcmd(f"delete from users where username = '{username}'")
+        for i in self.get_all_rooms_in(username):
+            self.kick_user_fr_room(username, i)
+    def get_all_rooms_in(self, username):
+        """A function that gets all of the rooms that the specified user is in currently."""
+        file = open(self.roomdata, "r")
+        contents = file.readlines()
+        file.close()
+        room_list = []
+        current_room = ""
+        for i in contents:
+            if i.startswith("RoomName:"):
+                current_room = i.split()[1]
+            for ii in i.split():
+                if username == ii and current_room not in room_list:
+                    room_list.append(current_room)
+        return room_list
     def check_for_sameitems(self, file, name, cmd):
         """This checks for same items that already in the server. If the name is
         already in the database, then the value the function is assigned to will
@@ -732,6 +764,7 @@ Advanced Encrypted Chat Server by DrSquid
 [+] !createroom [room_name] [room_pass]    - Creates a chat room(the password is optional).
 [+] !joinroom [room_name] [room_pass]      - Joins a chat room(the password is optional)
 [+] !leaveroom                             - Leaves the current room you are in.
+[+] !getroomlist                           - Gets the list of all the rooms you are a part of.
 [+] !block [user]                          - Blocks a user(they cannot dm or friend request you).
 [+] !unblock [user]                        - Unblocks a user.
 [+] !friendreq [user]                      - Sends a friend request to the user.
@@ -745,7 +778,8 @@ Advanced Encrypted Chat Server by DrSquid
 [+] !roomkick [user]                       - Kicks a user from the chat room(they can re-enter with the same password).
 [+] !changeroompass [new_pass]             - Changes the room password for a room(need to be room owner).
 [+] !promoteuser [user]                    - Promotes a user to room-admin(you need to be room admin).
-[+] !demoteuser [user]                     - Demotes a user down to regular room client(you need to be room admin)."""
+[+] !demoteuser [user]                     - Demotes a user down to regular room client(you need to be room admin).
+[+] !deleteacc                             - Removes your account from the database(everything except for banlists will be removed from the database)."""
         return msg
     def admin_help_message(self):
         """Generates the admin help message for admins."""
@@ -787,6 +821,7 @@ Advanced Encrypted Chat Server by DrSquid
         msgspersec = 0
         max_spam_warns = 3
         spam_warnings = 0
+        del_confirmation = False
         if self.ip == "localhost":
             max_msg_persec = 3
         else:
@@ -1160,6 +1195,20 @@ Advanced Encrypted Chat Server by DrSquid
                             except Exception as e:
                                 self.show_info(f"\n[({datetime.datetime.today()})][(ERROR)]: Error with parsing arguments: {e}")
                                 self.show_server_com_with_client(conn, selfname, "Invalid arguments! Proper Usage: !reregister <old_pass> <new_pass>")
+                        elif msg.startswith("!deleteacc"):
+                            if del_confirmation:
+                                self.show_server_com_with_client(conn, selfname, f"Deleting your account. Sorry for any inconvienence caused while using DatCord.")
+                                self.delete_account(selfname)
+                                self.show_info(f"\n[({datetime.datetime.today()})][(ACCOUNTDELETION)]: Account '{selfname}' has been removed from the server.")
+                                raise self.ServerError.Deletion_Exception
+                            else:
+                                if selfname == self.ownername:
+                                    self.show_server_com_with_client(conn, selfname, "The owner account cannot be deleted!")
+                                else:
+                                    del_confirmation = True
+                                    self.show_server_com_with_client(conn, selfname, "Are you sure you want to delete your account? Please send '!deleteacc' again to confirm.")
+                        elif msg.startswith("!getroomlist"):
+                            self.show_server_com_with_client(conn, selfname, f"All of the rooms that you are currently in: {self.get_all_rooms_in(selfname)}")
                         elif msg.startswith("!help"):
                             conn.send(self.fernet.encrypt(self.regular_client_help_message().strip().encode()))
                             self.show_info(f"\n[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message.")
@@ -1636,8 +1685,10 @@ class OptionParse:
         """Displays all of the new features added to DatCord in the current version."""
         print(Server.logo())
         print("""
-[+] Whats New in DatCord Version v7.72:
+[+] Whats New in DatCord Version v7.75:
 [+] - Bug Fixes.
+[+] - Added account self deletion command.
+[+] - Added 'self.get_all_rooms_in' function for users to see what room they are currently in.
 [+] - Added Banner(Allows clients or port scanners to see current version of server).
 [+] - Added more logging commands.
 [+] - Renamed function 'show_errors()' to 'show_info()' to prevent confusing code readability.
