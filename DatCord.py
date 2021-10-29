@@ -453,8 +453,8 @@ Advanced Encrypted Chat Server by DrSquid
             self.rm_friend(friend, username)
         tablenames = ["friendslist","friendrequests","blocklists"]
         for i in tablenames:
-            self.exec_sqlcmd(f"delete from {i} where user = '{username}'")
-        self.exec_sqlcmd(f"delete from users where username = '{username}'")
+            self.exec_sqlcmd(self.dbfile, f"delete from {i} where user = '{username}'")
+        self.exec_sqlcmd(self.dbfile,f"delete from users where username = '{username}'")
         for i in self.get_all_rooms_in(username):
             self.kick_user_fr_room(username, i)
     def get_all_rooms_in(self, username):
