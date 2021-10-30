@@ -459,7 +459,18 @@ Advanced Encrypted Chat Server by DrSquid
         for i in self.get_all_rooms_in(username):
             for ii in self.member_types:
                 if username in self.get_role_members(i, "Owner:"):
-                    new_owner = random.choice(self.get_role_members(i,"Admins:"))
+                    if len(self.get_role_members(i,"Admins:")) != 0:
+                        new_owner = random.choice(self.get_role_members(i,"Admins:"))
+                    elif len(self.get_role_members(i,"Members:")) != 0:
+                        new_owner = random.choice(self.get_role_members(i,"Members:"))
+                    else:
+                        new_owner = random.choice(self.get_userlist())
+                    try:
+                        newowner_conn = self.opendm(new_owner)
+                        newowner_conn.send(self.fernet(f"[(SERVER)]: You have become the new owner of the chatroom '{i}'".encode()))
+                        self.show(f"\n[({datetime.datetime.today()})][(NEWCHATROOMOWNER)]: User '{new_owner}' has become the new owner of chatroom '{i}'")
+                    except:
+                        pass
                     self.add_to_roomdata(new_owner, i, "Owner:")
                 self.del_from_roomdata(username, i, ii)
     def get_all_rooms_in(self, username):
@@ -927,7 +938,6 @@ Advanced Encrypted Chat Server by DrSquid
                     else:
                         if not indm and not inroom:
                             self.show_info(f"\n[({datetime.datetime.today()})]" + this_main_msg.strip())
-
                     if indm:
                         try:
                             if serverowner:
