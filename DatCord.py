@@ -76,7 +76,7 @@ Advanced Encrypted Chat Server by DrSquid
         self.userdbfile = userdbfile
         self.roomdata = roomdata
         self.logfile = logfile
-        self.member_types = ["Members:","Owners:","Admins:"]
+        self.member_types = ["Owners:","Admins:","Members:"]
         self.ownername = ownername
         self.ownerpassword = ownerpassword
         self.version = version
@@ -618,7 +618,8 @@ Advanced Encrypted Chat Server by DrSquid
             if indata:
                 if i != "EndData":
                     if i.startswith(stat):
-                        member_list = i.split().remove(i[0])
+                        member_list = i.split()
+                        del member_list[0]
                         return member_list
                 else:
                     indata = False
@@ -637,6 +638,7 @@ Advanced Encrypted Chat Server by DrSquid
                 if i != "EndData":
                     for i in self.member_types:
                         info += f"({i}) {self.get_role_members(room,i)} "
+                    break
                 else:
                     indata = False
                     break
