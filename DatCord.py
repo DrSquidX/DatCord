@@ -4,12 +4,12 @@ class Server:
     def logo(self=None):
         """Logo of this script."""
         logo = """  
-________          __   _________                  .___       _________ _________.________
-\______ \ _____ _/  |_ \_   ___ \  ___________  __| _/ ___  _\______  \\\______  \   ____/
- |    |  \\\__  \\\   __\/    \  \/ /  _ \_  __ \/ __ |  \  \/ /   /    /    /    /____  \ 
- |    `   \/ __ \|  |  \     \___(  <_> )  | \/ /_/ |   \   /   /    /    /    //       \\
-/_______  (____  /__|   \______  /\____/|__|  \____ |    \_/   /____/ /\ /____//______  /
-        \/     \/              \/                  \/                 \/              \/                                 
+________          __   _________                  .___       _________ __________________ 
+\______ \ _____ _/  |_ \_   ___ \  ___________  __| _/ ___  _\______  \\\______  \______  \\
+ |    |  \\\__  \\\   __\/    \  \/ /  _ \_  __ \/ __ |  \  \/ /   /    /    /    /   /    /
+ |    `   \/ __ \|  |  \     \___(  <_> )  | \/ /_/ |   \   /   /    /    /    /   /    / 
+/_______  (____  /__|   \______  /\____/|__|  \____ |    \_/   /____/ /\ /____/   /____/  
+        \/     \/              \/                  \/                 \/                                             
 Advanced Encrypted Chat Server by DrSquid
 [+] Github: https://github.com/DrSquidX"""
         return logo
@@ -63,7 +63,7 @@ Advanced Encrypted Chat Server by DrSquid
             def __init__(self, msg="Account has been deleted."):
                 self.msg = msg
                 super().__init__(self.msg)
-    def __init__(self, ip, port, dbfile, userdbfile, roomdata, logfile, ownername, ownerpassword, connpersec):
+    def __init__(self, ip, port, dbfile, userdbfile, roomdata, logfile, ownername, ownerpassword, connpersec, version):
         """This is the function where all of the important variables are defined. The databases
         is configuyred here, as well as the owner account along with the logging files and room
         data files. Once configured, the user can choose when to start listening for connections
@@ -76,9 +76,10 @@ Advanced Encrypted Chat Server by DrSquid
         self.userdbfile = userdbfile
         self.roomdata = roomdata
         self.logfile = logfile
+        self.member_types = ["Members:","Owners:","Admins:"]
         self.ownername = ownername
         self.ownerpassword = ownerpassword
-        self.version = "7.75"
+        self.version = version
         self.start = True
         self.check_update()
         try:
@@ -456,7 +457,11 @@ Advanced Encrypted Chat Server by DrSquid
             self.exec_sqlcmd(self.dbfile, f"delete from {i} where user = '{username}'")
         self.exec_sqlcmd(self.dbfile,f"delete from users where username = '{username}'")
         for i in self.get_all_rooms_in(username):
-            self.kick_user_fr_room(username, i)
+            for ii in self.member_types:
+                if username in self.get_role_members(i, "Owner:"):
+                    new_owner = random.choice(self.get_role_members("Admins:"))
+                    self.add_to_roomdata(new_owner, i, "Owner:")
+                self.del_from_roomdata(username, i, ii)
     def get_all_rooms_in(self, username):
         """A function that gets all of the rooms that the specified user is in currently."""
         file = open(self.roomdata, "r")
@@ -599,6 +604,43 @@ Advanced Encrypted Chat Server by DrSquid
                 break
             item += 1
         pass
+    def get_role_members(self, room, stat):
+        """Gets all of the members inside of a specific role, in a
+        specific chatroom."""
+        file = open(self.roomdata,"r")
+        contents = file.readlines()
+        indata = True
+        member_list = []
+        for i in contents:
+            if i.startswith("RoomName"):
+                if i.split()[1] == room:
+                    indata = True
+            if indata:
+                if i != "EndData":
+                    if i.startswith(stat):
+                        member_list = i.split().remove(i[0])
+                        return member_list
+                else:
+                    indata = False
+                    break
+    def get_all_room_roles(self, room):
+        """Gets all of the roles of a specified room."""
+        file = open(self.roomdata,"r")
+        contents = file.readlines()
+        indata = True
+        info = ""
+        for i in contents:
+            if i.startswith("RoomName"):
+                if i.split()[1] == room:
+                    indata = True
+            if indata:
+                if i != "EndData":
+                    for i in self.member_types:
+                        info += f"({i}) {self.get_role_members(room,i)} "
+                else:
+                    indata = False
+                    break
+        return info
     def show_info(self, msg):
         """This displays and logs errors that happen in the server."""
         self.log(msg)
@@ -1207,8 +1249,18 @@ Advanced Encrypted Chat Server by DrSquid
                                 else:
                                     del_confirmation = True
                                     self.show_server_com_with_client(conn, selfname, "Are you sure you want to delete your account? Please send '!deleteacc' again to confirm.")
+                        elif msg.startswith("!getroomroles"):
+                            if inroom:
+                                roomroles = self.get_all_room_roles(selfroomname)
+                                self.show_server_com_with_client(conn, selfname, f"All of the members in the chatroom: {roomroles}")
+                            else:
+                                self.show_server_com_with_client(conn, selfname, f"You are currently not in a room at the moment!")
                         elif msg.startswith("!getroomlist"):
-                            self.show_server_com_with_client(conn, selfname, f"All of the rooms that you are currently in: {self.get_all_rooms_in(selfname)}")
+                            room_lists = self.get_all_rooms_in(username)
+                            if len(room_lists) == 0:
+                                self.show_server_com_with_client(conn, selfname, f"You are not in any chatrooms at the moment.")
+                            else:
+                                self.show_server_com_with_client(conn, selfname, f"All of the rooms that you are currently in: {room_lists}")
                         elif msg.startswith("!help"):
                             conn.send(self.fernet.encrypt(self.regular_client_help_message().strip().encode()))
                             self.show_info(f"\n[({datetime.datetime.today()})][(SERVER)--->({selfname})]: Sent the Regular Help Message.")
@@ -1680,12 +1732,13 @@ class OptionParse:
     """Option-Parsing Class for parsing arguments."""
     def __init__(self):
         """Starts to parse the arguments."""
+        self.version = "7.77"
         self.parse_args()
     def whatsnew(self):
         """Displays all of the new features added to DatCord in the current version."""
         print(Server.logo())
-        print("""
-[+] Whats New in DatCord Version v7.75:
+        print(f"""
+[+] Whats New in DatCord Version v{self.version}:
 [+] - Bug Fixes.
 [+] - Added account self deletion command.
 [+] - Added 'self.get_all_rooms_in' function for users to see what room they are currently in.
@@ -1799,7 +1852,7 @@ class OptionParse:
                 mc = 30
         else:
             mc = 30
-        server = Server(ip, port, db, au, rd, sl, ou, op, mc)
+        server = Server(ip, port, db, au, rd, sl, ou, op, mc, self.version)
         server.listen()
 if __name__ == '__main__':
     """Initiates the script."""
