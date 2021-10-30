@@ -459,7 +459,7 @@ Advanced Encrypted Chat Server by DrSquid
         for i in self.get_all_rooms_in(username):
             for ii in self.member_types:
                 if username in self.get_role_members(i, "Owner:"):
-                    new_owner = random.choice(self.get_role_members("Admins:"))
+                    new_owner = random.choice(self.get_role_members(i,"Admins:"))
                     self.add_to_roomdata(new_owner, i, "Owner:")
                 self.del_from_roomdata(username, i, ii)
     def get_all_rooms_in(self, username):
