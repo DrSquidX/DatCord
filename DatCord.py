@@ -76,7 +76,7 @@ Advanced Encrypted Chat Server by DrSquid
         self.userdbfile = userdbfile
         self.roomdata = roomdata
         self.logfile = logfile
-        self.member_types = ["Owners:","Admins:","Members:"]
+        self.member_types = ["Owner:","Admins:","Members:"]
         self.ownername = ownername
         self.ownerpassword = ownerpassword
         self.version = version
