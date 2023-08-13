@@ -162,6 +162,20 @@ Below is the exploit in action:
 [+] !kick [user]                           - Kicks a user from the server.
 [*] Enter your message:
 ```
+# Root of Injection Vulnerability:
+The source of this vulnerability is how I originally filtered injections in the first place. Using `.strip()` is not an optimal way to filter specific characters, which renders it useless when exploiting. See the snippet below, which is what allows for these injections to happen.
+```python
+if not logged_in:
+    if msg.startswith("!register"):
+        try:
+            username = msg.split()[1].strip("'").strip('"')
+            this_main_msg = f"\n[({selfname})]: Attempting to register as {username}."
+        except:
+            pass
+    elif msg.startswith("!login"):
+        ...
+```
+Using `filter()` or `.replace()` are better alternatives to diminish the possibility of injections like these. The usage of `.strip()` to filter strings are also scattered across the main script, so if you geniunely use this project: change them!
 
 # Every Feature Included(In a more straightforward way):
 * Secure Password Storage - Every password is stored inside of an SQL Database
